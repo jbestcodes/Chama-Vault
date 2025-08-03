@@ -1,19 +1,18 @@
-const mysql = require('mysql2');
-require('dotenv').config();
-
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('My SQL connection failed:', err);
-        return;
+const mysql = require('mysql2/promise');
+const dbConfig = {
+    host: 'localhost',
+    user: 'root',
+    password: '28494217',
+    database: 'Chama_Vault'
+};
+// Export the connection function directly
+module.exports = async () => {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        console.log('connected to mysql database');
+        return connection;
+    } catch (error) {
+        console.error('Error connecting to the database:', error);
+        throw error; // Re-throw the error so it can be caught in index.js
     }
-    console.log('My SQL connected successfully');
-}
-);
-module.exports = db;
+};
