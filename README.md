@@ -1,5 +1,5 @@
 # Chama Vault
-Chama Vault is a secure, web- based savings tracker built for table banking groups (Chamas). It allows members to view their weekly savings, see group rankings anonymously, and request their
+Chama Vault is a secure, web-based savings tracker built for table banking groups (Chamas). It allows members to view their weekly savings, see group rankings anonymously, and request their
 saving status via SMS.
 
 # Project scope
@@ -7,9 +7,9 @@ This platform is designed to
 - Let members sign up and log in securely
 - Allow admins to update savings
 - Show members their savings history
-- Display anonymous group rankings with blurred names or alias
-- Provide sms based self service updates on savings
-- Admin only dashboard
+- Display anonymous group rankings with blurred names or aliases
+- Provide sms based self-service updates on savings
+- Admin-only dashboard
 - 
   # Technologies used
   ### Backend:
