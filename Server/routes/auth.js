@@ -1,10 +1,15 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+
+const jwtSecret = process.env.JWT_SECRET; // get JWT secret from environment variables
 
 // Register route
 router.post('/register', async (req, res) => {
     // correctly get data from the request payload
+    const db = req.db; 
     const { full_name, phone, password } = req.body;
     // simple check to ensure all fields are provided
 if (!full_name || !phone || !password) {
@@ -27,8 +32,8 @@ if (!full_name || !phone || !password) {
         );
         res.status(201).json({ message: 'Member registered successfully' });
     } catch (error) {
-        console.error('Error registering member:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error registering member:', error);
+        res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 });
     // Login route
@@ -51,9 +56,14 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         res.status(200).json({message: 'Login successful', member: { id: member.id, full_name: member.full_name, phone: member.phone } });
+   
+        // only generate token if login is successful
+        const token = jwt.sign({ id: member.id, phone: member.phone }, jwtSecret, { expiresIn: '1h' });
+    // Send the token in the response
+        res.status(200).json({ message: 'Login successful', token, member: { id: member.id, full_name: member.full_name, phone: member.phone } });
     } catch (error) {
-        console.error('Error log in error:', error.message);
-        res.status(500).json({ error: 'Internal server error' }); 
+        console.error('Error during login:', error);
+        return res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 });
 
