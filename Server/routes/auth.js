@@ -1,56 +1,59 @@
 const express = require('express');
-const router = express.Router();
 const bcrypt = require('bcrypt');
-const connectDB = require('../db.js');
+const router = express.Router();
 
-// REGISTER new member
+// Register route
 router.post('/register', async (req, res) => {
-    const { full_name, phone_number, password } = req.body;
+    // correctly get data from the request payload
+    const { full_name, phone, password } = req.body;
+    // simple check to ensure all fields are provided
+if (!full_name || !phone || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+}
     try {
-        const db = await connectDB();
-        const [existing] = await db.query('SELECT * FROM members WHERE phone_number = ?', [phone_number]);
-        if (existing.length > 0) {
-            return res.status(409).json({ message: 'Member already exists' });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const [result] = await db.query(
-            'INSERT INTO members (full_name, phone_number, password) VALUES (?, ?, ?)',
-            [full_name, phone_number, hashedPassword]
+        //step 1: Check if the phone number already exists
+        const [existingMember] = await req.db.execute(
+            'SELECT * FROM members WHERE phone = ?',
+            [phone]
         );
-        res.status(201).json({ message: 'Member registered successfully', memberId: result.insertId });
-    } catch (err) {
-        console.error('Error registering member:', err);
-        res.status(500).json({ message: 'Internal server error', error: err });
+        if (existingMember.length > 0) {
+            return res.status(409).json({ error: 'Phone number already registered' });
+        }
+        // step 2: Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.execute(
+            'INSERT INTO members (full_name, phone, password) VALUES (?, ?, ?)',
+            [full_name, phone, hashedPassword]
+        );
+        res.status(201).json({ message: 'Member registered successfully' });
+    } catch (error) {
+        console.error('Error registering member:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-// LOGIN member
+    // Login route
 router.post('/login', async (req, res) => {
-    const { phoneNumber, password } = req.body;
-    if (!phoneNumber || !password) {
-        return res.status(400).json({ message: 'Phone number and password are required' });
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+        return res.status(400).json({ error: 'Phone and password are required' });
     }
     try {
-        const db = await connectDB();
-        const [results] = await db.query('SELECT * FROM members WHERE phone_number = ?', [phoneNumber]);
+        const [results] = await req.db.execute(
+            'SELECT * FROM members WHERE phone = ?',
+            [phone]
+        );
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Member not found' });
+            return res.status(404).json({ error: 'Member not found' });
         }
-        const user = results[0];
-        const isMatch = await bcrypt.compare(password, user.password);
+        const member = results[0];
+        const isMatch = await bcrypt.compare(password, member.password);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid password' });
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
-        res.json({
-            message: 'Login successful',
-            user: {
-                id: user.id,
-                name: user.full_name,
-                phoneNumber: user.phone_number
-            }
-        });
-    } catch (err) {
-        return res.status(500).json({ message: 'Database error', error: err });
+        res.status(200).json({message: 'Login successful', member: { id: member.id, full_name: member.full_name, phone: member.phone } });
+    } catch (error) {
+        console.error('Error log in error:', error.message);
+        res.status(500).json({ error: 'Internal server error' }); 
     }
 });
 
