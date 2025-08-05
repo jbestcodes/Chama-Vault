@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const  authenticateToken  = require('../middleware/auth');
+const  {authenticateToken, isAdmin}  = require('../middleware/auth');
 
 //route: get / api/savings
 // description: Get all savings records for the authenticated user
@@ -74,5 +74,117 @@ router.get('/my', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+//Admin-only route to get all savings records
+router.get('/admin/dashboard', authenticateToken, isAdmin,(req, res) => {
+    res.json({ message: 'Admin dashboard accessed successfully', user: req.user });
+});
+//Add new savings (Admin only)
+router.post('/admin/add', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const db = req.db;
+        const { member_id, week_number, amount } = req.body;
+        //admin check
+        if (!req.user || !req.user.is_admin) {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+        }
+        if (!week_number || !amount || !member_id) {
+            return res.status(400).json({ error: 'Week number, amount, and member ID are required' });
+        }
+        await db.execute(
+            'INSERT INTO savings (member_id, week_number, amount) VALUES (?, ?, ?)',
+            [member_id, week_number, amount]
+        );
+        res.status(201).json({ message: 'New savings record added successfully' });
+    } catch (error) {
+        console.error('Error adding new savings record:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+//update savings record (Admin only)
+router.post('/admin/update', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const db = req.db;
+        const { member_id, week_number, amount } = req.body;
+        //admin check
+        if (!req.user || !req.user.is_admin) {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+        }
+        if (!member_id || !week_number || !amount) {
+            return res.status(400).json({ error: 'all fields are required' });
+        }
+        await db.execute(
+            'INSERT INTO savings (member_id, week_number, amount) VALUES (?, ?, ?)' 
+
+            [member_id, week_number, amount, amount]);
+        res.status(201).json({ message: 'Savings record updated successfully' });
+    } catch (error) {
+        console.error('Error updating savings record:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+//Route; Get member profile with savings, total and rank
+router.get('/my-profile', authenticateToken, async (req, res) => {
+    try {
+        const db = req.db;
+        const memberId = req.user.id; 
+        //get member savings history
+        const [savingsHistory] = await db.query(
+            'SELECT week_number, amount FROM savings WHERE member_id = ? ORDER BY week_number ASC',
+            [memberId]
+        );
+        //get total savings of all members for ranking
+        const [rankingData] = await db.query(
+            `SELECT 
+            m.id AS member_id, m.full_name,
+            COALESCE(SUM(s.amount), 0) AS total_savings
+            FROM members m
+            LEFT JOIN savings s ON m.id = s.member_id
+            GROUP BY m.id
+            ORDER BY total_savings DESC
+        `
+        );
+        // calculate user's total savings and rank
+        const userTotalSavings = rankingData.find(m=> m.id === memberId)?.
+        total_savings || 0;
+        const userRank = rankingData.findIndex(m => m.id === memberId) + 1;
+
+        //anonymized leaderboard(initials or masked names)
+        const anonymizedLeaderboard = rankingData.map(member => ({
+            name: m.id === memberId ? m.full_name : `${member.full_name.charAt(0)}****`,
+            total_savings: member.total_savings,
+        }));
+        res.json({
+            savingsHistory,
+            totalSavings: userTotalSavings,
+            rank: userRank,
+            leaderboard: anonymizedLeaderboard,
+        });
+    } catch (error) {
+        console.error('Error fetching member profile:', error.message);
+        res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+});
+
+//rankings route
+router.get('/ranking', authenticateToken, async (req, res) => {
+    try {
+        const db = req.db;
+        const [rankingRows] = await db.query(
+            `SELECT 
+            m.id AS member_id, 
+            m.full_name, 
+            COALESCE(SUM(s.amount), 0) AS total_savings
+            FROM members m
+            LEFT JOIN savings s ON m.id = s.member_id
+            GROUP BY m.id
+            ORDER BY total_savings DESC`
+        );
+    res.status(200).json({rankings: rankingRows});
+    } catch (error) {
+        console.error('Error fetching rankings:', error.message);
+        res.status(500).json({ error: 'Internal server error', message: error.message });
+    }
+    });
+
 
 module.exports = router;

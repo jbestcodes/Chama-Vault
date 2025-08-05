@@ -3,6 +3,7 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const authRoutes = require('./routes/auth');
 const savingsRoutes = require('./routes/savings');
+const groupsRoutes = require('./routes/groups');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/savings', savingsRoutes);
+app.use('/api/groups', groupsRoutes);
 
 // Start server
 app.listen(PORT, () => {
