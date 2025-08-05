@@ -38,32 +38,32 @@ if (!full_name || !phone || !password) {
 });
     // Login route
 router.post('/login', async (req, res) => {
-    const { phone, password } = req.body;
-    if (!phone || !password) {
-        return res.status(400).json({ error: 'Phone and password are required' });
-    }
     try {
-        const [results] = await req.db.execute(
-            'SELECT * FROM members WHERE phone = ?',
+        const db = req.db; // get the database connection from the request
+        const { phone, password } = req.body;
+if (!phone || !password) {
+    return res.status(400).json({ error: 'Phone number and password are required' });
+}
+const[results] = await db.execute( 'SELECT * FROM members WHERE phone = ?',
             [phone]
         );
         if (results.length === 0) {
-            return res.status(404).json({ error: 'Member not found' });
+            return res.status(401).json({ error: 'Invalid phone number or password' });
         }
         const member = results[0];
+
+        // step 3: Compare the provided password with the hashed password
         const isMatch = await bcrypt.compare(password, member.password);
         if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: 'Invalid phone number or password' });
         }
-        res.status(200).json({message: 'Login successful', member: { id: member.id, full_name: member.full_name, phone: member.phone } });
-   
-        // only generate token if login is successful
+
+        // step 4: Generate a JWT token and send it back to the client
         const token = jwt.sign({ id: member.id, phone: member.phone }, jwtSecret, { expiresIn: '1h' });
-    // Send the token in the response
-        res.status(200).json({ message: 'Login successful', token, member: { id: member.id, full_name: member.full_name, phone: member.phone } });
+        return res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
-        console.error('Error during login:', error);
-        return res.status(500).json({ error: 'Internal server error', message: error.message });
+        console.error('Error logging in:', error);
+        res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 });
 
