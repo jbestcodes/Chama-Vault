@@ -113,9 +113,9 @@ router.post('/admin/update', authenticateToken, isAdmin, async (req, res) => {
             return res.status(400).json({ error: 'all fields are required' });
         }
         await db.execute(
-            'INSERT INTO savings (member_id, week_number, amount) VALUES (?, ?, ?)' 
-
-            [member_id, week_number, amount, amount]);
+            'UPDATE savings SET amount = ? WHERE member_id = ? AND week_number = ?',
+            [amount, member_id, week_number]
+        );
         res.status(201).json({ message: 'Savings record updated successfully' });
     } catch (error) {
         console.error('Error updating savings record:', error.message);
@@ -123,56 +123,62 @@ router.post('/admin/update', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 //Route; Get member profile with savings, total and rank
-router.get('/my-profile', authenticateToken, async (req, res) => 
-{ console.log(`HIT /my-profile ROUTE`);
-    try{
-    const memberId = req.user.id;
-    //get member savings history
-    const [savingsHistory] = await db.query(`
-        SELECT s.id, s.amount, s.date
-        FROM savings as s
-        WHERE s.member_id =?
-        ORDER BY s.date DESC`, [memberId]);
-
-        //get total savings for this member
-        const[[{ total_savings} = {total_savings: 0}]]=await db.query
-        (`SELECT SUM(amount) As total_savings
-            FROM savings
-            WHERE member_id =?`, [memberId]);
-
-            //get total savings for all members for ranking
-            const [rankingData] = await db.query (`
-                SELECT m.id AS member_id, m.full_name, SUM(s.amount) As
-                total_savings
-                FROM members AS s on m.id = s.member_id
-                GROUP BY m.id
-                ORDER BY total_savings DESC`);
-                //find this member's rank
-                const userRank = rankingData.findIndex(member=> member.member_id
-                    ===memberId
-                ) + 1;
-
-                //anonymize leaderboard
-                const anonymizeLeaderboard = rankingData.map(member=> 
-                ({name: member.member_id === memberId ? member.full_name :
-                    `${member.full_name.charAT(0)}****`,
-                    total_savings:member.total_savings || 0,
-                })
-                );
-                //send response
-                res.json({
-                    savingsHistory: savingsHistory,
-                    totalSavings: total_savings,
-                    rank: userRank,
-                    leaderboard: anonymizeLeaderboard
-                });
-}
- catch (error){
-    console.error(`error fetching member profile:`, error.message);
-    res.status(500),json({error: `Internal server error`, message:
-        error.message
-    })
- }});
+router.get('/my-profile', authenticateToken, async (req, res) => {
+    console.log('HIT /my-profile ROUTE');
+    const db = req.db;
+    if (!db) {
+        return res.status(500).json({ error: 'Database connection not available' });
+    }
+    try {
+        const memberId = req.user.id;
+        // get member savings history
+        const [savingsHistory] = await db.query(
+            `SELECT s.id, s.amount, s.created_at
+             FROM savings AS s
+             WHERE s.member_id = ?
+             ORDER BY s.created_at DESC`,
+            [memberId]
+        );
+        // get total savings for this member
+        const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
+            `SELECT COALESCE(SUM(s.amount),0) AS total_savings
+             FROM savings AS s
+             WHERE s.member_id = ?`,
+            [memberId]
+        );
+        // get total savings for all members for ranking
+        const [rankingData] = await db.query(
+            `SELECT m.id AS member_id, m.full_name,
+                    COALESCE(SUM(s.amount), 0) AS total_savings
+             FROM members m
+             LEFT JOIN savings s ON m.id = s.member_id
+             GROUP BY m.id
+             ORDER BY total_savings DESC`
+        );
+        // find this member's rank
+        const userRank = rankingData.findIndex(member =>
+            member.member_id === memberId) + 1;
+        // anonymize leaderboard
+        const anonymizedLeaderboard = rankingData.map(member => ({
+            name: member.member_id === memberId ?
+                member.full_name : `${member.full_name.charAt(0)}****`,
+            total_savings: member.total_savings || 0,
+        }));
+        // send response
+        res.json({
+            savingsHistory,
+            totalSavings: total_savings,
+            rank: userRank,
+            leaderboard: anonymizedLeaderboard,
+        });
+    } catch (error) {
+        console.error('Error fetching member profile:', error.message);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: error.message,
+        });
+    }
+});
 
 
 module.exports = router;
