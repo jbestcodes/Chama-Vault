@@ -179,6 +179,70 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         });
     }
 });
+//Route: GET /api/savings/dashboard
+// Description: Get dashboard summary (total savings, member count, last contribution)
+router.get('/dashboard', authenticateToken, async (req, res) => {
+    const db = req.db;
+    try {
+        const memberId = req.user.id; // Assuming user ID is stored in the token
+        console.log(`Fetching dashboard for member ID:`, memberId);
 
+        // Get total savings for the member
+const [totalSavingsRows] = await db.query(
+    `SELECT SUM(amount) AS total_savings
+     FROM savings
+     WHERE member_id = ?`,
+[memberId]
+);
+        const totalSavings = totalSavingsRows[0]?.total_savings || 0;
+
+        // Get total number of members
+        const [memberCountRows] = await db.query(
+            `SELECT COUNT(*) AS member_count FROM members`
+        );
+        const memberCount = memberCountRows[0]?.member_count || 0;
+
+        //Get total savings for all members
+const [totalSavingsAllRows] = await db.query(
+    `SELECT SUM(amount) AS total_savings_all
+     FROM savings`
+);
+        const totalSavingsAll = totalSavingsAllRows[0]?.total_savings_all || 0;
+
+        // user rank based on total savings
+const [rankingData] = await db.query(
+`SELECT m.id AS member_id, m.full_name, SUM(s.amount) AS total_savings
+FROM members AS m
+LEFT JOIN savings AS s ON m.id = s.member_id
+GROUP BY m.id
+ORDER BY total_savings DESC`
+);
+        const userRank = rankingData.findIndex(member =>
+            member.member_id === memberId) + 1;
+
+        // Get last contribution date
+        const [lastContributionRows] = await db.query(
+            `SELECT MAX(created_at) AS last_contribution
+             FROM savings
+             WHERE member_id = ?`,
+            [memberId]
+        );
+        const lastContribution = lastContributionRows[0]?.last_contribution || 'No contributions yet';
+
+        res.json({
+            totalSavings,
+            memberCount,
+            totalSavingsAll,
+            userRank,
+            lastContribution,
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error.message);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: error.message,
+        });
+    }
+});
 
 module.exports = router;
