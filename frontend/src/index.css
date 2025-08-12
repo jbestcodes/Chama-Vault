@@ -66,3 +66,37 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+@media (prefers-color-scheme: light) {
+  body {
+    color: #000;
+    background-color: #f0f0f0;
+  }
+  h1 {
+    color: #333;
+  }
+  button {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+  }
+  button:hover {
+    border-color: #aaa;
+  }
+}
+/* === Home Page styles === */
+#home-section {
+  background-color: junglegreen;
+  padding: 20px;
+}
+#hero-title {
+  font-size: 2.5em;
+font-weight: bold;
+  color: #fff;
+}
+#cta-button {
+  background-color: #4caf50;
+color: white;
+padding: 10px 20px;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+}

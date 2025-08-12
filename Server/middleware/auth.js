@@ -1,5 +1,3 @@
-
-
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -21,12 +19,12 @@ const authenticateToken = (req, res, next) => {
     });
 };
 //check if user is admin
-const isAdmin = (req, res, next) => {
-    //check after attaching user in authenticateToken
-if (req.user && req.user.is_admin) {
-        next(); // User is admin, proceed to the next middleware
-}else {
-        return res.status(403).json({ message: 'Access denied. Admins only.' });
+function isAdmin(req, res, next) {
+    // Assumes req.user is set by authenticateToken middleware
+    if (req.user && req.user.role && req.user.role.toLowerCase() === 'admin') {
+        return next();
     }
-};
-module.exports = {authenticateToken, isAdmin};
+    return res.status(403).json({ error: 'Access denied. Admins only.' });
+}
+
+module.exports = { authenticateToken, isAdmin };

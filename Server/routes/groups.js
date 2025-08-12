@@ -13,9 +13,9 @@ router.post('/', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: 'Group name is required.' });
     }
     try {
-        await db.query('INSERT INTO groups (group_name) VALUES (?)', [group_name]);
+        await db.query('INSERT INTO savings_groups (name) VALUES (?)', [group_name]);
         res.status(201).json({ message: 'Group created successfully.' });
-        } catch (error) {
+    } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }

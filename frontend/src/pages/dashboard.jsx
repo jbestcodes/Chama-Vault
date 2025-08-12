@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import Milestones from './Milestones';
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -36,6 +38,15 @@ const Dashboard = () => {
     <div style={{ maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h2>Dashboard</h2>
 
+      {/* Show admin panel link only for admins */}
+      {role && role.toLowerCase() === 'admin' && (
+        <div style={{ marginBottom: '20px' }}>
+          <Link to="/admin-panel">
+            <button>View Admin Panel</button>
+          </Link>
+        </div>
+      )}
+
       <div style={{ marginTop: '20px' }}>
         <p><strong>Total Savings (You): Ksh </strong> {data.totalSavings}</p>
         <p><strong>Total Members:</strong> {data.totalMembers}</p>
@@ -52,6 +63,7 @@ const Dashboard = () => {
           <p><strong>Last Contribution:</strong> No contributions yet</p>
         )}
       </div>
+      <Milestones />
     </div>
   );
 };
