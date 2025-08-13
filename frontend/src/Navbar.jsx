@@ -8,7 +8,7 @@ function Navbar (){
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        window.location.href = '/login'; // Redirect to login page after logout
+        window.location.href = '/login';
     };
 
     useEffect(() => {
@@ -21,14 +21,11 @@ function Navbar (){
 
         const resetTimer = () => {
             clearTimeout(timeout);
-            timeout = setTimeout(logout, 15 * 60 * 1000); // 15 minutes
+            timeout = setTimeout(logout, 15 * 60 * 1000);
         };
 
-        // Listen for user activity
         window.addEventListener("mousemove", resetTimer);
         window.addEventListener("keydown", resetTimer);
-
-        // Start timer on mount
         resetTimer();
 
         return () => {
@@ -39,41 +36,28 @@ function Navbar (){
     }, [navigate]);
 
     return (
-        <nav
-            style={{
-                background: "#2d7b4f",
-                padding: "16px 0",
-                marginBottom: "32px"
-            }}
-        >
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "32px"
-                }}
-            >
-                <Link to="/" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+        <nav className="navbar">
+            <div className="navbar-links">
+                <Link to="/" className="navbar-link logo">
                     Home
                 </Link>
-                <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>
+                <Link to="/dashboard" className="navbar-link">
                     Dashboard
                 </Link>
-                <Link to="/my-profile" style={{ color: "#fff", textDecoration: "none" }}>
+                <Link to="/my-profile" className="navbar-link">
                     My Profile
                 </Link>
-                {!token? (
+                {!token ? (
                     <>
-                    <Link to="/login" style={{ color: "#fff", textDecoration: "none" }}>
-                        Login
-                    </Link>
-                    <Link to="/register" style={{ color: "#fff", textDecoration: "none" }}>
-                        Register
-                    </Link>
+                        <Link to="/login" className="navbar-link">
+                            Login
+                        </Link>
+                        <Link to="/register" className="navbar-link">
+                            Register
+                        </Link>
                     </>
-                ) :(
-                    <button onClick={handleLogout} className="text-red-500 hover:underline">
+                ) : (
+                    <button onClick={handleLogout} className="navbar-link logout-btn">
                         Logout
                     </button>
                 )}

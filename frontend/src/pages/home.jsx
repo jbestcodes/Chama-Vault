@@ -15,7 +15,7 @@ function Home() {
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
-                background: "#f9f9f9",
+                background: "#e8f5e9",
                 padding: "24px",
             }}
         >

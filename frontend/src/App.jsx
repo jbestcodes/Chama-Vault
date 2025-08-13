@@ -8,6 +8,8 @@ import Register from "./pages/register";
 import RequestPasswordReset from "./pages/RequestPasswordReset";
 import ResetPassword from "./pages/ResetPassword";
 import SavingsAdmin from "./pages/SavingsAdmin"; 
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (

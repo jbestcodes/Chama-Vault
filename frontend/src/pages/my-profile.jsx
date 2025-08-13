@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 
 function MyProfile() {
   const [profile, setProfile] = useState(null);
@@ -109,6 +110,23 @@ function MyProfile() {
           </li>
         ))}
       </ul>
+      {profile.leaderboard && profile.leaderboard.length > 0 && (
+        <>
+          <h3>Group Savings Chart</h3>
+          <div style={{ width: "100%", maxWidth: 500, height: 300 }}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={profile.leaderboard}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total_savings" fill="#1976d2" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
       <h3>Your Savings History</h3>
       <ul>
         {profile.savingsHistory.length === 0 && <li>No savings history available yet</li>}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import ProgressBar from 'react-bootstrap/ProgressBar';
 
 function Recommendation() {
   const [recommendation, setRecommendation] = useState("");
@@ -27,6 +28,20 @@ function Recommendation() {
       }}
     >
       {recommendation}
+    </div>
+  );
+}
+
+function MilestoneProgress({ currentSavings, target }) {
+  const percentage = Math.min((currentSavings / target) * 100, 100);
+  return (
+    <div style={{ margin: '10px 0', width: 200 }}>
+      <ProgressBar
+        now={percentage}
+        label={`${percentage.toFixed(1)}%`}
+        style={{ height: '18px', backgroundColor: '#145A32' }}
+        variant='success'
+      />
     </div>
   );
 }
@@ -68,6 +83,13 @@ function Milestones() {
     e.preventDefault();
     setError("");
     setMessage("");
+
+    // Validation
+    if (Number(targetAmount) <= 0) {
+      setError("Target amount must be a positive number.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -105,6 +127,11 @@ function Milestones() {
     e.preventDefault();
     setError("");
     setMessage("");
+    const milestone = milestones.find(m => m.id === editId);
+    if (milestone && Number(editTargetAmount) < Number(milestone.amount_saved)) {
+      setError("Target cannot be less than amount already saved.");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       await axios.put(
@@ -137,6 +164,23 @@ function Milestones() {
     setEditTargetAmount("");
     setMessage("");
     setError("");
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this milestone?")) return;
+    setError("");
+    setMessage("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `http://localhost:5000/api/savings/milestone/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage("Milestone deleted successfully.");
+      fetchMilestones();
+    } catch (err) {
+      setError(err.response?.data?.error || "Error deleting milestone");
+    }
   };
 
   return (
@@ -192,36 +236,27 @@ function Milestones() {
               </form>
             </li>
           ) : (
-            <li key={m.id} style={{ marginBottom: 15 }}>
-              <strong>{m.milestone_name}</strong> <br />
-              Target: Ksh {m.target_amount} <br />
-              Saved: Ksh {m.amount_saved} <br />
-              Remaining: Ksh {m.amount_remaining} <br />
-              Progress: {Math.round(m.progress)}%
-              <div
-                style={{
-                  background: "#eee",
-                  height: 10,
-                  width: "100%",
-                  marginTop: 5,
-                  borderRadius: 5,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    background: "#4caf50",
-                    width: `${Math.round(m.progress)}%`,
-                    height: "100%",
-                  }}
-                ></div>
+            <li key={m.id} style={{ marginBottom: 15, display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <strong>{m.milestone_name}</strong> <br />
+                Target: Ksh {m.target_amount} <br />
+                Saved: Ksh {m.amount_saved} <br />
+                Remaining: Ksh {m.amount_remaining} <br />
+                Progress: {Math.round(m.progress)}%
+                <button
+                  style={{ marginTop: 8 }}
+                  onClick={() => handleEdit(m)}
+                >
+                  Edit
+                </button>
+                <button
+                  style={{ marginTop: 8, marginLeft: 8, background: "#d32f2f", color: "#fff" }}
+                  onClick={() => handleDelete(m.id)}
+                >
+                  Delete
+                </button>
               </div>
-              <button
-                style={{ marginTop: 8 }}
-                onClick={() => handleEdit(m)}
-              >
-                Edit
-              </button>
+              <MilestoneProgress currentSavings={m.amount_saved} target={m.target_amount} />
             </li>
           )
         )}

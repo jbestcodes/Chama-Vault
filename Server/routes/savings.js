@@ -272,24 +272,45 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 
 // Add milestone for a member
 router.post('/milestone', authenticateToken, async (req, res) => {
-    const db = req.db;
-    const memberId = req.user.id;
-    const { milestone_name, target_amount } = req.body;
+  const db = req.db;
+  const memberId = req.user.id;
+  const { milestone_name, target_amount } = req.body;
 
-    if (!milestone_name || !target_amount) {
-        return res.status(400).json({ error: 'Milestone name and target amount are required.' });
-    }
+  if (!milestone_name || !target_amount) {
+    return res.status(400).json({ error: 'Milestone name and target amount are required.' });
+  }
+  if (Number(target_amount) <= 0) {
+    return res.status(400).json({ error: 'Target amount must be a positive number.' });
+  }
 
-    try {
-        await db.execute(
-            'INSERT INTO milestones (member_id, milestone_name, target_amount) VALUES (?, ?, ?)',
-            [memberId, milestone_name, target_amount]
-        );
-        res.status(201).json({ message: 'Milestone created successfully.' });
-    } catch (error) {
-        console.error('Error creating milestone:', error);
-        res.status(500).json({ error: 'Internal server error.' });
-    }
+  // Check for duplicate milestone name for this user
+  const [existing] = await db.execute(
+    'SELECT id FROM milestones WHERE member_id = ? AND milestone_name = ?',
+    [memberId, milestone_name]
+  );
+  if (existing.length > 0) {
+    return res.status(400).json({ error: 'You already have a milestone with this name.' });
+  }
+
+  // Check if member has already saved more than or equal to target
+  const [[{ total_savings }]] = await db.execute(
+      'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
+      [memberId]
+  );
+  if (Number(total_savings) >= Number(target_amount)) {
+      return res.status(400).json({ error: 'Milestone already completed.' });
+  }
+
+  try {
+      await db.execute(
+          'INSERT INTO milestones (member_id, milestone_name, target_amount) VALUES (?, ?, ?)',
+          [memberId, milestone_name, target_amount]
+      );
+      res.status(201).json({ message: 'Milestone created successfully.' });
+  } catch (error) {
+      console.error('Error creating milestone:', error);
+      res.status(500).json({ error: 'Internal server error.' });
+  }
 });
 
 // Get member milestones and progress
@@ -382,9 +403,9 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
             matrix[week] = {};
             membersRows.forEach(member => {
                 const record = savingsRows.find(
-                    r => r.member_id === member.id && r.week_number === week
+                    r => r.member_id === member.id && Number(r.week_number) === Number(week)
                 );
-                matrix[week][member.id] = record ? record.amount : 0;
+                matrix[week][member.id] = record ? Number(record.amount) : 0;
             });
         });
 
@@ -456,6 +477,24 @@ router.get('/milestone/recommendation', authenticateToken, async (req, res) => {
     }
 
     res.json({ recommendation });
+});
+
+// Delete a milestone (member only)
+router.delete('/milestone/:id', authenticateToken, async (req, res) => {
+  const db = req.db;
+  const memberId = req.user.id;
+  const milestoneId = req.params.id;
+
+  try {
+    // Optional: Only allow deleting own milestone
+    await db.execute(
+      'DELETE FROM milestones WHERE id = ? AND member_id = ?',
+      [milestoneId, memberId]
+    );
+    res.json({ message: 'Milestone deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting milestone.' });
+  }
 });
 
 module.exports = router;
