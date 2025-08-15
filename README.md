@@ -15,9 +15,9 @@ Chama Vault is a secure, web-based savings tracker built for table banking group
 - Contact Us form (messages sent to admin email)
 
 ## coming soon
-- Mpesa API intergration
+- Mpesa API integration
 - SMS-based self-service updates on savings (optional)
-- Support for multiple groups and group management
+- Support for multi-group membership for an individual
 
 ## Technologies Used
 
