@@ -25,8 +25,7 @@ const Register = () => {
                 role
             });
 
-            setSuccess('Registration successful! Redirecting to login...');
-            setTimeout(() => navigate('/login'), 1500);
+            setSuccess('Registration successful! Your account is pending admin approval. You will be able to log in once approved.');
         } catch (error) {
             setError(error.response?.data?.error || 'Registration failed. Please try again.');
         }

@@ -98,15 +98,17 @@ function MyProfile() {
         </>
       )}
       {success && <p style={{ color: 'green' }}>{success}</p>}
-      <p><strong>Group Name:</strong> {profile.group_name}</p>
+      <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
       <p><strong>Total Savings:</strong> Ksh {profile.totalSavings}</p>
-      <p><strong>Your Rank:</strong> {profile.rank}</p>
+      <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
 
       <h3>Leaderboard</h3>
       <ul>
-        {profile.leaderboard.map((member, index) => (
+        {(profile.leaderboard || []).map((member, index) => (
           <li key={index}>
-            {member.name} - Ksh {member.total_savings ? member.total_savings.toLocaleString() : 0}
+            {member.name} - {member.total_savings && member.total_savings > 0
+              ? `Ksh ${member.total_savings.toLocaleString()}`
+              : 'No contribution yet'}
           </li>
         ))}
       </ul>
@@ -129,8 +131,8 @@ function MyProfile() {
       )}
       <h3>Your Savings History</h3>
       <ul>
-        {profile.savingsHistory.length === 0 && <li>No savings history available yet</li>}
-        {profile.savingsHistory.map(saving => (
+        {(!profile.savingsHistory || profile.savingsHistory.length === 0) && <li>No savings history available yet</li>}
+        {(profile.savingsHistory || []).map(saving => (
           <li key={saving.id}>
             Ksh {saving.amount} - {new Date(saving.created_at).toLocaleDateString()}
           </li>

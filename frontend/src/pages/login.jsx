@@ -24,7 +24,11 @@ const Login = () => {
                 navigate('/dashboard');
             }
         } catch (error) {
-            setError(error.response?.data?.message || 'Login failed. Please try again.');
+            setError(
+                error.response?.data?.error ||
+                error.response?.data?.message ||
+                'Login failed. Please try again.'
+            );
         }
     };
 

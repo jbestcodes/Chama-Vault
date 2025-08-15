@@ -1,316 +1,209 @@
 const express = require('express');
 const router = express.Router();
-const  {authenticateToken, isAdmin}  = require('../middleware/auth');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
-//route: get / api/savings
-// description: Get all savings records for the authenticated user
-router.get('/', async (req, res) => {
-    console.log('Savings route accessed');
+// Get all members in admin's group
+router.get('/group', authenticateToken, isAdmin, async (req, res) => {
     const db = req.db;
-    console.log('Database connection object:', db);
-    if (!db) {
-        return res.status(500).json({ error: 'Database connection not available' });
-    }
-    try {
-        const [rows] = await db.query(
-            `SELECT 
-            m.id AS member_id,
-            COALESCE(m.full_name, 'member') AS full_name,
-            COALESCE(SUM(s.amount), 0) AS total_savings
-            FROM members AS m
-            LEFT JOIN savings AS s ON m.id = s.member_id
-            GROUP BY m.id
-            ORDER BY total_savings DESC`
-        );
-        res.json(rows);
-    } catch (error) {
-        console.error('Error fetching savings records:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    const adminId = req.user.id;
+    const [adminRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [adminId]);
+    const groupId = adminRows[0]?.group_id;
+    if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+
+    // Removed ORDER BY created_at DESC since created_at may not exist
+    const [members] = await db.query(
+        'SELECT id, full_name, phone, status FROM members WHERE group_id = ?',
+        [groupId]
+    );
+    res.json({ members });
 });
 
-// Route: GET /api/savings/test
-router.get('/test', (req, res) => {
-    res.json({ message: 'Savings test route is working' });
-});
-
-// Route: GET /api/savings/summary
-// Description: Get savings summary for the authenticated user
-router.get('/summary', async (req, res) => {
+// Add member to group
+router.post('/add', authenticateToken, isAdmin, async (req, res) => {
     const db = req.db;
-    if (!db) {
-        return res.status(500).json({ error: 'Database connection not available' });
-    }
-    try {
-        const [rows] = await db.query(
-            `SELECT 
-            m.id AS member_id,
-            CONCAT(LEFT(m.full_name, 2), "****") AS masked_name,
-            COALESCE(SUM(s.amount), 0) AS total_savings
-            FROM members AS m
-            LEFT JOIN savings s ON m.id = s.member_id
-            GROUP BY m.id
-            ORDER BY total_savings DESC`
-        );
-        res.json(rows);
-    } catch (error) {
-        console.error('Error fetching savings summary:', error.message);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
+    const adminId = req.user.id;
+    const { full_name, phone } = req.body;
+    if (!full_name || !phone) return res.status(400).json({ error: 'Full name and phone required.' });
+
+    const [adminRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [adminId]);
+    const groupId = adminRows[0]?.group_id;
+    if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+
+    await db.execute(
+        'INSERT INTO members (full_name, phone, group_id, status, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+        [full_name, phone, groupId, 'pending', 'member']
+    );
+    res.json({ message: 'Member added. Pending approval.' });
 });
 
-// Route: GET /api/savings/my-savings
-// Description: Get savings records for the authenticated user
-router.get('/my', authenticateToken, async (req, res) => {
-    try {
-        const memberId = req.user.id; // Assuming user ID is stored in the token
-        const [rows] = await req.db.query(
-            'SELECT week_number, amount FROM savings WHERE member_id = ? ORDER BY week_number ASC',
-            [memberId]
-        );
-        res.status(200).json({ savings: rows });
-    } catch (error) {
-        console.error('Error fetching my savings:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+// Edit member
+router.post('/edit', authenticateToken, isAdmin, async (req, res) => {
+    const db = req.db;
+    const { member_id, full_name, phone } = req.body;
+    if (!member_id || !full_name || !phone) return res.status(400).json({ error: 'All fields required.' });
+
+    await db.execute(
+        'UPDATE members SET full_name = ?, phone = ? WHERE id = ?',
+        [full_name, phone, member_id]
+    );
+    res.json({ message: 'Member updated.' });
 });
-//Admin-only route to get all savings records
-router.get('/admin/dashboard', authenticateToken, isAdmin,(req, res) => {
-    res.json({ message: 'Admin dashboard accessed successfully', user: req.user });
+
+// Remove member
+router.post('/remove', authenticateToken, isAdmin, async (req, res) => {
+    const db = req.db;
+    const { member_id } = req.body;
+    if (!member_id) return res.status(400).json({ error: 'Member ID required.' });
+
+    await db.execute('DELETE FROM members WHERE id = ?', [member_id]);
+    res.json({ message: 'Member removed.' });
 });
-//Add new savings (Admin only)
-router.post('/admin/add', authenticateToken, isAdmin, async (req, res) => {
+
+// Savings Matrix for Admin's Group
+router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
     try {
         const db = req.db;
-        const { member_id, week_number, amount } = req.body;
-        //admin check
-        if (!req.user || req.user.role.toLowerCase() !== 'admin') {
-            return res.status(403).json({ error: 'Access denied. Admins only.' });
-        }
-        if (!week_number || !amount || !member_id) {
-            return res.status(400).json({ error: 'Week number, amount, and member ID are required' });
-        }
-        await db.execute(
-            'INSERT INTO savings (member_id, week_number, amount) VALUES (?, ?, ?)',
-            [member_id, week_number, amount]
-        );
-        res.status(201).json({ message: 'New savings record added successfully' });
-    } catch (error) {
-        console.error('Error adding new savings record:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-//update savings record (Admin only)
-router.post('/admin/update', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const db = req.db;
-        const { member_id, week_number, amount } = req.body;
-        //admin check
-        if (!req.user || req.user.role.toLowerCase() !== 'admin') {
-            return res.status(403).json({ error: 'Access denied. Admins only.' });
-        }
-        if (!member_id || !week_number || !amount) {
-            return res.status(400).json({ error: 'all fields are required' });
-        }
-        await db.execute(
-            'UPDATE savings SET amount = ? WHERE member_id = ? AND week_number = ?',
-            [amount, member_id, week_number]
-        );
-        res.status(201).json({ message: 'Savings record updated successfully' });
-    } catch (error) {
-        console.error('Error updating savings record:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-//Route; Get member profile with savings, total and rank
-router.get('/my-profile', authenticateToken, async (req, res) => {
-    const db = req.db;
-    if (!db) {
-        return res.status(500).json({ error: 'Database connection not available' });
-    }
-    try {
-        const memberId = req.user.id;
+        const adminId = req.user.id;
+        const [adminRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [adminId]);
+        const groupId = adminRows[0]?.group_id;
+        if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
-        // Fetch member info
-        const [memberRows] = await db.query(
-            'SELECT full_name, phone FROM members WHERE id = ?',
-            [memberId]
+        const [members] = await db.query(
+            'SELECT id, full_name FROM members WHERE group_id = ?',
+            [groupId]
         );
-        const memberInfo = memberRows[0] || { full_name: '', phone: '' };
 
-        // get member savings history
-        const [savingsHistory] = await db.query(
-            `SELECT s.id, s.amount, s.created_at
-             FROM savings AS s
-             WHERE s.member_id = ?
-             ORDER BY s.created_at DESC`,
-            [memberId]
+        const [weeksRows] = await db.query(
+            'SELECT DISTINCT s.week_number FROM savings s JOIN members m ON s.member_id = m.id WHERE m.group_id = ? ORDER BY s.week_number ASC',
+            [groupId]
         );
-        // get total savings for this member
-        const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
-            `SELECT COALESCE(SUM(s.amount),0) AS total_savings
-             FROM savings AS s
-             WHERE s.member_id = ?`,
-            [memberId]
+        const weeks = weeksRows.map(row => row.week_number);
+
+        const [savingsRows] = await db.query(
+            'SELECT s.member_id, s.week_number, s.amount FROM savings s JOIN members m ON s.member_id = m.id WHERE m.group_id = ?',
+            [groupId]
         );
-        // get total savings for all members for ranking
-        const [rankingData] = await db.query(
-            `SELECT m.id AS member_id, m.full_name,
-                    COALESCE(SUM(s.amount), 0) AS total_savings
-             FROM members m
-             LEFT JOIN savings s ON m.id = s.member_id
-             GROUP BY m.id
-             ORDER BY total_savings DESC`
-        );
-        // find this member's rank
-        const userRank = rankingData.findIndex(member =>
-            member.member_id === memberId) + 1;
-        // anonymize leaderboard
-        const anonymizedLeaderboard = rankingData.map(member => ({
-            name: member.member_id === memberId ?
-                member.full_name : `${member.full_name.charAt(0)}****`,
-            total_savings: member.total_savings || 0,
-        }));
-        // send response
+        const matrix = {};
+        weeks.forEach(week => { matrix[week] = {}; });
+        for (const row of savingsRows) {
+            if (!matrix[row.week_number]) matrix[row.week_number] = {};
+            matrix[row.week_number][row.member_id] = row.amount;
+        }
+
+        const groupTotal = savingsRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+
         res.json({
-            full_name: memberInfo.full_name,
-            phone: memberInfo.phone,
-            savingsHistory,
-            totalSavings: total_savings,
-            rank: userRank,
-            leaderboard: anonymizedLeaderboard,
+            members,
+            weeks,
+            matrix,
+            groupTotal
         });
-    } catch (error) {
-        console.error('Error fetching member profile:', error.message);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: error.message,
-        });
+    } catch (err) {
+        console.error("MATRIX ERROR:", err);
+        res.status(500).json({ error: "Internal server error", details: err.message });
     }
 });
-//Route: GET /api/savings/dashboard
-// Description: Get dashboard summary (total savings, member count, last contribution)
+
 router.get('/dashboard', authenticateToken, async (req, res) => {
     const db = req.db;
-    try {
-        const memberId = req.user.id;
-        // Get the user's group_id and group_name
-        const [userRows] = await db.query(
-            'SELECT group_id, group_name FROM members WHERE id = ?',
-            [memberId]
-        );
-        if (userRows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const { group_id, group_name } = userRows[0];
+    const userId = req.user.id;
 
-        // Get total savings for the member
-        const [totalSavingsRows] = await db.query(
-            `SELECT SUM(amount) AS total_savings
-             FROM savings
-             WHERE member_id = ?`,
-            [memberId]
-        );
-        const totalSavings = totalSavingsRows[0]?.total_savings || 0;
+    // Get user info
+    const [userRows] = await db.query('SELECT group_id, group_name FROM members WHERE id = ?', [userId]);
+    const groupId = userRows[0]?.group_id;
+    const groupName = userRows[0]?.group_name;
 
-        // Get total number of members in the same group
-        const [memberCountRows] = await db.query(
-            `SELECT COUNT(*) AS member_count FROM members WHERE group_id = ?`,
-            [group_id]
-        );
-        const memberCount = memberCountRows[0]?.member_count || 0;
+    // Total savings for this user
+    const [userSavingsRows] = await db.query('SELECT SUM(amount) as total FROM savings WHERE member_id = ?', [userId]);
+    const totalSavings = Number(userSavingsRows[0]?.total || 0);
 
-        // Get total savings for all members in the same group
-        const [totalSavingsAllRows] = await db.query(
-            `SELECT SUM(s.amount) AS total_savings_all
-             FROM savings s
-             JOIN members m ON s.member_id = m.id
-             WHERE m.group_id = ?`,
-            [group_id]
-        );
-        const totalSavingsAll = totalSavingsAllRows[0]?.total_savings_all || 0;
+    // Total members in group
+    const [memberRows] = await db.query('SELECT COUNT(*) as count FROM members WHERE group_id = ?', [groupId]);
+    const memberCount = memberRows[0]?.count || 0;
 
-        // User rank based on total savings within the group
-        const [rankingData] = await db.query(
-            `SELECT m.id AS member_id, m.full_name, COALESCE(SUM(s.amount), 0) AS total_savings
-             FROM members m
-             LEFT JOIN savings s ON m.id = s.member_id
-             WHERE m.group_id = ?
-             GROUP BY m.id
-             ORDER BY total_savings DESC`,
-            [group_id]
-        );
-        const userRank = rankingData.findIndex(member =>
-            member.member_id === memberId) + 1;
+    // Total savings for all members in group
+    const [allSavingsRows] = await db.query(
+        'SELECT SUM(s.amount) as total FROM savings s JOIN members m ON s.member_id = m.id WHERE m.group_id = ?',
+        [groupId]
+    );
+    const totalSavingsAll = Number(allSavingsRows[0]?.total || 0);
 
-        // Get last contribution date for the member
-        const [lastContributionRows] = await db.query(
-            `SELECT MAX(created_at) AS last_contribution
-             FROM savings
-             WHERE member_id = ?`,
-            [memberId]
-        );
-        const lastContribution = lastContributionRows[0]?.last_contribution || 'No contributions yet';
+    // User rank (by total savings in group)
+    const [rankRows] = await db.query(
+        `SELECT s.member_id, SUM(s.amount) as total
+         FROM savings s JOIN members m ON s.member_id = m.id
+         WHERE m.group_id = ?
+         GROUP BY s.member_id
+         ORDER BY total DESC`,
+        [groupId]
+    );
+    let userRank = null;
+    rankRows.forEach((row, idx) => {
+        if (row.member_id === userId) userRank = idx + 1;
+    });
 
-        res.json({
-            totalSavings,
-            memberCount,
-            totalSavingsAll,
-            userRank,
-            lastContribution,
-            group_id,
-            group_name
-        });
-    } catch (error) {
-        console.error('Error fetching dashboard data:', error.message);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: error.message,
-        });
-    }
+    // Last contribution
+    const [lastRows] = await db.query(
+        'SELECT amount, created_at as date FROM savings WHERE member_id = ? ORDER BY created_at DESC LIMIT 1',
+        [userId]
+    );
+    const lastContribution = lastRows[0] || null;
+
+    res.json({
+        totalSavings,
+        memberCount,
+        totalSavingsAll,
+        userRank,
+        lastContribution,
+        group_name: groupName
+    });
+});
+
+// Milestone route (example: get all milestones for a group)
+router.get('/milestones', authenticateToken, async (req, res) => {
+    const db = req.db;
+    const userId = req.user.id;
+
+    // Get user's group_id
+    const [userRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [userId]);
+    const groupId = userRows[0]?.group_id;
+    if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+
+    // Fetch milestones for the group
+    const [milestones] = await db.query(
+        'SELECT * FROM milestones WHERE group_id = ? ORDER BY target_date ASC',
+        [groupId]
+    );
+    res.json({ milestones });
 });
 
 // Add milestone for a member
 router.post('/milestone', authenticateToken, async (req, res) => {
-  const db = req.db;
-  const memberId = req.user.id;
-  const { milestone_name, target_amount } = req.body;
+    const db = req.db;
+    const memberId = req.user.id;
+    const { milestone_name, target_amount } = req.body;
 
-  if (!milestone_name || !target_amount) {
-    return res.status(400).json({ error: 'Milestone name and target amount are required.' });
-  }
-  if (Number(target_amount) <= 0) {
-    return res.status(400).json({ error: 'Target amount must be a positive number.' });
-  }
+    if (!milestone_name || !target_amount) {
+        return res.status(400).json({ error: 'Milestone name and target amount are required.' });
+    }
+    if (Number(target_amount) <= 0) {
+        return res.status(400).json({ error: 'Target amount must be a positive number.' });
+    }
 
-  // Check for duplicate milestone name for this user
-  const [existing] = await db.execute(
-    'SELECT id FROM milestones WHERE member_id = ? AND milestone_name = ?',
-    [memberId, milestone_name]
-  );
-  if (existing.length > 0) {
-    return res.status(400).json({ error: 'You already have a milestone with this name.' });
-  }
+    // Check for duplicate milestone name for this user
+    const [existing] = await db.query(
+        'SELECT id FROM milestones WHERE member_id = ? AND milestone_name = ?',
+        [memberId, milestone_name]
+    );
+    if (existing.length > 0) {
+        return res.status(400).json({ error: 'You already have a milestone with this name.' });
+    }
 
-  // Check if member has already saved more than or equal to target
-  const [[{ total_savings }]] = await db.execute(
-      'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
-      [memberId]
-  );
-  if (Number(total_savings) >= Number(target_amount)) {
-      return res.status(400).json({ error: 'Milestone already completed.' });
-  }
-
-  try {
-      await db.execute(
-          'INSERT INTO milestones (member_id, milestone_name, target_amount) VALUES (?, ?, ?)',
-          [memberId, milestone_name, target_amount]
-      );
-      res.status(201).json({ message: 'Milestone created successfully.' });
-  } catch (error) {
-      console.error('Error creating milestone:', error);
-      res.status(500).json({ error: 'Internal server error.' });
-  }
+    await db.execute(
+        'INSERT INTO milestones (member_id, milestone_name, target_amount) VALUES (?, ?, ?)',
+        [memberId, milestone_name, target_amount]
+    );
+    res.status(201).json({ message: 'Milestone created successfully.' });
 });
 
 // Get member milestones and progress
@@ -318,130 +211,27 @@ router.get('/milestone', authenticateToken, async (req, res) => {
     const db = req.db;
     const memberId = req.user.id;
 
-    try {
-        // Get all milestones for the member
-        const [milestones] = await db.execute(
-            'SELECT id, milestone_name, target_amount FROM milestones WHERE member_id = ?',
-            [memberId]
-        );
+    // Get all milestones for the member
+    const [milestones] = await db.query(
+        'SELECT id, milestone_name, target_amount FROM milestones WHERE member_id = ?',
+        [memberId]
+    );
 
-        // Get total savings for the member
-        const [[{ total_savings } = { total_savings: 0 }]] = await db.execute(
-            'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
-            [memberId]
-        );
+    // Get total savings for the member
+    const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
+        'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
+        [memberId]
+    );
 
-        // Calculate progress for each milestone
-        const milestonesWithProgress = milestones.map(milestone => ({
-            ...milestone,
-            progress: Math.min((total_savings / milestone.target_amount) * 100, 100),
-            amount_saved: Math.min(total_savings, milestone.target_amount),
-            amount_remaining: Math.max(milestone.target_amount - total_savings, 0)
-        }));
+    // Calculate progress for each milestone
+    const milestonesWithProgress = milestones.map(milestone => ({
+        ...milestone,
+        progress: Math.min((total_savings / milestone.target_amount) * 100, 100),
+        amount_saved: Math.min(total_savings, milestone.target_amount),
+        amount_remaining: Math.max(milestone.target_amount - total_savings, 0)
+    }));
 
-        res.json({ milestones: milestonesWithProgress, total_savings });
-    } catch (error) {
-        console.error('Error fetching milestones:', error);
-        res.status(500).json({ error: 'Internal server error.' });
-    }
-});
-
-// Admin-only: Get all members
-router.get('/members', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
-    try {
-        const [rows] = await db.query(
-            'SELECT id, full_name, phone, role FROM members ORDER BY full_name ASC'
-        );
-        res.json({ members: rows });
-    } catch (error) {
-        console.error('Error fetching members:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Admin-only: Get all savings records with member info
-router.get('/all', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
-    try {
-        const [rows] = await db.query(
-            `SELECT s.id, s.amount, s.week_number, s.created_at, m.full_name, m.phone
-             FROM savings s
-             JOIN members m ON s.member_id = m.id
-             ORDER BY s.created_at DESC`
-        );
-        res.json({ savings: rows });
-    } catch (error) {
-        console.error('Error fetching all savings:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Admin-only: Get savings matrix for all members and weeks
-router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
-    try {
-        // Get all weeks
-        const [weeksRows] = await db.query(
-            'SELECT DISTINCT week_number FROM savings ORDER BY week_number ASC'
-        );
-        const weeks = weeksRows.map(row => parseInt(row.week_number, 10)).sort((a, b) => a - b);
-
-        // Get all members
-        const [membersRows] = await db.query(
-            'SELECT id, full_name FROM members ORDER BY full_name ASC'
-        );
-
-        // Get all savings records
-        const [savingsRows] = await db.query(
-            'SELECT member_id, week_number, SUM(amount) AS amount FROM savings GROUP BY member_id, week_number'
-        );
-
-        // Build matrix: { week: { memberId: amount } }
-        const matrix = {};
-        weeks.forEach(week => {
-            matrix[week] = {};
-            membersRows.forEach(member => {
-                const record = savingsRows.find(
-                    r => r.member_id === member.id && Number(r.week_number) === Number(week)
-                );
-                matrix[week][member.id] = record ? Number(record.amount) : 0;
-            });
-        });
-
-        // Calculate member totals
-        const memberTotals = {};
-        membersRows.forEach(member => {
-            memberTotals[member.id] = weeks.reduce(
-                (sum, week) => sum + (matrix[week][member.id] || 0),
-                0
-            );
-        });
-
-        // Calculate week totals
-        const weekTotals = {};
-        weeks.forEach(week => {
-            weekTotals[week] = membersRows.reduce(
-                (sum, member) => sum + (matrix[week][member.id] || 0),
-                0
-            );
-        });
-
-        // Group total
-        const groupTotal = Object.values(memberTotals).reduce((a, b) => a + b, 0);
-
-        res.json({
-            weeks,
-            members: membersRows,
-            matrix,
-            memberTotals,
-            weekTotals,
-            groupTotal
-        });
-    } catch (error) {
-        console.error('Error fetching savings matrix:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    res.json({ milestones: milestonesWithProgress, total_savings });
 });
 
 // Get recommendation for member
@@ -450,7 +240,7 @@ router.get('/milestone/recommendation', authenticateToken, async (req, res) => {
     const memberId = req.user.id;
 
     // Get last month's savings
-    const [[{ last_month_savings }]] = await db.execute(
+    const [[{ last_month_savings }]] = await db.query(
         `SELECT COALESCE(SUM(amount),0) AS last_month_savings
          FROM savings
          WHERE member_id = ? AND MONTH(created_at) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
@@ -459,13 +249,13 @@ router.get('/milestone/recommendation', authenticateToken, async (req, res) => {
     );
 
     // Get active milestone
-    const [[milestone]] = await db.execute(
+    const [[milestone]] = await db.query(
         `SELECT milestone_name, target_amount FROM milestones WHERE member_id = ? ORDER BY id DESC LIMIT 1`,
         [memberId]
     );
 
     // Get total savings
-    const [[{ total_savings }]] = await db.execute(
+    const [[{ total_savings }]] = await db.query(
         `SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?`,
         [memberId]
     );
@@ -481,20 +271,81 @@ router.get('/milestone/recommendation', authenticateToken, async (req, res) => {
 
 // Delete a milestone (member only)
 router.delete('/milestone/:id', authenticateToken, async (req, res) => {
-  const db = req.db;
-  const memberId = req.user.id;
-  const milestoneId = req.params.id;
+    const db = req.db;
+    const memberId = req.user.id;
+    const milestoneId = req.params.id;
 
-  try {
-    // Optional: Only allow deleting own milestone
-    await db.execute(
-      'DELETE FROM milestones WHERE id = ? AND member_id = ?',
-      [milestoneId, memberId]
+    // Check if milestone exists and belongs to the user's group
+    const [milestoneRows] = await db.query(
+        'SELECT * FROM milestones WHERE id = ? AND group_id = ?',
+        [milestoneId, userId]
     );
-    res.json({ message: 'Milestone deleted successfully.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error deleting milestone.' });
-  }
+    if (milestoneRows.length === 0) {
+        return res.status(404).json({ error: 'Milestone not found or does not belong to your group.' });
+    }
+
+    // Delete milestone
+    await db.execute('DELETE FROM milestones WHERE id = ?', [milestoneId]);
+    res.json({ message: 'Milestone deleted.' });
+});
+
+router.get('/my-profile', authenticateToken, async (req, res) => {
+    const db = req.db;
+    const memberId = req.user.id;
+
+    // Get member info and group name from savings_groups
+    const [userRows] = await db.query(
+        `SELECT m.id, m.full_name, m.phone, m.group_id, g.group_name
+         FROM members m
+         LEFT JOIN savings_groups g ON m.group_id = g.group_id
+         WHERE m.id = ?`,
+        [memberId]
+    );
+    if (userRows.length === 0) {
+        return res.status(404).json({ error: 'Profile not found.' });
+    }
+    const user = userRows[0];
+
+    // Get all members in the same group
+    const [groupMembers] = await db.query(
+        `SELECT id, full_name FROM members WHERE group_id = ?`,
+        [user.group_id]
+    );
+
+    // Get leaderboard for the group
+    const [leaderboardRows] = await db.query(
+        `SELECT m.id, m.full_name, COALESCE(SUM(s.amount), 0) as total_savings
+         FROM members m
+         LEFT JOIN savings s ON m.id = s.member_id
+         WHERE m.group_id = ?
+         GROUP BY m.id
+         ORDER BY total_savings DESC`,
+        [user.group_id]
+    );
+
+    // Mask names except for the logged-in user
+    const leaderboard = leaderboardRows.map(row => ({
+        name: row.id === user.id ? row.full_name : `${row.full_name.charAt(0)}****`,
+        total_savings: Number(row.total_savings || 0)
+    }));
+
+    // Find user's rank in the group
+    const rank = leaderboardRows.findIndex(row => row.id === user.id) + 1;
+
+    // Get user's savings history for graph
+    const [savingsHistory] = await db.query(
+        `SELECT id, amount, created_at FROM savings WHERE member_id = ? ORDER BY created_at ASC`,
+        [memberId]
+    );
+
+    res.json({
+        full_name: user.full_name,
+        phone: user.phone,
+        group_name: user.group_name,
+        rank,
+        leaderboard,
+        savingsHistory,
+    });
 });
 
 module.exports = router;

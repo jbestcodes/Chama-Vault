@@ -62,17 +62,24 @@ router.post('/register', async (req, res) => {
             'SELECT * FROM members WHERE phone = ?',
             [phone]
         );
-        if (existingMember.length > 0) {
-            return res.status(409).json({ error: 'Phone number already registered' });
-        }
 
-        // Hash password and insert member
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await db.execute(
-            'INSERT INTO members (full_name, phone, password, group_id, group_name, role) VALUES (?, ?, ?, ?, ?, ?)',
-            [full_name, phone, hashedPassword, group_id, group_name, useRole]
-        );
-        res.status(201).json({ message: 'Member registered successfully' });
+        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+
+        if (existingMember.length > 0) {
+            // Update existing member (pre-added by admin)
+            await db.execute(
+                'UPDATE members SET password = ?, status = ? WHERE phone = ?',
+                [hashedPassword, 'pending', phone]
+            );
+            return res.status(201).json({ message: 'Registration pending admin approval.' });
+        } else {
+            // New signup, not pre-approved
+            await db.execute(
+                'INSERT INTO members (full_name, phone, password, group_id, group_name, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [full_name, phone, hashedPassword, group_id, group_name, useRole, 'pending']
+            );
+            return res.status(201).json({ message: 'Registration pending admin approval.' });
+        }
     } catch (error) {
         console.error('Error registering member:', error);
         res.status(500).json({ error: 'Internal server error', message: error.message });
@@ -91,8 +98,8 @@ router.post('/login', async (req, res) => {
             'SELECT * FROM members WHERE phone = ?',
             [phone]
         );
-        if (results.length === 0) {
-            return res.status(401).json({ error: 'Invalid phone number or password' });
+        if (results.length === 0 || results[0].status !== 'approved') {
+            return res.status(401).json({ error: 'Account not approved yet.' });
         }
         const member = results[0];
 
@@ -224,6 +231,25 @@ router.put('/milestone/:id', authenticateToken, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Error updating milestone.' });
     }
+});
+
+// Approve member
+router.post('/approve-member', authenticateToken, async (req, res) => {
+    const db = req.db;
+    const { member_id } = req.body;
+    // Only admin can approve
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    await db.execute('UPDATE members SET status = ? WHERE id = ?', ['approved', member_id]);
+    res.json({ message: 'Member approved.' });
+});
+
+// Deny member
+router.post('/deny-member', authenticateToken, async (req, res) => {
+    const db = req.db;
+    const { member_id } = req.body;
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    await db.execute('UPDATE members SET status = ? WHERE id = ?', ['denied', member_id]);
+    res.json({ message: 'Member denied.' });
 });
 
 module.exports = router;

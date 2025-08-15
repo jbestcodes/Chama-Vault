@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-function Navbar (){
+function Navbar () {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
@@ -36,28 +36,53 @@ function Navbar (){
     }, [navigate]);
 
     return (
-        <nav className="navbar">
-            <div className="navbar-links">
-                <Link to="/" className="navbar-link logo">
+        <nav
+            style={{
+                width: "100%",
+                background: "#800000",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                padding: "7px 0",
+                position: "sticky",
+                top: 0,
+                zIndex: 100,
+            }}
+        >
+            <div
+                style={{
+                    maxWidth: 900,
+                    margin: "0 auto",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "28px",
+                    padding: "0 8px"
+                }}
+            >
+                <Link to="/" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                     Home
                 </Link>
-                <Link to="/dashboard" className="navbar-link">
+                <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                     Dashboard
                 </Link>
-                <Link to="/my-profile" className="navbar-link">
-                    My Profile
+                <Link to="/why-us" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    Why Us
                 </Link>
-                {!token ? (
-                    <>
-                        <Link to="/login" className="navbar-link">
-                            Login
-                        </Link>
-                        <Link to="/register" className="navbar-link">
-                            Register
-                        </Link>
-                    </>
-                ) : (
-                    <button onClick={handleLogout} className="navbar-link logout-btn">
+                <Link to="/contact" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    Contact Us
+                </Link>
+                {token && (
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            background: "#d32f2f",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            padding: "5px 14px",
+                            fontWeight: "bold",
+                            cursor: "pointer"
+                        }}
+                    >
                         Logout
                     </button>
                 )}

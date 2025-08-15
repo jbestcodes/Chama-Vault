@@ -42,14 +42,16 @@ const Dashboard = () => {
       {role && role.toLowerCase() === 'admin' && (
         <div style={{ marginBottom: '20px' }}>
           <Link to="/admin-panel">
-            <button>View Admin Panel</button>
+            <button type="button">View Admin Panel</button>
           </Link>
         </div>
       )}
 
       <div style={{ marginTop: '20px' }}>
         <p><strong>Total Savings (You): Ksh </strong> {data.totalSavings}</p>
-        <p><strong>Total Members:</strong> {data.totalMembers}</p>
+        <p>
+          <strong>Total Member{data.memberCount === 1 ? '' : 's'}:</strong> {data.memberCount}
+        </p>
         <p><strong>Total Savings (All Members):</strong> {data.totalSavingsAll}</p>
         <p><strong>Your Rank:</strong> {data.userRank}</p>
         <Link to="/my-profile">My Profile</Link>
@@ -57,10 +59,16 @@ const Dashboard = () => {
         {data.lastContribution ? (
           <p>
             <strong>Last Contribution:</strong> {data.lastContribution.amount} on{' '}
-            {new Date(data.lastContribution.date).toLocaleDateString()}
+            {data.lastContribution.date
+              ? new Date(data.lastContribution.date).toLocaleDateString()
+              : 'No date'}
           </p>
         ) : (
           <p><strong>Last Contribution:</strong> No contributions yet</p>
+        )}
+
+        {data.group_name && (
+          <p><strong>Group:</strong> {data.group_name}</p>
         )}
       </div>
       <Milestones />
