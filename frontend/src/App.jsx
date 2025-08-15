@@ -9,6 +9,7 @@ import RequestPasswordReset from "./pages/RequestPasswordReset";
 import ResetPassword from "./pages/ResetPassword";
 import SavingsAdmin from "./pages/SavingsAdmin"; 
 import WhyUs from "./pages/why-us";
+import ContactUs from "./pages/ContactUs";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin-panel" element={<SavingsAdmin />} />
         <Route path="/why-us" element={<WhyUs />} />
+        <Route path="/contact" element={<ContactUs />} />
         {/* Add more routes as needed */}
       </Routes>
     </>

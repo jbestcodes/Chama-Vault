@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/savings', savingsRoutes);
 app.use('/api/groups', groupsRoutes);
+app.use('/api/contact', require('./routes/contact'));
 
 // Start server
 app.listen(PORT, () => {

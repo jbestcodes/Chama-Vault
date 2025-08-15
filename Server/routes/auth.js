@@ -66,19 +66,17 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
         if (existingMember.length > 0) {
-            // Update existing member (pre-added by admin)
             await db.execute(
                 'UPDATE members SET password = ?, status = ? WHERE phone = ?',
-                [hashedPassword, 'pending', phone]
+                [hashedPassword, 'approved', phone] // <-- now 'approved'
             );
-            return res.status(201).json({ message: 'Registration pending admin approval.' });
+            return res.status(201).json({ message: 'Registration successful.' });
         } else {
-            // New signup, not pre-approved
             await db.execute(
                 'INSERT INTO members (full_name, phone, password, group_id, group_name, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [full_name, phone, hashedPassword, group_id, group_name, useRole, 'pending']
+                [full_name, phone, hashedPassword, group_id, group_name, useRole, 'pending'] // <-- now 'pending'
             );
-            return res.status(201).json({ message: 'Registration pending admin approval.' });
+            return res.status(201).json({ message: 'Registration successful.' });
         }
     } catch (error) {
         console.error('Error registering member:', error);
@@ -247,9 +245,25 @@ router.post('/approve-member', authenticateToken, async (req, res) => {
 router.post('/deny-member', authenticateToken, async (req, res) => {
     const db = req.db;
     const { member_id } = req.body;
-    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
-    await db.execute('UPDATE members SET status = ? WHERE id = ?', ['denied', member_id]);
-    res.json({ message: 'Member denied.' });
+    try {
+        // Delete the member from the database
+        await db.execute('DELETE FROM members WHERE id = ?', [member_id]);
+        res.json({ message: 'Member denied and removed.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error denying member.' });
+    }
+});
+
+// Delete member
+router.delete('/delete-member/:id', authenticateToken, async (req, res) => {
+    const db = req.db;
+    const memberId = req.params.id;
+    try {
+        await db.execute('DELETE FROM members WHERE id = ?', [memberId]);
+        res.json({ message: 'Member deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting member.' });
+    }
 });
 
 module.exports = router;

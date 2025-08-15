@@ -68,8 +68,8 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
         const groupId = adminRows[0]?.group_id;
         if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
-        const [members] = await db.query(
-            'SELECT id, full_name FROM members WHERE group_id = ?',
+        const [membersRows] = await db.query(
+            'SELECT id, full_name, phone FROM members WHERE group_id = ? ORDER BY full_name ASC',
             [groupId]
         );
 
@@ -93,7 +93,7 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
         const groupTotal = savingsRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
 
         res.json({
-            members,
+            members: membersRows,
             weeks,
             matrix,
             groupTotal
@@ -260,10 +260,17 @@ router.get('/milestone/recommendation', authenticateToken, async (req, res) => {
         [memberId]
     );
 
+    // Get member's first name
+    const [[user]] = await db.query(
+        'SELECT full_name FROM members WHERE id = ?',
+        [memberId]
+    );
+    const firstName = user?.full_name?.split(" ")[0] || "";
+
     let recommendation = "No milestone set.";
     if (milestone) {
         const remaining = milestone.target_amount - total_savings;
-        recommendation = `Hey, you saved ${last_month_savings} last month. You need to save ${remaining > 0 ? remaining : 0} this month to hit your "${milestone.milestone_name}" milestone.`;
+        recommendation = `Hey ${firstName}, you have saved ${total_savings} so far. You need to save ${remaining > 0 ? remaining : 0} more to hit your "${milestone.milestone_name}" milestone.`;
     }
 
     res.json({ recommendation });
@@ -346,6 +353,60 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         leaderboard,
         savingsHistory,
     });
+});
+
+// Admin: Add savings for any member
+router.post('/admin/add', authenticateToken, isAdmin, async (req, res) => {
+    const db = req.db;
+    const { member_id, week_number, amount } = req.body;
+    if (!member_id || !week_number || !amount) {
+        return res.status(400).json({ error: 'Member, week, and amount are required.' });
+    }
+    try {
+        await db.execute(
+            'INSERT INTO savings (member_id, week_number, amount) VALUES (?, ?, ?)',
+            [member_id, week_number, amount]
+        );
+        res.status(201).json({ message: 'Savings added successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error adding savings.' });
+    }
+});
+
+// Admin: Update savings for any member
+router.post('/admin/update', authenticateToken, isAdmin, async (req, res) => {
+    const db = req.db;
+    const { member_id, week_number, amount } = req.body;
+    if (!member_id || !week_number || !amount) {
+        return res.status(400).json({ error: 'Member, week, and amount are required.' });
+    }
+    try {
+        await db.execute(
+            'UPDATE savings SET amount = ? WHERE member_id = ? AND week_number = ?',
+            [amount, member_id, week_number]
+        );
+        res.status(200).json({ message: 'Savings updated successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating savings.' });
+    }
+});
+
+// Admin: Delete savings for any member
+router.post('/admin/delete', authenticateToken, isAdmin, async (req, res) => {
+    const db = req.db;
+    const { member_id, week_number } = req.body;
+    if (!member_id || !week_number) {
+        return res.status(400).json({ error: 'Member and week are required.' });
+    }
+    try {
+        await db.execute(
+            'DELETE FROM savings WHERE member_id = ? AND week_number = ?',
+            [member_id, week_number]
+        );
+        res.status(200).json({ message: 'Savings deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting savings.' });
+    }
 });
 
 module.exports = router;
