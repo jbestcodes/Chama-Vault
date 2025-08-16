@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -12,7 +14,7 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/savings/dashboard', {
+        const res = await axios.get(`${apiUrl}/api/savings/dashboard`, { // <-- Use backticks and apiUrl
           headers: {
             Authorization: `Bearer ${token}`,
           },

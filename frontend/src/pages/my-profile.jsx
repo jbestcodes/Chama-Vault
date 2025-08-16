@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 function MyProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ function MyProfile() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/savings/my-profile', {
+        const response = await axios.get(`${apiUrl}/api/savings/my-profile`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -41,7 +43,7 @@ function MyProfile() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        'http://localhost:5000/api/auth/update-profile', 
+        `${apiUrl}/api/auth/update-profile`, 
         { full_name: fullName, phone },
         {
           headers: {

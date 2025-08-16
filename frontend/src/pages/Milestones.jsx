@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 function Recommendation() {
   const [recommendation, setRecommendation] = useState("");
 
@@ -9,7 +11,7 @@ function Recommendation() {
     const fetchRecommendation = async () => {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        "http://localhost:5000/api/savings/milestone/recommendation",
+        `${apiUrl}/api/savings/milestone/recommendation`, // <-- Use backticks and apiUrl
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -61,7 +63,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/savings/milestone",
+        `${apiUrl}/api/savings/milestone`, // <-- Use backticks and apiUrl
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -93,7 +95,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/savings/milestone",
+        `${apiUrl}/api/savings/milestone`, // <-- Use backticks and apiUrl
         {
           milestone_name: milestoneName,
           target_amount: targetAmount,
@@ -135,7 +137,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/auth/milestone/${editId}`,
+        `${apiUrl}/api/auth/milestone/${editId}`, // <-- Use backticks and apiUrl
         {
           milestone_name: editMilestoneName,
           target_amount: editTargetAmount,
@@ -173,7 +175,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:5000/api/savings/milestone/${id}`,
+        `${apiUrl}/api/savings/milestone/${id}`, // <-- Use backticks and apiUrl
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage("Milestone deleted successfully.");

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 const Register = () => {
     const [full_name, setFullName] = useState('');
     const [phone, setPhone] = useState('');
@@ -17,7 +19,7 @@ const Register = () => {
         setError('');
         setSuccess('');
         try {
-            await axios.post('http://localhost:5000/api/auth/register', {
+            await axios.post(`${apiUrl}/api/auth/register`, { // <-- Use backticks and apiUrl
                 full_name,
                 phone,
                 password,

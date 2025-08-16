@@ -1,4 +1,6 @@
-import {useState } from 'react';
+import { useState } from 'react';
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 function RequestPasswordReset() {
     const [phone, setPhone] = useState('');
@@ -11,7 +13,7 @@ function RequestPasswordReset() {
         setMessage('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/request-password-reset', {
+            const response = await fetch(`${apiUrl}/api/auth/request-password-reset`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

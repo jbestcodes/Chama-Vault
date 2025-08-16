@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 function ContactUs() {
   const [form, setForm] = useState({
     full_name: "",
@@ -18,7 +20,7 @@ function ContactUs() {
     e.preventDefault();
     setStatus("");
     try {
-      await axios.post("http://localhost:5000/api/contact", form);
+      await axios.post(`${apiUrl}/api/contact`, form); // <-- Use backticks here
       setStatus("Message sent successfully!");
       setForm({ full_name: "", phone: "", group_name: "", message: "" });
     } catch (err) {

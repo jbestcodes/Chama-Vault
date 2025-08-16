@@ -39,13 +39,13 @@ function Home() {
                     <strong>Features:</strong>
                 </p>
                 <ul style={{ textAlign: "left", display: "inline-block", margin: "16px auto", fontSize: "1em" }}>
-                    <li>Group savings dashboard with masked leaderboard</li>
-                    <li>Personal savings milestones and progress tracking</li>
-                    <li>Admin panel for group management and savings matrix</li>
-                    <li>Visual charts for group savings</li>
-                    <li>Secure login and easy password reset</li>
-                    <li>Contribution history and weekly tracking</li>
-                    <li>Group-specific ranking and analytics</li>
+                    <li>📊 Group savings dashboard with masked leaderboard</li>
+                    <li>🎯 Personal savings milestones and progress tracking</li>
+                    <li>🛡️ Admin panel for group management and savings matrix</li>
+                    <li>📈 Visual charts for group savings</li>
+                    <li>🔒 Secure login and easy password reset</li>
+                    <li>📅 Contribution history and weekly tracking</li>
+                    <li>🏆 Group-specific ranking and analytics</li>
                 </ul>
                 <div style={{ marginTop: 32 }}>
                     {!isLoggedIn && (

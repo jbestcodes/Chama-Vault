@@ -11,6 +11,8 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 function SavingsAdmin() {
   const [members, setMembers] = useState([]);
   const [weeks, setWeeks] = useState([]);
@@ -30,7 +32,7 @@ function SavingsAdmin() {
   const fetchMatrix = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get("http://localhost:5000/api/savings/matrix", {
+      const res = await axios.get(`${apiUrl}/api/savings/matrix`, { // <-- Use backticks and apiUrl
         headers: { Authorization: `Bearer ${token}` },
       });
       setWeeks(res.data.weeks);
@@ -45,7 +47,7 @@ function SavingsAdmin() {
   const fetchPendingMembers = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get("http://localhost:5000/api/savings/group", {
+      const res = await axios.get(`${apiUrl}/api/savings/group`, { // <-- Use backticks and apiUrl
         headers: { Authorization: `Bearer ${token}` },
       });
       // Filter for pending status
@@ -83,7 +85,7 @@ function SavingsAdmin() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/savings/admin/add",
+        `${apiUrl}/api/savings/admin/add`, // <-- Use backticks and apiUrl
         { member_id: memberId, week_number: weekNumber, amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,7 +111,7 @@ function SavingsAdmin() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/savings/admin/update",
+        `${apiUrl}/api/savings/admin/update`, // <-- Use backticks and apiUrl
         { member_id: memberId, week_number: week, amount: editValue },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -127,7 +129,7 @@ function SavingsAdmin() {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/approve-member",
+        `${apiUrl}/api/auth/approve-member`, // <-- Use backticks and apiUrl
         { member_id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -144,7 +146,7 @@ function SavingsAdmin() {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/deny-member",
+        `${apiUrl}/api/auth/deny-member`, // <-- Use backticks and apiUrl
         { member_id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -163,7 +165,7 @@ function SavingsAdmin() {
     setApprovalMsg("");
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`http://localhost:5000/api/auth/delete-member/${member.id}`, {
+      await axios.delete(`${apiUrl}/api/auth/delete-member/${member.id}`, { // <-- Use backticks and apiUrl
         headers: { Authorization: `Bearer ${token}` }
       });
       setApprovalMsg("Member deleted.");
@@ -188,7 +190,7 @@ function SavingsAdmin() {
             const token = localStorage.getItem("token");
             try {
               await axios.post(
-                "http://localhost:5000/api/savings/add",
+                "${apiUrl}/api/savings/add",
                 { full_name: e.target.full_name.value, phone: e.target.phone.value },
                 { headers: { Authorization: `Bearer ${token}` } }
               );

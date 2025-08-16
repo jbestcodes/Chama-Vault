@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 const Login = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
@@ -12,7 +14,7 @@ const Login = () => {
         e.preventDefault();
         setError('');
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', {
+            const response = await axios.post(`${apiUrl}/api/auth/login`, { // <-- Use backticks here
                 phone,
                 password
             });

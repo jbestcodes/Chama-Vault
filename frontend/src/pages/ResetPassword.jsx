@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+
 function ResetPassword() {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
@@ -20,7 +22,7 @@ function ResetPassword() {
             return;
         }
         try {
-            const response = await fetch('http://localhost:5000/api/auth/reset-password/' + token, {
+            const response = await fetch(`${apiUrl}/api/auth/reset-password/${token}`, { // <-- Use backticks and apiUrl
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
