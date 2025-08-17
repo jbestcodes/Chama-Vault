@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+const apiUrl = import.meta.env.VITE_API_URL;
 
 function ContactUs() {
   const [form, setForm] = useState({
@@ -9,6 +9,7 @@ function ContactUs() {
     phone: "",
     group_name: "",
     message: "",
+    reason: "Reporting a bug", // default value
   });
   const [status, setStatus] = useState("");
 
@@ -20,9 +21,9 @@ function ContactUs() {
     e.preventDefault();
     setStatus("");
     try {
-      await axios.post(`${apiUrl}/api/contact`, form); // <-- Use backticks here
+      await axios.post(`${apiUrl}/api/contact`, form);
       setStatus("Message sent successfully!");
-      setForm({ full_name: "", phone: "", group_name: "", message: "" });
+      setForm({ full_name: "", phone: "", group_name: "", message: "", reason: "Reporting a bug" });
     } catch (err) {
       setStatus("Failed to send message. Please try again.");
     }
@@ -56,6 +57,18 @@ function ContactUs() {
           required
           style={{ width: "100%", marginBottom: 12, padding: 8 }}
         />
+        <select
+          name="reason"
+          value={form.reason}
+          onChange={handleChange}
+          required
+          style={{ width: "100%", marginBottom: 12, padding: 8 }}
+        >
+          <option value="Reporting a bug">Reporting a bug</option>
+          <option value="Suggesting a new feature">Suggesting a new feature</option>
+          <option value="Rating the app">Rating the app</option>
+          <option value="Other">Other</option>
+        </select>
         <textarea
           name="message"
           placeholder="Your Message"
