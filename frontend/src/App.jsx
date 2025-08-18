@@ -1,5 +1,5 @@
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./Navbar";
+import { Routes, Route, BrowserRouter as Router } from "react-router-dom";
+import Navbar from './Navbar';
 import Home from "./pages/home";
 import Login from "./pages/login";
 import MyProfile from "./pages/my-profile";
@@ -17,7 +17,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
-    <>
+    <Router>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -34,7 +34,11 @@ function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         {/* Add more routes as needed */}
       </Routes>
-    </>
+      <footer style={{ textAlign: "center", padding: "16px 0", background: "#f5f5f5", marginTop: 40 }}>
+        <a href="/terms" style={{ marginRight: 16, color: "#1976d2" }}>Terms & Conditions</a>
+        <a href="/privacy" style={{ color: "#1976d2" }}>Privacy Policy</a>
+      </footer>
+    </Router>
   );
 }
 
