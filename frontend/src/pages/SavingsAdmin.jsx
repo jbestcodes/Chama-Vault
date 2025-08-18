@@ -190,7 +190,7 @@ function SavingsAdmin() {
             const token = localStorage.getItem("token");
             try {
               await axios.post(
-                "${apiUrl}/api/savings/add",
+                `${apiUrl}/api/savings/add`, // <-- Use backticks for template literal
                 { full_name: e.target.full_name.value, phone: e.target.phone.value },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
