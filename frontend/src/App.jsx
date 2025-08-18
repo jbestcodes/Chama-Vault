@@ -10,6 +10,8 @@ import ResetPassword from "./pages/ResetPassword";
 import SavingsAdmin from "./pages/SavingsAdmin"; 
 import WhyUs from "./pages/why-us";
 import ContactUs from "./pages/ContactUs";
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -28,6 +30,8 @@ function App() {
         <Route path="/admin-panel" element={<SavingsAdmin />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         {/* Add more routes as needed */}
       </Routes>
     </>

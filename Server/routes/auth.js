@@ -258,6 +258,10 @@ router.post('/deny-member', authenticateToken, async (req, res) => {
 router.delete('/delete-member/:id', authenticateToken, async (req, res) => {
     const db = req.db;
     const memberId = req.params.id;
+    // Prevent admin from deleting themselves
+    if (req.user.id == memberId) {
+        return res.status(400).json({ error: "You cannot delete your own admin account." });
+    }
     try {
         await db.execute('DELETE FROM members WHERE id = ?', [memberId]);
         res.json({ message: 'Member deleted successfully.' });

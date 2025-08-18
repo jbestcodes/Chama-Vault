@@ -36,6 +36,7 @@ function Navbar () {
     }, [navigate]);
 
     return (
+        <>
         <nav
             style={{
                 width: "100%",
@@ -88,6 +89,11 @@ function Navbar () {
                 )}
             </div>
         </nav>
+        <footer style={{ textAlign: "center", padding: "16px 0", background: "#f5f5f5", marginTop: 40 }}>
+  <a href="/terms" style={{ marginRight: 16, color: "#1976d2" }}>Terms & Conditions</a>
+  <a href="/privacy" style={{ color: "#1976d2" }}>Privacy Policy</a>
+</footer>
+        </>
     );
 }
 export default Navbar;

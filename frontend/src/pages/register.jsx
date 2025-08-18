@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
 
@@ -10,6 +10,7 @@ const Register = () => {
     const [password, setPassword] = useState('');
     const [group_name, setGroupName] = useState('');
     const [role, setRole] = useState('');
+    const [agreed, setAgreed] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
@@ -28,6 +29,13 @@ const Register = () => {
             });
 
             setSuccess('Registration successful! Your account is pending admin approval. You will be able to log in once approved.');
+
+            // Redirect admin to login page after registration
+            if (role === 'admin') {
+                setTimeout(() => {
+                    navigate('/login');
+                }, 1500); // Wait 1.5 seconds before redirecting
+            }
         } catch (error) {
             setError(error.response?.data?.error || 'Registration failed. Please try again.');
         }
@@ -76,13 +84,40 @@ const Register = () => {
                         required
                     />
                 </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label>Role:</label>
-                    <select value={role} onChange={(e) => setRole(e.target.value)} required>
-                        <option value="">Select role</option>
-                        <option value="admin">Admin</option>
-                        <option value="member">Member</option>
-                    </select>
+                <div style={{ marginBottom: 12 }}>
+                    <label>
+                        <input
+                            type="radio"
+                            name="role"
+                            value="admin"
+                            checked={role === "admin"}
+                            onChange={() => setRole("admin")}
+                            required
+                        />{" "}
+                        Admin
+                    </label>
+                    <label style={{ marginLeft: 16 }}>
+                        <input
+                            type="radio"
+                            name="role"
+                            value="member"
+                            checked={role === "member"}
+                            onChange={() => setRole("member")}
+                            required
+                        />{" "}
+                        Member
+                    </label>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={agreed}
+                            onChange={() => setAgreed(!agreed)}
+                            required
+                        />{" "}
+                        I agree to the <Link to="/terms" target="_blank" style={{ color: "#1976d2" }}>Terms & Conditions</Link>
+                    </label>
                 </div>
                 <button type="submit" style={{ marginTop: '20px' }} disabled={!!success}>
                     Register
