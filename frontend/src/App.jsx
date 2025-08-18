@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter as Router } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Navbar from './Navbar';
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -17,7 +17,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -38,7 +38,7 @@ function App() {
         <a href="/terms" style={{ marginRight: 16, color: "#1976d2" }}>Terms & Conditions</a>
         <a href="/privacy" style={{ color: "#1976d2" }}>Privacy Policy</a>
       </footer>
-    </Router>
+    </>
   );
 }
 
