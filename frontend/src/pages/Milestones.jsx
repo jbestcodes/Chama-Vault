@@ -234,7 +234,7 @@ function Milestones() {
       {message && <p style={{ color: "green" }}>{message}</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
       <h3>Your Total Savings: Ksh {totalSavings}</h3>
-      <ul>
+      <ul style={{ padding: 0, listStyle: "none" }}>
         {milestones.length === 0 && <li>No milestones yet.</li>}
         {milestones.map((m) =>
           editId === m.id ? (
@@ -261,31 +261,74 @@ function Milestones() {
               </form>
             </li>
           ) : (
-            <li key={m.id} style={{ marginBottom: 15, display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <strong>{m.milestone_name}</strong> <br />
-                Target: Ksh {m.target_amount} <br />
-                Saved: Ksh {m.amount_saved} <br />
-                Remaining: Ksh {m.amount_remaining} <br />
-                Progress: {Math.round(m.progress)}%
+            <li key={m.id} style={{ marginBottom: 24 }}>
+              {/* Milestone name on top */}
+              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, textAlign: "center" }}>
+                {m.milestone_name}
+              </div>
+              {/* Box grid for Target, Saved, Remaining */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 10,
+                  marginBottom: 10,
+                  background: "#f5f5f5",
+                  borderRadius: 10,
+                  padding: 8,
+                }}
+                className="milestone-box-grid"
+              >
+                <div style={{ background: "#e3f2fd", borderRadius: 8, padding: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 20, marginBottom: 2 }}>🎯</div>
+                  <div style={{ fontSize: 13, color: "#1976d2" }}>Target</div>
+                  <div style={{ fontWeight: 700, color: "#1976d2" }}>Ksh {m.target_amount}</div>
+                </div>
+                <div style={{ background: "#e8f5e9", borderRadius: 8, padding: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 20, marginBottom: 2 }}>🪙</div>
+                  <div style={{ fontSize: 13, color: "#388e3c" }}>Saved</div>
+                  <div style={{ fontWeight: 700, color: "#388e3c" }}>Ksh {m.amount_saved}</div>
+                </div>
+                <div style={{ background: "#fffde7", borderRadius: 8, padding: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 20, marginBottom: 2 }}>⏰</div>
+                  <div style={{ fontSize: 13, color: "#fbc02d" }}>Remaining</div>
+                  <div style={{ fontWeight: 700, color: "#fbc02d" }}>Ksh {m.amount_remaining}</div>
+                </div>
+              </div>
+              {/* Progress bar below the grid */}
+              <MilestoneProgress currentSavings={m.amount_saved} target={m.target_amount} />
+              <div style={{ marginTop: 8 }}>
+                <span style={{ fontSize: 13, color: "#888" }}>Progress: {Math.round(m.progress)}%</span>
+              </div>
+              <div style={{ marginTop: 8 }}>
                 <button
-                  style={{ marginTop: 8 }}
                   onClick={() => handleEdit(m)}
+                  style={{ marginRight: 8 }}
                 >
                   Edit
                 </button>
                 <button
-                  style={{ marginTop: 8, marginLeft: 8, background: "#d32f2f", color: "#fff" }}
+                  style={{ background: "#d32f2f", color: "#fff" }}
                   onClick={() => handleDelete(m.id)}
                 >
                   Delete
                 </button>
               </div>
-              <MilestoneProgress currentSavings={m.amount_saved} target={m.target_amount} />
             </li>
           )
         )}
       </ul>
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 600px) {
+            .milestone-box-grid {
+              grid-template-columns: 1fr !important;
+              gap: 6px !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
