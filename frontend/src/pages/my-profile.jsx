@@ -121,7 +121,7 @@ function MyProfile() {
           <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
         </div>
 
-        {/* Right: Leaderboard and Graph */}
+        {/* Right: Leaderboard */}
         <div style={{ background: "#fff8e1", borderRadius: 10, padding: 16 }}>
           <h3>Leaderboard</h3>
           <ul>
@@ -133,26 +133,27 @@ function MyProfile() {
               </li>
             ))}
           </ul>
-          {profile.leaderboard && profile.leaderboard.length > 0 && (
-            <>
-              <h3>Group Savings Chart</h3>
-              <div style={{ width: "100%", maxWidth: 500, height: 300 }}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={profile.leaderboard}
-                  >
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="total_savings" fill="#1976d2" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </>
-          )}
         </div>
       </div>
-      {/* Savings History below the grid */}
+      {/* Bar Chart below the grid */}
+      {profile.leaderboard && profile.leaderboard.length > 0 && (
+        <div style={{ background: "#f3f7fa", borderRadius: 10, padding: 16, marginBottom: 32 }}>
+          <h3>Group Savings Chart</h3>
+          <div style={{ width: "100%", maxWidth: 700, height: 300, margin: "0 auto" }}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={profile.leaderboard}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total_savings" fill="#1976d2" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+      {/* Savings History below the chart */}
       <div style={{ background: "#f9fbe7", borderRadius: 10, padding: 16 }}>
         <h3>Your Savings History</h3>
         <ul>
