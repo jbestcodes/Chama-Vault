@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
+import './my-profile.css'; // (create this file for custom styles if you want, or use inline as below)
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -65,81 +66,108 @@ function MyProfile() {
   if (!profile) return null;
 
   return (
-    <div>
+    <div style={{ maxWidth: 1100, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>My Profile</h2>
-      {editMode ? (
-        <form onSubmit={handleUpdateProfile} style={{ marginBottom: 16 }}>
-          <div>
-            <label>Full Name: </label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Phone: </label>
-            <input
-              type="text"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit">Save</button>
-          <button type="button" onClick={() => setEditMode(false)} style={{ marginLeft: 8 }}>
-            Cancel
-          </button>
-        </form>
-      ) : (
-        <>
-          <p><strong>Full Name:</strong> {profile.full_name}</p>
-          <p><strong>Phone:</strong> {profile.phone}</p>
-          <button onClick={() => setEditMode(true)}>Edit Profile</button>
-        </>
-      )}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
-      <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
-      <p><strong>Total Savings:</strong> Ksh {profile.total_savings}</p>
-      <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 2fr",
+          gap: 24,
+          alignItems: "flex-start",
+          marginBottom: 32,
+          // Responsive grid for mobile
+          gridTemplateAreas: window.innerWidth < 800
+            ? `"left" "middle" "right"`
+            : `"left middle right"`
+        }}
+      >
+        {/* Left: Name, Phone, Edit */}
+        <div style={{ background: "#f0f4ff", borderRadius: 10, padding: 16, gridArea: "left" }}>
+          {editMode ? (
+            <form onSubmit={handleUpdateProfile} style={{ marginBottom: 16 }}>
+              <div>
+                <label>Full Name: </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label>Phone: </label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit">Save</button>
+              <button type="button" onClick={() => setEditMode(false)} style={{ marginLeft: 8 }}>
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <>
+              <p><strong>Full Name:</strong> {profile.full_name}</p>
+              <p><strong>Phone:</strong> {profile.phone}</p>
+              <button onClick={() => setEditMode(true)}>Edit Profile</button>
+            </>
+          )}
+          {success && <p style={{ color: 'green' }}>{success}</p>}
+        </div>
 
-      <h3>Leaderboard</h3>
-      <ul>
-        {(profile.leaderboard || []).map((member, index) => (
-          <li key={index}>
-            {member.name} - {member.total_savings && member.total_savings > 0
-              ? `Ksh ${member.total_savings.toLocaleString()}`
-              : 'No contribution yet'}
-          </li>
-        ))}
-      </ul>
-      {profile.leaderboard && profile.leaderboard.length > 0 && (
-        <>
-          <h3>Group Savings Chart</h3>
-          <div style={{ width: "100%", maxWidth: 500, height: 300 }}>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={profile.leaderboard}
-              >
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total_savings" fill="#1976d2" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
-      <h3>Your Savings History</h3>
-      <ul>
-        {(!profile.savingsHistory || profile.savingsHistory.length === 0) && <li>No savings history available yet</li>}
-        {(profile.savingsHistory || []).map(saving => (
-          <li key={saving.id}>
-            Ksh {saving.amount} - {new Date(saving.created_at).toLocaleDateString()}
-          </li>
-        ))}
-      </ul>
+        {/* Middle: Group, Savings, Rank */}
+        <div style={{ background: "#e8f5e9", borderRadius: 10, padding: 16, gridArea: "middle" }}>
+          <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
+          <p><strong>Total Savings:</strong> Ksh {profile.total_savings}</p>
+          <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
+        </div>
+
+        {/* Right: Leaderboard and Graph */}
+        <div style={{ background: "#fff8e1", borderRadius: 10, padding: 16, gridArea: "right" }}>
+          <h3>Leaderboard</h3>
+          <ul>
+            {(profile.leaderboard || []).map((member, index) => (
+              <li key={index}>
+                {member.name} - {member.total_savings && member.total_savings > 0
+                  ? `Ksh ${member.total_savings.toLocaleString()}`
+                  : 'No contribution yet'}
+              </li>
+            ))}
+          </ul>
+          {profile.leaderboard && profile.leaderboard.length > 0 && (
+            <>
+              <h3>Group Savings Chart</h3>
+              <div style={{ width: "100%", maxWidth: 500, height: 300 }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={profile.leaderboard}
+                  >
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="total_savings" fill="#1976d2" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      {/* Savings History below the grid */}
+      <div style={{ background: "#f9fbe7", borderRadius: 10, padding: 16 }}>
+        <h3>Your Savings History</h3>
+        <ul>
+          {(!profile.savingsHistory || profile.savingsHistory.length === 0) && <li>No savings history available yet</li>}
+          {(profile.savingsHistory || []).map(saving => (
+            <li key={saving.id}>
+              Ksh {saving.amount} - {new Date(saving.created_at).toLocaleDateString()}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
