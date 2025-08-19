@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -43,7 +43,7 @@ function MyProfile() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${apiUrl}/api/auth/update-profile`, 
+        `${apiUrl}/api/auth/update-profile`,
         { full_name: fullName, phone },
         {
           headers: {
@@ -68,20 +68,17 @@ function MyProfile() {
     <div style={{ maxWidth: 1100, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>My Profile</h2>
       <div
+        className="my-profile-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr 2fr",
           gap: 24,
           alignItems: "flex-start",
           marginBottom: 32,
-          // Responsive grid for mobile
-          gridTemplateAreas: window.innerWidth < 800
-            ? `"left" "middle" "right"`
-            : `"left middle right"`
         }}
       >
         {/* Left: Name, Phone, Edit */}
-        <div style={{ background: "#f0f4ff", borderRadius: 10, padding: 16, gridArea: "left" }}>
+        <div style={{ background: "#f0f4ff", borderRadius: 10, padding: 16 }}>
           {editMode ? (
             <form onSubmit={handleUpdateProfile} style={{ marginBottom: 16 }}>
               <div>
@@ -118,14 +115,14 @@ function MyProfile() {
         </div>
 
         {/* Middle: Group, Savings, Rank */}
-        <div style={{ background: "#e8f5e9", borderRadius: 10, padding: 16, gridArea: "middle" }}>
+        <div style={{ background: "#e8f5e9", borderRadius: 10, padding: 16 }}>
           <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
           <p><strong>Total Savings:</strong> Ksh {profile.total_savings}</p>
           <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
         </div>
 
         {/* Right: Leaderboard and Graph */}
-        <div style={{ background: "#fff8e1", borderRadius: 10, padding: 16, gridArea: "right" }}>
+        <div style={{ background: "#fff8e1", borderRadius: 10, padding: 16 }}>
           <h3>Leaderboard</h3>
           <ul>
             {(profile.leaderboard || []).map((member, index) => (
@@ -167,6 +164,20 @@ function MyProfile() {
           ))}
         </ul>
       </div>
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 900px) {
+            .my-profile-grid {
+              grid-template-columns: 1fr !important;
+              grid-template-areas:
+                "left"
+                "middle"
+                "right";
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
