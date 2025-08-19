@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import heroImg from "./hero.png";
 
 function Home() {
     const isLoggedIn = !!localStorage.getItem("token");
@@ -20,7 +21,7 @@ function Home() {
                 style={{
                     width: "100vw",
                     height: "220px",
-                    background: `url('/hero.png') center/cover no-repeat`,
+                    background: `url(${heroImg}) center/cover no-repeat`,
                     borderRadius: "0 0 24px 24px",
                     margin: "0 auto",
                     marginBottom: 24,
