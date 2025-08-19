@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
-import './my-profile.css'; // (create this file for custom styles if you want, or use inline as below)
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
