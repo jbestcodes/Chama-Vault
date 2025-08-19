@@ -29,17 +29,18 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'All fields are required' });
     }
     try {
-        // Find group_id by group_name
+        const normalizedGroupName = group_name.trim().toLowerCase();
+
         const [groupRows] = await db.execute(
-            'SELECT group_id FROM savings_groups WHERE group_name = ?',
-            [group_name]
+            'SELECT group_id FROM savings_groups WHERE LOWER(TRIM(group_name)) = ?',
+            [normalizedGroupName]
         );
         let group_id;
         if (groupRows.length === 0) {
             // Insert new group
             const [result] = await db.execute(
                 'INSERT INTO savings_groups (group_name) VALUES (?)',
-                [group_name]
+                [normalizedGroupName]
             );
             group_id = result.insertId;
         } else {

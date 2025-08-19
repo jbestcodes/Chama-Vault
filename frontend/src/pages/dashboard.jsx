@@ -50,13 +50,79 @@ const Dashboard = () => {
       )}
 
       <div style={{ marginTop: '20px' }}>
-        <p><strong>Total Savings (You): Ksh </strong> {data.totalSavings}</p>
+        <div style={{
+          display: 'flex',
+          gap: 16,
+          marginBottom: 24,
+          flexWrap: 'wrap'
+        }}>
+          <div style={{
+            background: '#e8f5e9',
+            borderRadius: 10,
+            padding: 16,
+            minWidth: 150,
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+          }}>
+            <span role="img" aria-label="Money Bag" style={{ fontSize: 28 }}>💰</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>Your Savings</div>
+              <div style={{ fontSize: 18 }}>Ksh {data.totalSavings}</div>
+            </div>
+          </div>
+          <div style={{
+            background: '#fff8e1',
+            borderRadius: 10,
+            padding: 16,
+            minWidth: 150,
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+          }}>
+            <span role="img" aria-label="People" style={{ fontSize: 28 }}>👥</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>Members</div>
+              <div style={{ fontSize: 18 }}>{data.memberCount}</div>
+            </div>
+          </div>
+          <div style={{
+            background: '#f0f4ff',
+            borderRadius: 10,
+            padding: 16,
+            minWidth: 150,
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+          }}>
+            <span role="img" aria-label="Money Bag" style={{ fontSize: 28 }}>💰</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>Group Savings</div>
+              <div style={{ fontSize: 18 }}>Ksh {data.totalSavingsAll}</div>
+            </div>
+          </div>
+        </div>
         <p>
-          <strong>Total Member{data.memberCount === 1 ? '' : 's'}:</strong> {data.memberCount}
+          <strong>Your Rank:</strong> {data.userRank}
         </p>
-        <p><strong>Total Savings (All Members):</strong> {data.totalSavingsAll}</p>
-        <p><strong>Your Rank:</strong> {data.userRank}</p>
-        <Link to="/my-profile">My Profile</Link>
+        <Link
+          to="/my-profile"
+          style={{
+            display: "inline-block",
+            background: "#1976d2",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textDecoration: "none",
+            margin: "16px 0"
+          }}
+        >
+          My Profile
+        </Link>
 
         {data.lastContribution ? (
           <p>

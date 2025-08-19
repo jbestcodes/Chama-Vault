@@ -41,9 +41,21 @@ function MilestoneProgress({ currentSavings, target }) {
       <ProgressBar
         now={percentage}
         label={`${percentage.toFixed(1)}%`}
-        style={{ height: '18px', backgroundColor: '#145A32' }}
-        variant='success'
+        style={{
+          height: '18px',
+          backgroundColor: '#ff9800', // orange for the unfilled part
+        }}
+        variant="success" // luminous green for the filled part
       />
+      <style>
+        {`
+          .progress-bar.bg-success {
+            background-color: #39ff14 !important; /* luminous green */
+            color: #222;
+            font-weight: bold;
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -175,7 +187,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${apiUrl}/api/savings/milestone/${id}`, // <-- Use backticks and apiUrl
+        `${apiUrl}/api/savings/milestone/${id}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage("Milestone deleted successfully.");
