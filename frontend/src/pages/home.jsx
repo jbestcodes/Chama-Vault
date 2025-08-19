@@ -15,6 +15,18 @@ function Home() {
                 padding: "24px",
             }}
         >
+            {/* Hero image banner */}
+            <div
+                style={{
+                    width: "100vw",
+                    height: "220px",
+                    background: `url('/hero.png') center/cover no-repeat`,
+                    borderRadius: "0 0 24px 24px",
+                    margin: "0 auto",
+                    marginBottom: 24,
+                }}
+            />
+
             <div style={{ height: 32 }} /> {/* Spacer for visual balance */}
 
             <div

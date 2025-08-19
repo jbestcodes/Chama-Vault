@@ -352,6 +352,7 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         rank,
         leaderboard,
         savingsHistory,
+        total_savings: Number(total_savings || 0), // <-- Add this
     });
 });
 
