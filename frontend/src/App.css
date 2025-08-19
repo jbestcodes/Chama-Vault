@@ -196,3 +196,13 @@ margin-top: 20px;
     font-size: 14px;
   }
 }
+
+.hero-banner {
+  height: 160px;
+}
+@media (min-width: 600px) {
+  .hero-banner {
+    height: 240px;
+    margin-bottom: 24px;
+  }
+}

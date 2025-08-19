@@ -345,6 +345,12 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         [memberId]
     );
 
+    // Get total savings for the member
+    const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
+        'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
+        [memberId]
+    );
+
     res.json({
         full_name: user.full_name,
         phone: user.phone,
@@ -352,7 +358,7 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         rank,
         leaderboard,
         savingsHistory,
-        total_savings: Number(total_savings || 0), // <-- Add this
+        total_savings: Number(total_savings || 0), 
     });
 });
 
