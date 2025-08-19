@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import ProgressBar from 'react-bootstrap/ProgressBar';
 
 const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
 
@@ -37,25 +36,37 @@ function Recommendation() {
 function MilestoneProgress({ currentSavings, target }) {
   const percentage = Math.min((currentSavings / target) * 100, 100);
   return (
-    <div style={{ margin: '10px 0', width: 200 }}>
-      <ProgressBar
-        now={percentage}
-        label={`${percentage.toFixed(1)}%`}
+    <div style={{
+      width: '100%',
+      height: 18,
+      background: '#e0e0e0',
+      borderRadius: 8,
+      overflow: 'hidden',
+      position: 'relative',
+      marginBottom: 12
+    }}>
+      <div
         style={{
-          height: '18px',
-          backgroundColor: '#ff9800', // orange for the unfilled part
+          width: `${percentage}%`,
+          height: '100%',
+          background:
+            percentage < 50
+              ? '#90caf9' // light blue
+              : '#81c784', // lighter green
+          transition: 'width 0.5s'
         }}
-        variant="success" // luminous green for the filled part
       />
-      <style>
-        {`
-          .progress-bar.bg-success {
-            background-color: #39ff14 !important; /* luminous green */
-            color: #222;
-            font-weight: bold;
-          }
-        `}
-      </style>
+      <span style={{
+        position: 'absolute',
+        left: '50%',
+        top: 0,
+        transform: 'translateX(-50%)',
+        fontWeight: 600,
+        fontSize: 13,
+        color: '#222'
+      }}>
+        {percentage.toFixed(1)}%
+      </span>
     </div>
   );
 }
@@ -75,7 +86,7 @@ function Milestones() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${apiUrl}/api/savings/milestone`, // <-- Use backticks and apiUrl
+        `${apiUrl}/api/savings/milestone`, 
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -199,7 +210,7 @@ function Milestones() {
 
   return (
     <div style={{ maxWidth: 500, margin: "auto", padding: 20 }}>
-      <h2>My Savings Milestones</h2>
+      <h2 style={{ padding: "14px 0 18px 0" }}>My Savings Milestones</h2>
       <Recommendation />
       <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
         <input
