@@ -101,7 +101,7 @@ function MyProfile() {
       )}
       {success && <p style={{ color: 'green' }}>{success}</p>}
       <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
-      <p><strong>Total Savings:</strong> Ksh {profile.totalSavings}</p>
+      <p><strong>Total Savings:</strong> Ksh {profile.total_savings}</p>
       <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
 
       <h3>Leaderboard</h3>
