@@ -138,10 +138,25 @@ const Dashboard = () => {
             borderRadius: "8px",
             fontWeight: 600,
             textDecoration: "none",
-            margin: "16px 0"
+            margin: "16px 10px 16px 0"
           }}
         >
           My Profile
+        </Link>
+        <Link
+          to="/loans"
+          style={{
+            display: "inline-block",
+            background: "#388e3c",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textDecoration: "none",
+            margin: "16px 0"
+          }}
+        >
+          Loans & Repayments
         </Link>
 
         {data.lastContribution ? (

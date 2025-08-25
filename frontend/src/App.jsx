@@ -12,6 +12,7 @@ import WhyUs from "./pages/why-us";
 import ContactUs from "./pages/ContactUs";
 import TermsAndConditions from './pages/TermsAndConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import LoansAndRepayments from "./pages/LoansAndRepayments"; 
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -32,6 +33,7 @@ function App() {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/loans" element={<LoansAndRepayments />} /> 
         {/* Add more routes as needed */}
       </Routes>
       <footer style={{ textAlign: "center", padding: "16px 0", background: "#f5f5f5", marginTop: 40 }}>

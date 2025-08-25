@@ -409,6 +409,23 @@ function SavingsAdmin() {
           {approvalMsg && <div style={{ color: "green", marginTop: 8 }}>{approvalMsg}</div>}
         </div>
       )}
+      <div style={{ margin: "16px 0" }}>
+        <a
+          href="/loans"
+          style={{
+            display: "inline-block",
+            background: "#388e3c",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textDecoration: "none",
+            marginRight: 10
+          }}
+        >
+          Loans & Repayments
+        </a>
+      </div>
     </div>
   );
 }

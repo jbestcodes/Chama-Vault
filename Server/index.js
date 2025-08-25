@@ -4,6 +4,8 @@ const mysql = require('mysql2/promise');
 const authRoutes = require('./routes/auth');
 const savingsRoutes = require('./routes/savings');
 const groupsRoutes = require('./routes/groups');
+const loansRoutes = require('./routes/Loans');
+const repaymentsRoutes = require('./routes/repayments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +35,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/savings', savingsRoutes);
 app.use('/api/groups', groupsRoutes);
 app.use('/api/contact', require('./routes/contact'));
+app.use('/api/loans', loansRoutes);
+app.use('/api/repayments', repaymentsRoutes);
 
 // Start server
 app.listen(PORT, () => {
