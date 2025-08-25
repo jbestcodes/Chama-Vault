@@ -79,7 +79,7 @@ router.get('/group', require('../middleware/auth').authenticateToken, require('.
     const conn = await db();
     const [loans] = await conn.query('SELECT * FROM loans WHERE group_id = ?', [groupId]);
     for (const loan of loans) {
-        const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+        const [repayments] = await conn.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
         loan.repayments = repayments;
     }
     await conn.release();
