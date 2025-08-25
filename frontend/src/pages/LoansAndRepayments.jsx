@@ -30,7 +30,7 @@ function LoansAndRepayments() {
         setRole(userRole);
 
         let endpoint = "/api/loans/my";
-        if (userRole === "admin") {
+        if (userRole && userRole.toLowerCase() === "admin") {
           endpoint = "/api/loans/group";
         }
 
