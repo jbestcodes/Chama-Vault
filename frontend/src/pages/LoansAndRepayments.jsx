@@ -26,11 +26,12 @@ function LoansAndRepayments() {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const userRole = localStorage.getItem("role");
+        // Always lowercase the role
+        const userRole = (localStorage.getItem("role") || "").toLowerCase();
         setRole(userRole);
 
         let endpoint = "/api/loans/my";
-        if (userRole && userRole.toLowerCase() === "admin") {
+        if (userRole === "admin") {
           endpoint = "/api/loans/group";
         }
 
@@ -123,7 +124,8 @@ function LoansAndRepayments() {
   return (
     <div style={{ maxWidth: 900, margin: "40px auto", padding: 24 }}>
       <h2 style={{ marginBottom: 24 }}>Loans & Repayments</h2>
-      {role && role.toLowerCase() !== "admin" && (
+      {/* Only show request loan form for non-admins */}
+      {role && role !== "admin" && (
         <form onSubmit={handleLoanRequest} style={{ marginBottom: 24, background: "#f0f4ff", padding: 16, borderRadius: 8 }}>
           <h4>Request a Loan</h4>
           <input
