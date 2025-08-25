@@ -16,7 +16,10 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://chama-vault-aiid.vercel.app', 'http://localhost:5173'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Attach pool to req for use in routes
