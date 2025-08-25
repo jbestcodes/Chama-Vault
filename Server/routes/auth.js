@@ -113,7 +113,12 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1h' }
         );
         // Add role to the response here
-        return res.status(200).json({ message: 'Login successful', token, role: member.role });
+        return res.status(200).json({
+            message: 'Login successful',
+            token,
+            role: member.role,
+            full_name: member.full_name 
+        });
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ error: 'Internal server error', message: error.message });

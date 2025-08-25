@@ -43,20 +43,22 @@ const Dashboard = () => {
     <div style={{ maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       {/* Greeting message */}
       {userName && (
-        <div style={{
-          background: "#e3f2fd",
-          padding: "12px 0",
-          borderRadius: 8,
-          textAlign: "center",
-          fontWeight: 600,
-          fontSize: 18,
-          marginBottom: 18
-        }}>
+        <h2
+          style={{
+            background: "#e3f2fd",
+            padding: "18px 0",
+            borderRadius: 10,
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: 28,
+            marginBottom: 18,
+            color: "#1976d2",
+            letterSpacing: 1
+          }}
+        >
           Hello {userName}
-        </div>
+        </h2>
       )}
-
-      <h2>Dashboard</h2>
 
       {/* Show admin panel link only for admins */}
       {role && role.toLowerCase() === 'admin' && (
