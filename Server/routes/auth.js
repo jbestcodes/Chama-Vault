@@ -75,7 +75,7 @@ router.post('/register', async (req, res) => {
         } else {
             await db.execute(
                 'INSERT INTO members (full_name, phone, password, group_id, group_name, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [full_name, phone, hashedPassword, group_id, group_name, useRole, useRole === 'admin' ? 'approved' : 'pending']
+                [full_name, phone, hashedPassword, group_id, normalizedGroupName, useRole, useRole === 'admin' ? 'approved' : 'pending']
             );
             return res.status(201).json({ message: 'Registration successful.' });
         }

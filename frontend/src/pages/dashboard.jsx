@@ -3,18 +3,21 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
 
-const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+const apiUrl = import.meta.env.VITE_API_URL; 
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const role = localStorage.getItem('role');
 
+  // Get user's name from localStorage if available
+  const userName = localStorage.getItem('full_name');
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${apiUrl}/api/savings/dashboard`, { // <-- Use backticks and apiUrl
+        const res = await axios.get(`${apiUrl}/api/savings/dashboard`, { 
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -38,6 +41,21 @@ const Dashboard = () => {
 
   return (
     <div style={{ maxWidth: '600px', margin: 'auto', padding: '20px' }}>
+      {/* Greeting message */}
+      {userName && (
+        <div style={{
+          background: "#e3f2fd",
+          padding: "12px 0",
+          borderRadius: 8,
+          textAlign: "center",
+          fontWeight: 600,
+          fontSize: 18,
+          marginBottom: 18
+        }}>
+          Hello {userName}
+        </div>
+      )}
+
       <h2>Dashboard</h2>
 
       {/* Show admin panel link only for admins */}
