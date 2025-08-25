@@ -179,6 +179,24 @@ function SavingsAdmin() {
   return (
     <div style={{ overflowX: "auto", padding: 20 }}>
       <h2>Admin Savings Matrix (Your Group)</h2>
+      {/* Loans & Repayments Link - move to top */}
+      <div style={{ margin: "16px 0" }}>
+        <a
+          href="/loans"
+          style={{
+            display: "inline-block",
+            background: "#388e3c",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textDecoration: "none",
+            marginRight: 10
+          }}
+        >
+          Loans & Repayments
+        </a>
+      </div>
       {/* Add New Member Form */}
       <div style={{ marginBottom: 24, background: "#e3f2fd", padding: 16, borderRadius: 8 }}>
         <h3>Add New Member</h3>
@@ -409,23 +427,6 @@ function SavingsAdmin() {
           {approvalMsg && <div style={{ color: "green", marginTop: 8 }}>{approvalMsg}</div>}
         </div>
       )}
-      <div style={{ margin: "16px 0" }}>
-        <a
-          href="/loans"
-          style={{
-            display: "inline-block",
-            background: "#388e3c",
-            color: "#fff",
-            padding: "10px 22px",
-            borderRadius: "8px",
-            fontWeight: 600,
-            textDecoration: "none",
-            marginRight: 10
-          }}
-        >
-          Loans & Repayments
-        </a>
-      </div>
     </div>
   );
 }

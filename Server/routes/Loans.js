@@ -75,6 +75,7 @@ router.get('/my', require('../middleware/auth').authenticateToken, async (req, r
 // Get all loans for the admin's group
 router.get('/group', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
     const groupId = req.user.group_id;
+    console.log("req.user in /api/loans/group:", req.user);
     const [loans] = await db.query('SELECT * FROM loans WHERE group_id = ?', [groupId]);
     for (const loan of loans) {
         const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
