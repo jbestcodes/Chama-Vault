@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+const apiUrl = import.meta.env.VITE_API_URL; 
 
 const Login = () => {
     const [phone, setPhone] = useState('');
@@ -21,6 +21,7 @@ const Login = () => {
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('role', response.data.role);
+                localStorage.setItem('full_name', response.data.full_name);
 
                 // Redirect ALL users to dashboard after login
                 navigate('/dashboard');
