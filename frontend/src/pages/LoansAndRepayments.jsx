@@ -123,7 +123,7 @@ function LoansAndRepayments() {
   return (
     <div style={{ maxWidth: 900, margin: "40px auto", padding: 24 }}>
       <h2 style={{ marginBottom: 24 }}>Loans & Repayments</h2>
-      {role !== "admin" && (
+      {role && role.toLowerCase() !== "admin" && (
         <form onSubmit={handleLoanRequest} style={{ marginBottom: 24, background: "#f0f4ff", padding: 16, borderRadius: 8 }}>
           <h4>Request a Loan</h4>
           <input
