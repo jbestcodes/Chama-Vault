@@ -50,6 +50,17 @@ function LoansAndRepayments() {
     fetchLoans();
   }, [requestMsg]);
 
+  // Filter loans for admin to show only pending/requested if you want
+  const visibleLoans =
+    role === "admin"
+      ? loans.filter(
+          (loan) =>
+            loan.status === "requested" ||
+            loan.status === "pending" ||
+            loan.status === "offered"
+        )
+      : loans;
+
   // Member submits a loan request
   const handleLoanRequest = async (e) => {
     e.preventDefault();
@@ -124,15 +135,23 @@ function LoansAndRepayments() {
   return (
     <div style={{ maxWidth: 900, margin: "40px auto", padding: 24 }}>
       <h2 style={{ marginBottom: 24 }}>Loans & Repayments</h2>
-      {/* Only show request loan form for non-admins */}
-      {role && role !== "admin" && (
-        <form onSubmit={handleLoanRequest} style={{ marginBottom: 24, background: "#f0f4ff", padding: 16, borderRadius: 8 }}>
+      {/* Show request loan form for members only */}
+      {role !== "admin" && (
+        <form
+          onSubmit={handleLoanRequest}
+          style={{
+            marginBottom: 24,
+            background: "#f0f4ff",
+            padding: 16,
+            borderRadius: 8,
+          }}
+        >
           <h4>Request a Loan</h4>
           <input
             type="number"
             placeholder="Amount"
             value={requestAmount}
-            onChange={e => setRequestAmount(e.target.value)}
+            onChange={(e) => setRequestAmount(e.target.value)}
             required
             style={{ marginRight: 10 }}
           />
@@ -140,75 +159,139 @@ function LoansAndRepayments() {
             type="text"
             placeholder="Reason (optional)"
             value={requestReason}
-            onChange={e => setRequestReason(e.target.value)}
+            onChange={(e) => setRequestReason(e.target.value)}
             style={{ marginRight: 10 }}
           />
           <button type="submit">Send Request</button>
-          {requestMsg && <div style={{ marginTop: 8, color: "#1976d2" }}>{requestMsg}</div>}
+          {requestMsg && (
+            <div style={{ marginTop: 8, color: "#1976d2" }}>{requestMsg}</div>
+          )}
         </form>
       )}
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {!loading && loans.length === 0 && (
+      {!loading && visibleLoans.length === 0 && (
         <p>
           {role === "admin"
             ? "No loans found for your group."
             : "You have no pending loans."}
         </p>
       )}
-      {!loading && loans.length > 0 && (
+      {!loading && visibleLoans.length > 0 && (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 32 }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginBottom: 32,
+            }}
+          >
             <thead>
               <tr style={{ background: "#f0f4ff" }}>
                 <th style={{ padding: 8, border: "1px solid #ddd" }}>Loan ID</th>
                 {role === "admin" && (
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>Member ID</th>
+                  <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Member ID
+                  </th>
                 )}
                 <th style={{ padding: 8, border: "1px solid #ddd" }}>Amount</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Interest Rate (%)</th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Interest Rate (%)
+                </th>
                 <th style={{ padding: 8, border: "1px solid #ddd" }}>Fees</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Total Due</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Installments</th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Total Due
+                </th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Installments
+                </th>
                 <th style={{ padding: 8, border: "1px solid #ddd" }}>Status</th>
                 <th style={{ padding: 8, border: "1px solid #ddd" }}>Reason</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Created At</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Due Date</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Last Due Date</th>
-                <th style={{ padding: 8, border: "1px solid #ddd" }}>Repayments</th>
-                {role !== "admin" && <th style={{ padding: 8, border: "1px solid #ddd" }}>Action</th>}
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Created At
+                </th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Due Date
+                </th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Last Due Date
+                </th>
+                <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                  Repayments
+                </th>
+                {role !== "admin" && (
+                  <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Action
+                  </th>
+                )}
                 {role === "admin" && (
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>Offer</th>
+                  <th style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Offer
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {loans.map((loan) => (
+              {visibleLoans.map((loan) => (
                 <tr key={loan.id}>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.id}</td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.id}
+                  </td>
                   {role === "admin" && (
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.member_id}</td>
+                    <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                      {loan.member_id}
+                    </td>
                   )}
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>Ksh {loan.amount}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.interest_rate}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>Ksh {loan.fees}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>Ksh {loan.total_due}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.installment_number}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.status}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.reason}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.created_at ? new Date(loan.created_at).toLocaleDateString() : ""}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.due_date ? new Date(loan.due_date).toLocaleDateString() : ""}</td>
-                  <td style={{ padding: 8, border: "1px solid #ddd" }}>{loan.last_due_date ? new Date(loan.last_due_date).toLocaleDateString() : ""}</td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Ksh {loan.amount}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.interest_rate}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Ksh {loan.fees}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    Ksh {loan.total_due}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.installment_number}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.status}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.reason}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.created_at
+                      ? new Date(loan.created_at).toLocaleDateString()
+                      : ""}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.due_date
+                      ? new Date(loan.due_date).toLocaleDateString()
+                      : ""}
+                  </td>
+                  <td style={{ padding: 8, border: "1px solid #ddd" }}>
+                    {loan.last_due_date
+                      ? new Date(loan.last_due_date).toLocaleDateString()
+                      : ""}
+                  </td>
                   <td style={{ padding: 8, border: "1px solid #ddd" }}>
                     {loan.repayments && loan.repayments.length > 0 ? (
                       <details>
                         <summary style={{ cursor: "pointer" }}>
-                          {loan.repayments.length} Repayment{loan.repayments.length > 1 ? "s" : ""}
+                          {loan.repayments.length} Repayment
+                          {loan.repayments.length > 1 ? "s" : ""}
                         </summary>
                         <ul style={{ paddingLeft: 16 }}>
                           {loan.repayments.map((rep, idx) => (
                             <li key={rep.id || idx}>
-                              Ksh {rep.amount} on {rep.paid_date ? new Date(rep.paid_date).toLocaleDateString() : ""}
+                              Ksh {rep.amount} on{" "}
+                              {rep.paid_date
+                                ? new Date(rep.paid_date).toLocaleDateString()
+                                : ""}
                             </li>
                           ))}
                         </ul>
@@ -221,8 +304,31 @@ function LoansAndRepayments() {
                     <td style={{ padding: 8, border: "1px solid #ddd" }}>
                       {loan.status === "offered" && (
                         <>
-                          <button onClick={() => handleOfferAction(loan.id, "accept")} style={{ marginRight: 8, background: "#388e3c", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px" }}>Accept</button>
-                          <button onClick={() => handleOfferAction(loan.id, "reject")} style={{ background: "#d32f2f", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px" }}>Reject</button>
+                          <button
+                            onClick={() => handleOfferAction(loan.id, "accept")}
+                            style={{
+                              marginRight: 8,
+                              background: "#388e3c",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 4,
+                              padding: "4px 10px",
+                            }}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleOfferAction(loan.id, "reject")}
+                            style={{
+                              background: "#d32f2f",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 4,
+                              padding: "4px 10px",
+                            }}
+                          >
+                            Reject
+                          </button>
                         </>
                       )}
                     </td>
@@ -230,12 +336,20 @@ function LoansAndRepayments() {
                   {role === "admin" && (
                     <td style={{ padding: 8, border: "1px solid #ddd" }}>
                       {showOfferFormId === loan.id ? (
-                        <form onSubmit={(e) => handleOfferSubmit(e, loan.id)} style={{ display: "flex", flexDirection: "column" }}>
+                        <form
+                          onSubmit={(e) => handleOfferSubmit(e, loan.id)}
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
                           <input
                             type="number"
                             placeholder="Amount"
                             value={offerForm.amount}
-                            onChange={e => setOfferForm({ ...offerForm, amount: e.target.value })}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                amount: e.target.value,
+                              })
+                            }
                             required
                             style={{ marginBottom: 8 }}
                           />
@@ -243,7 +357,12 @@ function LoansAndRepayments() {
                             type="number"
                             placeholder="Interest Rate (%)"
                             value={offerForm.interest_rate}
-                            onChange={e => setOfferForm({ ...offerForm, interest_rate: e.target.value })}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                interest_rate: e.target.value,
+                              })
+                            }
                             required
                             style={{ marginBottom: 8 }}
                           />
@@ -251,7 +370,12 @@ function LoansAndRepayments() {
                             type="number"
                             placeholder="Fees"
                             value={offerForm.fees}
-                            onChange={e => setOfferForm({ ...offerForm, fees: e.target.value })}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                fees: e.target.value,
+                              })
+                            }
                             required
                             style={{ marginBottom: 8 }}
                           />
@@ -259,7 +383,12 @@ function LoansAndRepayments() {
                             type="date"
                             placeholder="Due Date"
                             value={offerForm.due_date}
-                            onChange={e => setOfferForm({ ...offerForm, due_date: e.target.value })}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                due_date: e.target.value,
+                              })
+                            }
                             required
                             style={{ marginBottom: 8 }}
                           />
@@ -267,15 +396,52 @@ function LoansAndRepayments() {
                             type="number"
                             placeholder="Installments"
                             value={offerForm.installment_number}
-                            onChange={e => setOfferForm({ ...offerForm, installment_number: e.target.value })}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                installment_number: e.target.value,
+                              })
+                            }
                             required
                             style={{ marginBottom: 8 }}
                           />
-                          <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "8px 16px" }}>Send Offer</button>
-                          <button onClick={() => setShowOfferFormId(null)} style={{ marginTop: 8, background: "#ccc", color: "#333", border: "none", borderRadius: 4, padding: "8px 16px" }}>Cancel</button>
+                          <button
+                            type="submit"
+                            style={{
+                              background: "#1976d2",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 4,
+                              padding: "8px 16px",
+                            }}
+                          >
+                            Send Offer
+                          </button>
+                          <button
+                            onClick={() => setShowOfferFormId(null)}
+                            style={{
+                              marginTop: 8,
+                              background: "#ccc",
+                              color: "#333",
+                              border: "none",
+                              borderRadius: 4,
+                              padding: "8px 16px",
+                            }}
+                          >
+                            Cancel
+                          </button>
                         </form>
                       ) : (
-                        <button onClick={() => handleShowOfferForm(loan)} style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px" }}>
+                        <button
+                          onClick={() => handleShowOfferForm(loan)}
+                          style={{
+                            background: "#1976d2",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 4,
+                            padding: "4px 10px",
+                          }}
+                        >
                           Offer Loan
                         </button>
                       )}
