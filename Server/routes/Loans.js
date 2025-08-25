@@ -64,11 +64,13 @@ router.post('/request', require('../middleware/auth').authenticateToken, async (
 // Get all loans for the logged-in member
 router.get('/my', require('../middleware/auth').authenticateToken, async (req, res) => {
     const memberId = req.user.id;
-    const [loans] = await db.query('SELECT * FROM loans WHERE member_id = ?', [memberId]);
+    const conn = await db();
+    const [loans] = await conn.query('SELECT * FROM loans WHERE member_id = ?', [memberId]);
     for (const loan of loans) {
-        const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+        const [repayments] = await conn.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
         loan.repayments = repayments;
     }
+    await conn.release();
     res.json(loans);
 });
 
