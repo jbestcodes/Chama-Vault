@@ -1,11 +1,11 @@
 //routes/loan repayments
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); 
-const { authenticateToken, isAdmin } = require('../middleware/auth'); 
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 // Record a repayment
 router.post('/', async (req, res) => {
+    const db = req.db;
     try {
         const { loan_id, amount, payment_date } = req.body;
         if (!loan_id || !amount || !payment_date) {
@@ -46,28 +46,38 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Example: GET /api/loans/my
+// Get all loans for the logged-in member
 router.get('/my', authenticateToken, async (req, res) => {
-  const db = req.db;
-  const memberId = req.user.id;
-  const [loans] = await db.query('SELECT * FROM loans WHERE member_id = ?', [memberId]);
-  for (const loan of loans) {
-    const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
-    loan.repayments = repayments;
-  }
-  res.json(loans);
+    const db = req.db;
+    try {
+        const memberId = req.user.id;
+        const [loans] = await db.query('SELECT * FROM loans WHERE member_id = ?', [memberId]);
+        for (const loan of loans) {
+            const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+            loan.repayments = repayments;
+        }
+        res.json(loans);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
-// Example: GET /api/loans/group
+// Get all loans for the admin's group
 router.get('/group', authenticateToken, isAdmin, async (req, res) => {
-  const db = req.db;
-  const groupId = req.user.group_id;
-  const [loans] = await db.query('SELECT * FROM loans WHERE group_id = ?', [groupId]);
-  for (const loan of loans) {
-    const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
-    loan.repayments = repayments;
-  }
-  res.json(loans);
+    const db = req.db;
+    try {
+        const groupId = req.user.group_id;
+        const [loans] = await db.query('SELECT * FROM loans WHERE group_id = ?', [groupId]);
+        for (const loan of loans) {
+            const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+            loan.repayments = repayments;
+        }
+        res.json(loans);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
 module.exports = router;
