@@ -6,8 +6,8 @@ const router = express.Router();
 router.post('/', async (req, res) => {
     const db = req.db;
     try {
-        const { group_id, member_id, amount, interest_rate, fees, due_date, installment_number } = req.body;
-        if (!group_id || !member_id || !amount || !interest_rate || !due_date || !installment_number) {
+        const { member_id, amount, interest_rate, fees, due_date, installment_number } = req.body;
+        if (!member_id || !amount || !interest_rate || !due_date || !installment_number) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
@@ -16,14 +16,13 @@ router.post('/', async (req, res) => {
 
         // insert loan
         const [result] = await db.query(
-            'INSERT INTO loans (group_id, member_id, amount, interest_rate, fees, due_date, total_due, installment_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
-            [group_id, member_id, amount, interest_rate, fees || 0, due_date, total_due, installment_number]
+            'INSERT INTO loans (member_id, amount, interest_rate, fees, due_date, total_due, installment_number) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+            [member_id, amount, interest_rate, fees || 0, due_date, total_due, installment_number]
         );
         res.status(201).json({
             message: 'Loan created successfully',
             loan: {
                 id: result.insertId,
-                group_id,
                 member_id,
                 amount,
                 interest_rate,
@@ -42,18 +41,16 @@ router.post('/', async (req, res) => {
 // Member requests a loan (status: 'requested')
 router.post('/request', require('../middleware/auth').authenticateToken, async (req, res) => {
     const db = req.db;
-    console.log("req.user in /loans/request:", req.user); // <--- Add this line
     try {
         const member_id = req.user.id;
-        const group_id = req.user.group_id;
         const { amount, reason } = req.body;
         if (!amount) {
             return res.status(400).json({ message: 'Amount is required' });
         }
         // Insert loan request with status 'requested'
         const [result] = await db.query(
-            'INSERT INTO loans (group_id, member_id, amount, status, created_at, reason) VALUES (?, ?, ?, ?, NOW(), ?)',
-            [group_id, member_id, amount, 'requested', reason || null]
+            'INSERT INTO loans (member_id, amount, status, created_at, reason) VALUES (?, ?, ?, NOW(), ?)',
+            [member_id, amount, 'requested', reason || null]
         );
         res.status(201).json({ message: 'Loan request sent', loan_id: result.insertId });
     } catch (error) {
@@ -79,12 +76,17 @@ router.get('/my', require('../middleware/auth').authenticateToken, async (req, r
     }
 });
 
-// Get all loans for the admin's group
+// Get all loans for the admin's group (with JOIN)
 router.get('/group', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
     const db = req.db;
     try {
         const groupId = req.user.group_id;
-        const [loans] = await db.query('SELECT * FROM loans WHERE group_id = ?', [groupId]);
+        // Join loans with members to get all loans for this group
+        const [loans] = await db.query(
+            `SELECT loans.* FROM loans
+             JOIN members ON loans.member_id = members.id
+             WHERE members.group_id = ?`, [groupId]
+        );
         for (const loan of loans) {
             const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
             loan.repayments = repayments;
