@@ -1,6 +1,7 @@
 //routes/loans.js
 const express = require('express');
 const router = express.Router();
+const moment = require('moment'); // npm install moment
 
 // create a new loan (admin direct creation)
 router.post('/', async (req, res) => {
@@ -106,10 +107,24 @@ router.post('/offer', require('../middleware/auth').authenticateToken, require('
         if (!loan_id || !amount || !interest_rate || !due_date || !installment_number) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
+
+        // Check loan status before offering
+        const [loans] = await db.query('SELECT status FROM loans WHERE id = ?', [loan_id]);
+        if (!loans.length) {
+            return res.status(404).json({ message: 'Loan not found' });
+        }
+        const currentStatus = loans[0].status;
+        if (["active", "rejected"].includes(currentStatus)) {
+            return res.status(400).json({ message: 'Cannot offer terms on an already accepted or rejected loan.' });
+        }
+
         const total_due = Number(amount) + (Number(amount) * Number(interest_rate) / 100) + (fees ? Number(fees) : 0);
+        const firstDueDate = moment(due_date);
+        const lastDueDate = firstDueDate.clone().add(installment_number - 1, 'months').format('YYYY-MM-DD');
+        const installment_amount = (Number(total_due) / Number(installment_number)).toFixed(2);
         await db.query(
-            'UPDATE loans SET amount=?, interest_rate=?, fees=?, due_date=?, total_due=?, installment_number=?, status=? WHERE id=?',
-            [amount, interest_rate, fees || 0, due_date, total_due, installment_number, 'offered', loan_id]
+            'UPDATE loans SET amount=?, interest_rate=?, fees=?, due_date=?, last_due_date=?, total_due=?, installment_number=?, installment_amount=?, status=? WHERE id=?',
+            [amount, interest_rate, fees || 0, due_date, lastDueDate, total_due, installment_number, installment_amount, 'offered', loan_id]
         );
         res.json({ message: 'Loan offer sent to member' });
     } catch (error) {
@@ -132,7 +147,7 @@ router.post('/offer-action', require('../middleware/auth').authenticateToken, as
         if (rows.length === 0) {
             return res.status(403).json({ message: 'Not authorized' });
         }
-        const newStatus = action === 'accept' ? 'pending' : 'rejected';
+        const newStatus = action === 'accept' ? 'active' : 'rejected';
         await db.query('UPDATE loans SET status=? WHERE id=?', [newStatus, loan_id]);
         res.json({ message: `Loan ${action}ed` });
     } catch (error) {
