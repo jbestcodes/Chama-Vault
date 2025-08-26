@@ -108,16 +108,23 @@ router.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: member.id, phone: member.phone, is_admin: member.is_admin, role: member.role },
+            {
+                id: member.id,
+                phone: member.phone,
+                is_admin: member.is_admin,
+                role: member.role,
+                group_id: member.group_id 
+            },
             jwtSecret,
             { expiresIn: '1h' }
         );
-        // Add role to the response here
+        // Add role to the response 
         return res.status(200).json({
             message: 'Login successful',
             token,
             role: member.role,
-            full_name: member.full_name 
+            full_name: member.full_name,
+            group_id: member.group_id 
         });
     } catch (error) {
         console.error('Error logging in:', error);
