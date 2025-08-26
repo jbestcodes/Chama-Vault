@@ -20,7 +20,7 @@ const Login = () => {
             });
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role);
+                localStorage.setItem('role', response.data.role.toLowerCase());
                 localStorage.setItem('full_name', response.data.full_name);
 
                 // Redirect ALL users to dashboard after login
