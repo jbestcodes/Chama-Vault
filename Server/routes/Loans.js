@@ -42,6 +42,7 @@ router.post('/', async (req, res) => {
 // Member requests a loan (status: 'requested')
 router.post('/request', require('../middleware/auth').authenticateToken, async (req, res) => {
     const db = req.db;
+    console.log("req.user in /loans/request:", req.user); // <--- Add this line
     try {
         const member_id = req.user.id;
         const group_id = req.user.group_id;
