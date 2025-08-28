@@ -110,8 +110,9 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 
     // Get user info
     const [userRows] = await db.query('SELECT group_id, group_name FROM members WHERE id = ?', [userId]);
-    const groupId = userRows[0]?.group_id;
-    const groupName = userRows[0]?.group_name;
+    const user = userRows[0];
+    const groupId = user?.group_id;
+    const groupName = user?.group_name;
 
     // Total savings for this user
     const [userSavingsRows] = await db.query('SELECT SUM(amount) as total FROM savings WHERE member_id = ?', [userId]);
@@ -358,9 +359,20 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
 
     // Get total savings for the member
     const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
+
         'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
         [memberId]
     );
+
+    // Calculate group_total_savings for admin only
+    let group_total_savings = null;
+    if (req.user.role === 'admin') {
+        const [[{ group_total } = { group_total: 0 }]] = await db.query(
+            'SELECT COALESCE(SUM(amount),0) AS group_total FROM savings WHERE member_id IN (SELECT id FROM members WHERE group_id = ?)',
+            [user.group_id]
+        );
+        group_total_savings = group_total;
+    }
 
     res.json({
         full_name: user.full_name,
