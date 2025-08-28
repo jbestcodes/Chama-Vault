@@ -37,7 +37,7 @@ const Login = () => {
 
     return (
         <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '100px' }}>
-            <h2>Login</h2>
+            <h2>Log in to ChamaVault</h2>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <form onSubmit={handleLogin}>
                 <div>
@@ -61,7 +61,20 @@ const Login = () => {
                     />
                 </div>
                 <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <button type="submit">Login</button>
+                    <button
+                        type="submit"
+                        style={{
+                            background: '#1976d2',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 4,
+                            padding: '8px 20px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Login
+                    </button>
                     <Link to="/request-password-reset" style={{ fontSize: '0.95em' }}>
                         Forgot Password?
                     </Link>

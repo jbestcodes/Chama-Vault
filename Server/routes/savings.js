@@ -229,7 +229,7 @@ router.get('/milestone', authenticateToken, async (req, res) => {
         [memberId]
     );
 
-    // Get total savings for the member
+    // Get total savings for the member (one per week, matches matrix)
     const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
         `SELECT COALESCE(SUM(amount),0) AS total_savings
          FROM (

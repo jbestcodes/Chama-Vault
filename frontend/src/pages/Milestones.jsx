@@ -314,6 +314,29 @@ function Milestones() {
                   Delete
                 </button>
               </div>
+              {/* New progress and remaining amount display */}
+              <div style={{ width: 300, background: "#eee", borderRadius: 8, overflow: "hidden", marginTop: 16 }}>
+                <div style={{
+                  width: `${m.progress}%`,
+                  background: "#4caf50",
+                  color: "#fff",
+                  padding: "8px 0",
+                  textAlign: "center",
+                  fontWeight: "bold"
+                }}>
+                  {Math.round(m.progress)}% accomplished
+                </div>
+                <div style={{
+                  width: `${100 - m.progress}%`,
+                  background: "#fff",
+                  color: "#333",
+                  padding: "8px 0",
+                  textAlign: "center",
+                  fontWeight: "bold"
+                }}>
+                  {m.amount_remaining > 0 ? `Ksh ${m.amount_remaining} left` : "Goal reached!"}
+                </div>
+              </div>
             </li>
           )
         )}
