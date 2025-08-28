@@ -229,14 +229,19 @@ router.get('/milestone', authenticateToken, async (req, res) => {
         [memberId]
     );
 
-    // Get total savings for the member (one per week, matches matrix)
+    // Get total savings for the member (latest entry per week, matches matrix)
     const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
         `SELECT COALESCE(SUM(amount),0) AS total_savings
          FROM (
-             SELECT MAX(amount) as amount
-             FROM savings
-             WHERE member_id = ?
-             GROUP BY week_number
+             SELECT s.amount
+             FROM savings s
+             WHERE s.member_id = ?
+             AND s.created_at = (
+                 SELECT MAX(s2.created_at)
+                 FROM savings s2
+                 WHERE s2.member_id = s.member_id AND s2.week_number = s.week_number
+             )
+             GROUP BY s.week_number
          ) as weekly_savings`,
         [memberId]
     );
