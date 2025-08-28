@@ -149,13 +149,24 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
     );
     const lastContribution = lastRows[0] || null;
 
+    // Get total group savings (for admin only)
+    let group_total_savings = null;
+    if (req.user.role === 'admin') {
+        const [[{ group_total } = { group_total: 0 }]] = await db.query(
+            'SELECT COALESCE(SUM(amount),0) AS group_total FROM savings WHERE member_id IN (SELECT id FROM members WHERE group_id = ?)',
+            [user.group_id]
+        );
+        group_total_savings = group_total;
+    }
+
     res.json({
         totalSavings,
         memberCount,
         totalSavingsAll,
         userRank,
         lastContribution,
-        group_name: groupName
+        group_name: groupName,
+        group_total_savings
     });
 });
 
@@ -358,7 +369,8 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
         rank,
         leaderboard,
         savingsHistory,
-        total_savings: Number(total_savings || 0), 
+        total_savings: Number(total_savings || 0),
+        group_total_savings: group_total_savings !== null ? group_total_savings : "Hidden"
     });
 });
 

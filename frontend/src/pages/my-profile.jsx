@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -64,6 +64,9 @@ function MyProfile() {
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!profile) return null;
 
+  // Find the logged-in member's name (case-insensitive match)
+  const myName = profile.full_name?.toLowerCase();
+
   return (
     <div style={{ maxWidth: 1100, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>My Profile</h2>
@@ -119,6 +122,13 @@ function MyProfile() {
           <p><strong>Group Name:</strong> {profile.group_name || "N/A"}</p>
           <p><strong>Total Savings:</strong> Ksh {profile.total_savings}</p>
           <p><strong>Your Rank:</strong> {profile.rank !== null ? profile.rank : "N/A"}</p>
+          <div>
+            <strong>Group Total Savings:</strong> {profile.group_total_savings !== "Hidden" ? (
+              <span>Ksh {profile.group_total_savings}</span>
+            ) : (
+              <span style={{ color: "#888" }}>Hidden</span>
+            )}
+          </div>
         </div>
 
         {/* Right: Leaderboard */}
@@ -126,8 +136,18 @@ function MyProfile() {
           <h3>Leaderboard</h3>
           <ul>
             {(profile.leaderboard || []).map((member, index) => (
-              <li key={index}>
-                {member.name} - {member.total_savings && member.total_savings > 0
+              <li
+                key={index}
+                style={
+                  member.name?.toLowerCase() === myName
+                    ? { fontWeight: "bold", color: "#ff9800" }
+                    : {}
+                }
+              >
+                {member.name}
+                {member.name?.toLowerCase() === myName && " (You)"}
+                {" - "}
+                {member.total_savings && member.total_savings > 0
                   ? `Ksh ${member.total_savings.toLocaleString()}`
                   : 'No contribution yet'}
               </li>
@@ -141,13 +161,22 @@ function MyProfile() {
           <h3>Group Savings Chart</h3>
           <div style={{ width: "100%", maxWidth: 700, height: 300, margin: "0 auto" }}>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={profile.leaderboard}
-              >
+              <BarChart data={profile.leaderboard}>
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="total_savings" fill="#1976d2" />
+                <Bar dataKey="total_savings">
+                  {profile.leaderboard.map((entry, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={
+                        entry.name?.toLowerCase() === myName
+                          ? "#ff9800" // Highlight color for logged-in member
+                          : "#1976d2"
+                      }
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

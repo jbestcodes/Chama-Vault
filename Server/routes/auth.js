@@ -67,11 +67,12 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
         if (existingMember.length > 0) {
+            // Only update password, do NOT auto-approve
             await db.execute(
-                'UPDATE members SET password = ?, status = ? WHERE phone = ?',
-                [hashedPassword, 'approved', phone] // <-- now 'approved'
+                'UPDATE members SET password = ? WHERE phone = ?',
+                [hashedPassword, phone]
             );
-            return res.status(201).json({ message: 'Registration successful.' });
+            return res.status(201).json({ message: 'Registration successful. Awaiting approval.' });
         } else {
             await db.execute(
                 'INSERT INTO members (full_name, phone, password, group_id, group_name, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
