@@ -231,7 +231,13 @@ router.get('/milestone', authenticateToken, async (req, res) => {
 
     // Get total savings for the member
     const [[{ total_savings } = { total_savings: 0 }]] = await db.query(
-        'SELECT COALESCE(SUM(amount),0) AS total_savings FROM savings WHERE member_id = ?',
+        `SELECT COALESCE(SUM(amount),0) AS total_savings
+         FROM (
+             SELECT MAX(amount) as amount
+             FROM savings
+             WHERE member_id = ?
+             GROUP BY week_number
+         ) as weekly_savings`,
         [memberId]
     );
 
