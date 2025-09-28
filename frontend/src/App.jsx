@@ -13,7 +13,7 @@ import ContactUs from "./pages/ContactUs";
 import TermsAndConditions from './pages/TermsAndConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LoansAndRepayments from "./pages/LoansAndRepayments"; 
-import AIDashboard from './components/AIDashboard';
+import AIDashboard from './pages/AIDashboard';
 import WithdrawalRequest from './pages/WithdrawalRequest';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
