@@ -67,11 +67,11 @@ function Home() {
                     }}
                 />
                 
-                {/* Fallback gradient if no image */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600"></div>
+                {/* Fallback gradient if no image - DARKER */}
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black"></div>
                 
-                {/* Dark overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/50"></div>
+                {/* Dark overlay for better text readability - DARKER */}
+                <div className="absolute inset-0 bg-black/70"></div>
 
                 {/* Hero Content */}
                 <div className="relative z-20 h-full flex items-center justify-center px-4">
@@ -145,53 +145,69 @@ function Home() {
                 </div>
             </div>
 
-            {/* Rest of your existing content... */}
+            {/* Main Content Section - UPDATED LIST */}
             <div id="home-section" className="relative px-6 py-12 -mt-16 z-10">
                 <div className="h-8"></div>
-                <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 p-8 text-center mx-auto transform hover:-translate-y-2 transition-transform duration-300">
-                    <h2 id="hero-title" className="text-green-700 text-3xl font-bold mb-4 animate-pulse hover:text-green-800 transition-colors duration-300">
-                        Chama Vault
-                    </h2>
-                    <p className="text-lg mb-6 text-gray-700 leading-relaxed">
-                        Welcome to Chama Vault! <br />
-                        Chama Vault is a simple, secure platform for group savings and financial management.<br />
-                        Track your savings, set milestones, and manage your group with ease.<br /><br />
-                        <strong className="text-green-600">Features:</strong>
-                    </p>
-                    <ul className="text-left inline-block my-4 text-base space-y-2">
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            📊 Group savings dashboard with masked leaderboard
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            🎯 Personal savings milestones and progress tracking
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            🛡️ Admin panel for group management and savings matrix
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            📈 Visual charts for group savings
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            🔒 Secure login and easy password reset
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            📅 Contribution history and weekly tracking
-                        </li>
-                        <li className="hover:text-green-600 transition-colors duration-200 cursor-default transform hover:translate-x-2 transition-transform duration-200">
-                            🏆 Group-specific ranking and analytics
-                        </li>
-                    </ul>
-                    <div className="mt-8 space-x-3">
+                <div className="w-full max-w-6xl bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 p-6 sm:p-8 lg:p-12 text-center mx-auto transform hover:-translate-y-3 border border-white/20">
+                    
+                    {/* Welcome Section */}
+                    <div className="mb-8">
+                        <h2 id="hero-title" className="text-green-700 text-3xl sm:text-4xl font-bold mb-4 hover:text-green-800 transition-colors duration-300">
+                            Welcome to Your Financial Future! 🚀
+                        </h2>
+                        
+                        <div className="bg-gradient-to-r from-green-100 to-blue-100 rounded-xl p-6 mb-6">
+                            <p className="text-lg mb-6 text-gray-700 leading-relaxed">
+                                <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent font-semibold text-xl">
+                                    Chama Vault
+                                </span> is your gateway to collaborative wealth building! <br />
+                                Join thousands who are transforming their savings journey with our innovative platform.
+                            </p>
+                            <div className="bg-white/80 rounded-lg p-4 inline-block">
+                                <strong className="text-green-600 text-xl animate-pulse">✨ Amazing Features ✨</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Features Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 my-8">
+                        {[
+                            { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard" },
+                            { icon: "🎯", title: "Goal Tracking", desc: "Personal savings milestones and progress tracking" },
+                            { icon: "🛡️", title: "Admin Control", desc: "Powerful admin panel for group management" },
+                            { icon: "📈", title: "Visual Analytics", desc: "Beautiful charts for group savings insights" },
+                            { icon: "🔒", title: "Bank-Level Security", desc: "Secure login and easy password recovery" },
+                            { icon: "📅", title: "History Tracking", desc: "Complete contribution history and weekly tracking" },
+                            { icon: "🏆", title: "Competitive Edge", desc: "Group-specific ranking and analytics" },
+                            { icon: "💡", title: "Smart Notifications", desc: "Stay updated with real-time alerts" }
+                        ].map((feature, index) => (
+                            <div
+                                key={index}
+                                className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-2xl shadow-md hover:shadow-xl transform hover:scale-105 hover:-rotate-1 transition-all duration-300 cursor-pointer border border-green-100 hover:border-green-300 min-h-[160px] flex flex-col justify-center group"
+                            >
+                                <div className="text-3xl mb-3 animate-bounce group-hover:scale-110 transition-transform duration-300" style={{animationDelay: `${index * 100}ms`}}>
+                                    {feature.icon}
+                                </div>
+                                <h4 className="font-bold text-green-700 mb-2 text-base group-hover:text-green-800 transition-colors duration-300">{feature.title}</h4>
+                                <p className="text-sm text-gray-600 leading-tight group-hover:text-gray-700 transition-colors duration-300">{feature.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center items-center px-4">
                         {!isLoggedIn && (
                             <>
-                                <Link to="/register">
-                                    <button id="signup-button" className="bg-blue-600 hover:bg-blue-700 text-white border-none py-3 px-8 rounded-md text-base cursor-pointer font-bold transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-                                        Sign Up
+                                <Link to="/register" className="w-full sm:w-auto">
+                                    <button className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto">
+                                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                        <span className="relative">🎉 Join Now - It's Free!</span>
                                     </button>
                                 </Link>
-                                <Link to="/login">
-                                    <button id="cta-button" className="bg-green-700 hover:bg-green-800 text-white border-none py-3 px-8 rounded-md text-base cursor-pointer transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
-                                        Log In
+                                <Link to="/login" className="w-full sm:w-auto">
+                                    <button className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto">
+                                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                        <span className="relative">🔑 Login Now</span>
                                     </button>
                                 </Link>
                             </>
@@ -203,11 +219,32 @@ function Home() {
                                     localStorage.removeItem("role");
                                     window.location.reload();
                                 }}
-                                className="bg-red-600 hover:bg-red-700 text-white border-none py-3 px-8 rounded-md text-base cursor-pointer transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                                className="group relative bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto"
                             >
-                                Log Out
+                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                <span className="relative">👋 Logout</span>
                             </button>
                         )}
+                    </div>
+
+                    {/* Trust Indicators */}
+                    <div className="mt-12 pt-8 border-t border-gray-200">
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6">
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-8 text-sm text-gray-600">
+                                <div className="flex items-center animate-pulse delay-100 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                                    <span className="text-green-500 mr-2 text-lg">🔐</span>
+                                    <span className="font-medium">Bank-Level Security</span>
+                                </div>
+                                <div className="flex items-center animate-pulse delay-300 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                                    <span className="text-blue-500 mr-2 text-lg">⚡</span>
+                                    <span className="font-medium">Lightning Fast</span>
+                                </div>
+                                <div className="flex items-center animate-pulse delay-500 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                                    <span className="text-purple-500 mr-2 text-lg">🌟</span>
+                                    <span className="font-medium">Trusted by Thousands</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

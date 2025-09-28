@@ -8,13 +8,16 @@ const Login = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
         try {
-            const response = await axios.post(`${apiUrl}/api/auth/login`, { // <-- Use backticks here
+            const response = await axios.post(`${apiUrl}/api/auth/login`, {
                 phone,
                 password
             });
@@ -32,54 +35,301 @@ const Login = () => {
                 error.response?.data?.message ||
                 'Login failed. Please try again.'
             );
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
-        <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '100px' }}>
-            <h2>Log in to ChamaVault</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label htmlFor="phone">Phone Number:</label>
-                    <input
-                        type="text"
-                        id="phone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                    />
+        <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+        }}>
+            <div style={{
+                background: 'white',
+                borderRadius: '20px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                padding: '40px',
+                maxWidth: '400px',
+                width: '100%',
+                transform: 'translateY(0)',
+                transition: 'all 0.3s ease'
+            }}>
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <div style={{
+                        fontSize: '48px',
+                        marginBottom: '10px'
+                    }}>🏦</div>
+                    <h2 style={{
+                        margin: '0 0 8px 0',
+                        color: '#333',
+                        fontSize: '28px',
+                        fontWeight: 'bold'
+                    }}>Welcome Back!</h2>
+                    <p style={{
+                        margin: 0,
+                        color: '#666',
+                        fontSize: '16px'
+                    }}>Sign in to your ChamaVault account</p>
                 </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label htmlFor="password">Password:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+                {/* Error Message */}
+                {error && (
+                    <div style={{
+                        background: '#fee',
+                        border: '1px solid #fcc',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        marginBottom: '20px',
+                        color: '#c33',
+                        fontSize: '14px',
+                        animation: 'shake 0.5s ease-in-out'
+                    }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleLogin}>
+                    {/* Phone Input */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label htmlFor="phone" style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#333',
+                            fontWeight: '500',
+                            fontSize: '14px'
+                        }}>
+                            📱 Phone Number
+                        </label>
+                        <input
+                            type="text"
+                            id="phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Enter your phone number"
+                            required
+                            style={{
+                                width: '100%',
+                                padding: '12px 16px',
+                                border: '2px solid #e1e5e9',
+                                borderRadius: '10px',
+                                fontSize: '16px',
+                                transition: 'all 0.3s ease',
+                                outline: 'none',
+                                background: '#fafafa',
+                                boxSizing: 'border-box'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#667eea';
+                                e.target.style.background = 'white';
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#e1e5e9';
+                                e.target.style.background = '#fafafa';
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                        />
+                    </div>
+
+                    {/* Password Input */}
+                    <div style={{ marginBottom: '25px' }}>
+                        <label htmlFor="password" style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#333',
+                            fontWeight: '500',
+                            fontSize: '14px'
+                        }}>
+                            🔒 Password
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter your password"
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 45px 12px 16px',
+                                    border: '2px solid #e1e5e9',
+                                    borderRadius: '10px',
+                                    fontSize: '16px',
+                                    transition: 'all 0.3s ease',
+                                    outline: 'none',
+                                    background: '#fafafa',
+                                    boxSizing: 'border-box'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = '#667eea';
+                                    e.target.style.background = 'white';
+                                    e.target.style.transform = 'translateY(-2px)';
+                                    e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#e1e5e9';
+                                    e.target.style.background = '#fafafa';
+                                    e.target.style.transform = 'translateY(0)';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={togglePasswordVisibility}
+                                style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '18px',
+                                    color: '#666',
+                                    padding: '4px',
+                                    borderRadius: '4px',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.color = '#333';
+                                    e.target.style.background = '#f0f0f0';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.color = '#666';
+                                    e.target.style.background = 'none';
+                                }}
+                            >
+                                {showPassword ? '🙈' : '👁️'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Login Button */}
                     <button
                         type="submit"
+                        disabled={isLoading}
                         style={{
-                            background: '#1976d2',
-                            color: '#fff',
+                            width: '100%',
+                            background: isLoading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
                             border: 'none',
-                            borderRadius: 4,
-                            padding: '8px 20px',
+                            borderRadius: '12px',
+                            padding: '14px 20px',
+                            fontSize: '16px',
                             fontWeight: 'bold',
-                            cursor: 'pointer'
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.3s ease',
+                            marginBottom: '20px',
+                            transform: 'translateY(0)',
+                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isLoading) {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isLoading) {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                            }
                         }}
                     >
-                        Login
+                        {isLoading ? (
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <span style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    border: '2px solid #fff',
+                                    borderTop: '2px solid transparent',
+                                    borderRadius: '50%',
+                                    animation: 'spin 1s linear infinite'
+                                }}></span>
+                                Signing in...
+                            </span>
+                        ) : (
+                            '🚀 Sign In'
+                        )}
                     </button>
-                    <Link to="/request-password-reset" style={{ fontSize: '0.95em' }}>
-                        Forgot Password?
-                    </Link>
+
+                    {/* Forgot Password Link */}
+                    <div style={{ textAlign: 'center' }}>
+                        <Link 
+                            to="/request-password-reset" 
+                            style={{ 
+                                color: '#667eea',
+                                textDecoration: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.color = '#764ba2';
+                                e.target.style.textDecoration = 'underline';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.color = '#667eea';
+                                e.target.style.textDecoration = 'none';
+                            }}
+                        >
+                            🤔 Forgot Password?
+                        </Link>
+                    </div>
+                </form>
+
+                {/* Footer */}
+                <div style={{
+                    textAlign: 'center',
+                    marginTop: '30px',
+                    paddingTop: '20px',
+                    borderTop: '1px solid #eee'
+                }}>
+                    <p style={{
+                        margin: 0,
+                        color: '#999',
+                        fontSize: '12px'
+                    }}>
+                        © 2024 ChamaVault. Secure savings made simple.
+                    </p>
                 </div>
-            </form>
+            </div>
+
+            {/* CSS Animations */}
+            <style>
+                {`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    
+                    @keyframes shake {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-5px); }
+                        75% { transform: translateX(5px); }
+                    }
+
+                    @media (max-width: 480px) {
+                        div > div {
+                            padding: 30px 20px !important;
+                            margin: 10px !important;
+                        }
+                    }
+                `}
+            </style>
         </div>
     );
 };

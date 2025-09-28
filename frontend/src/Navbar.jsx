@@ -71,6 +71,9 @@ function Navbar () {
                 <Link to="/contact" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                     Contact Us
                 </Link>
+                <Link to="/ai-dashboard" className="nav-link" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    🤖 AI Assistant
+                </Link>
                 {token && (
                     <button
                         onClick={handleLogout}

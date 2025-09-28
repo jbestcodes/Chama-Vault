@@ -6,6 +6,8 @@ const savingsRoutes = require('./routes/savings');
 const groupsRoutes = require('./routes/groups');
 const loansRoutes = require('./routes/Loans');
 const repaymentsRoutes = require('./routes/repayments');
+const aiRoutes = require('./routes/ai');
+const withdrawalRoutes = require('./routes/withdrawals');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,6 +39,8 @@ app.use('/api/groups', groupsRoutes);
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/loans', loansRoutes);
 app.use('/api/repayments', repaymentsRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
 
 // Start server
 app.listen(PORT, () => {
