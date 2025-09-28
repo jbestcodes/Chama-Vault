@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const verifyToken = require('../middleware/verifyToken');
+const axios = require('axios');
+const { authenticateToken } = require('../middleware/auth');
 const openaiService = require('../services/openaiService');
 
 // Get Financial Nudge
-router.get('/financial-nudge', verifyToken, async (req, res) => {
+router.get('/financial-nudge', authenticateToken, async (req, res) => {
     try {
         const memberId = req.user.id;
         
@@ -61,7 +62,7 @@ router.get('/financial-nudge', verifyToken, async (req, res) => {
 });
 
 // Get Loan Analysis
-router.get('/loan-analysis', verifyToken, async (req, res) => {
+router.get('/loan-analysis', authenticateToken, async (req, res) => {
     try {
         const memberId = req.user.id;
         
@@ -109,7 +110,7 @@ router.get('/loan-analysis', verifyToken, async (req, res) => {
 });
 
 // Get Savings Health Insight
-router.get('/savings-health', verifyToken, async (req, res) => {
+router.get('/savings-health', authenticateToken, async (req, res) => {
     try {
         const memberId = req.user.id;
         
@@ -182,7 +183,7 @@ router.get('/savings-health', verifyToken, async (req, res) => {
 });
 
 // Chatbot Endpoint
-router.post('/chat', verifyToken, async (req, res) => {
+router.post('/chat', authenticateToken, async (req, res) => {
     try {
         const { question, context } = req.body;
         
