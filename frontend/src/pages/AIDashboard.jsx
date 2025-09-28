@@ -396,7 +396,7 @@ function AIDashboard() {
 
                 {/* AI Features Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Features as shown in your existing preview... */}
+                    {/* Smart Nudge Preview */}
                     <div className="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 p-8 border border-gray-100">
                         <div className="space-y-6">
                             <div className="flex items-center space-x-4">
@@ -419,32 +419,142 @@ function AIDashboard() {
                             </div>
                         </div>
                     </div>
-                    {/* Add other preview cards similarly... */}
+
+                    {/* Loan Analysis Preview */}
+                    <div className="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 p-8 border border-gray-100">
+                        <div className="space-y-6">
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl">
+                                    <span className="text-3xl">🏦</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900">Loan Analysis</h3>
+                            </div>
+                            
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 space-y-4">
+                                <div className="space-y-3">
+                                    <div className="bg-white rounded-xl p-4 border border-blue-100">
+                                        <p className="font-semibold text-gray-800 text-lg">Check Your Eligibility</p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border border-blue-100">
+                                        <p className="font-semibold text-gray-800 text-lg">See Maximum Amount</p>
+                                    </div>
+                                </div>
+                                <p className="text-gray-700 font-medium leading-relaxed">
+                                    AI calculates your loan eligibility based on your savings history and gives you personalized recommendations.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Savings Health Preview */}
+                    <div className="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 p-8 border border-gray-100">
+                        <div className="space-y-6">
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl">
+                                    <span className="text-3xl">📈</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900">Savings Health</h3>
+                            </div>
+                            
+                            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 space-y-4">
+                                <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-purple-100">
+                                    <span className="text-xl font-semibold text-gray-800">Health Score</span>
+                                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full">
+                                        <span className="text-lg font-bold text-gray-800">0-100</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 border border-purple-100 space-y-2">
+                                    <p className="font-semibold text-gray-800 text-lg">Track Your Status</p>
+                                    <p className="text-gray-700 font-medium">Get detailed analysis of your savings consistency and performance.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Login CTA */}
+                {/* AI Chatbot Preview */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8">
+                        <div className="flex items-center space-x-6">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-700 to-gray-600 rounded-2xl">
+                                <span className="text-3xl">🤖</span>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-3xl font-bold text-white">AI Chat Assistant</h3>
+                                <p className="text-xl text-gray-300">Ask questions about savings rules, policies, and get financial advice!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Chat Preview */}
+                    <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 space-y-8">
+                        <div className="text-center space-y-6">
+                            <p className="text-2xl font-bold text-gray-900">🤖 What can I help you with?</p>
+                            
+                            {/* Sample Questions */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                                {[
+                                    "What are the savings rules?",
+                                    "How do loans work?", 
+                                    "When can I withdraw money?",
+                                    "What's the interest rate?"
+                                ].map((question, index) => (
+                                    <div
+                                        key={index}
+                                        className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 px-6 py-4 rounded-2xl hover:shadow-sm transition-shadow duration-300"
+                                    >
+                                        <p className="text-blue-800 font-semibold text-lg">{question}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Features List */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 max-w-4xl mx-auto">
+                            <h4 className="text-2xl font-bold text-gray-900 mb-6">✨ AI Assistant Features</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {[
+                                    "Explains savings rules and policies",
+                                    "Answers questions about loans and interest",
+                                    "Provides personalized financial advice",
+                                    "24/7 availability for instant help"
+                                ].map((feature, index) => (
+                                    <div key={index} className="flex items-center space-x-4">
+                                        <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-full">
+                                            <span className="text-green-600 text-lg">✅</span>
+                                        </div>
+                                        <span className="text-gray-800 font-medium text-lg">{feature}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Login Call to Action - FIXED COLORS */}
                 <div className="text-center">
-                    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 rounded-3xl p-12 text-white shadow-lg">
+                    <div className="bg-white rounded-3xl p-12 shadow-lg border border-gray-200">
                         <div className="space-y-8">
                             <div className="space-y-6">
-                                <div className="inline-flex items-center justify-center w-24 h-24 bg-white bg-opacity-20 rounded-2xl">
+                                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl">
                                     <span className="text-5xl">🚀</span>
                                 </div>
-                                <h2 className="text-3xl sm:text-4xl font-bold text-white">Ready to Get Your AI Insights?</h2>
-                                <p className="text-xl sm:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+                                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Ready to Get Your AI Insights?</h2>
+                                <p className="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
                                     Login now to access personalized AI recommendations, chat with your financial assistant, and get smart insights about your savings!
                                 </p>
                             </div>
                             
                             <div className="space-y-6">
                                 <Link to="/login">
-                                    <button className="bg-white text-blue-700 hover:bg-gray-100 px-12 py-5 rounded-2xl text-2xl font-bold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                    <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 px-12 py-5 rounded-2xl text-2xl font-bold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                                         🔑 Login to Access AI Dashboard
                                     </button>
                                 </Link>
                                 
-                                <p className="text-blue-200 text-lg">
-                                    Don't have an account? <Link to="/register" className="text-white font-bold underline hover:text-blue-100 transition-colors">Sign up here</Link>
+                                <p className="text-gray-600 text-lg">
+                                    Don't have an account? <Link to="/register" className="text-blue-600 font-bold underline hover:text-blue-700 transition-colors">Sign up here</Link>
                                 </p>
                             </div>
                         </div>

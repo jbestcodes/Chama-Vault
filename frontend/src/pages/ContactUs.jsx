@@ -3,7 +3,7 @@ import React, { useState } from "react";
 function ContactUs() {
   const [form, setForm] = useState({
     full_name: "",
-    phone: "",
+    contact_info: "",
     group_name: "",
     message: "",
     reason: "Reporting a bug",
@@ -29,7 +29,7 @@ function ContactUs() {
         },
         body: JSON.stringify({
           name: form.full_name,
-          phone: form.phone,
+          contact_info: form.contact_info,
           group_name: form.group_name,
           message: form.message,
           reason: form.reason,
@@ -41,7 +41,7 @@ function ContactUs() {
         setStatus("success");
         setForm({ 
           full_name: "", 
-          phone: "", 
+          contact_info: "", 
           group_name: "", 
           message: "", 
           reason: "Reporting a bug" 
@@ -58,12 +58,12 @@ function ContactUs() {
   };
 
   const reasonOptions = [
-    { value: "Reporting a bug", icon: "🐛", color: "from-red-400 to-red-600" },
-    { value: "Suggesting a new feature", icon: "💡", color: "from-blue-400 to-blue-600" },
-    { value: "Rating the app", icon: "⭐", color: "from-yellow-400 to-yellow-600" },
-    { value: "General inquiry", icon: "❓", color: "from-purple-400 to-purple-600" },
-    { value: "Technical support", icon: "🔧", color: "from-green-400 to-green-600" },
-    { value: "Other", icon: "📝", color: "from-gray-400 to-gray-600" }
+    { value: "Reporting a bug", icon: "🐛" },
+    { value: "Suggesting a new feature", icon: "💡" },
+    { value: "Rating the app", icon: "⭐" },
+    { value: "General inquiry", icon: "❓" },
+    { value: "Technical support", icon: "🔧" },
+    { value: "Other", icon: "📝" }
   ];
 
   const getReasonIcon = (reason) => {
@@ -87,22 +87,15 @@ function ContactUs() {
           </p>
         </div>
 
-        {/* Contact Info Cards - Only Email and Live Chat */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl text-white">📧</span>
+        {/* Contact Info Card - Only Email */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 max-w-sm">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl text-white">📧</span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Email Us</h3>
-            <p className="text-gray-600 text-sm">support@chamavault.com</p>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl text-white">💬</span>
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Live Chat</h3>
-            <p className="text-gray-600 text-sm">Available 24/7</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Email Us</h3>
+            <p className="text-gray-600 text-lg">support@chamavault.com</p>
+            <p className="text-gray-500 text-sm mt-2">We typically respond within 24 hours</p>
           </div>
         </div>
 
@@ -119,7 +112,7 @@ function ContactUs() {
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
             
-            {/* Name and Phone Row */}
+            {/* Name and Contact Info Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -138,14 +131,14 @@ function ContactUs() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  📞 Phone Number *
+                  📞📧 Phone Number or Email *
                 </label>
                 <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
+                  type="text"
+                  name="contact_info"
+                  value={form.contact_info}
                   onChange={handleChange}
-                  placeholder="+254 700 000 000"
+                  placeholder="Phone: +254 700 000 000 or Email: your@email.com"
                   required
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-gray-800 placeholder-gray-500"
                 />
@@ -168,34 +161,24 @@ function ContactUs() {
               />
             </div>
 
-            {/* Reason Selection */}
+            {/* Reason Selection - Dropdown */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 {getReasonIcon(form.reason)} What can we help you with? *
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <select
+                name="reason"
+                value={form.reason}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-gray-800 bg-white"
+              >
                 {reasonOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setForm({ ...form, reason: option.value })}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
-                      form.reason === option.value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">{option.icon}</span>
-                      <span className={`font-medium ${
-                        form.reason === option.value ? 'text-blue-700' : 'text-gray-700'
-                      }`}>
-                        {option.value}
-                      </span>
-                    </div>
-                  </button>
+                  <option key={option.value} value={option.value}>
+                    {option.icon} {option.value}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
             {/* Message */}
