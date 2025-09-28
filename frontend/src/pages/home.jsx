@@ -55,9 +55,9 @@ function Home() {
     const currentSlideData = slides[currentSlide];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-            {/* Hero Section */}
-            <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[32rem] overflow-hidden">
+        <div className="min-h-screen">
+            {/* Hero Section - Different color from body */}
+            <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[32rem] overflow-hidden bg-gradient-to-br from-gray-800 via-gray-900 to-black">
                 
                 {/* Background Image */}
                 <div 
@@ -67,27 +67,27 @@ function Home() {
                     }}
                 />
                 
-                {/* Fallback gradient if no image - DARKER */}
+                {/* Fallback gradient if no image */}
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black"></div>
                 
-                {/* Dark overlay for better text readability - DARKER */}
-                <div className="absolute inset-0 bg-black/70"></div>
+                {/* Dark overlay for better text readability */}
+                <div className="absolute inset-0 bg-black/60"></div>
 
                 {/* Hero Content */}
                 <div className="relative z-20 h-full flex items-center justify-center px-4">
                     <div className="text-center text-white max-w-4xl">
                         {/* Title */}
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 drop-shadow-lg">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 drop-shadow-2xl text-white">
                             {currentSlideData.title}
                         </h1>
                         
                         {/* Subtitle */}
-                        <p className="text-lg sm:text-xl md:text-2xl font-light mb-4 drop-shadow-md">
+                        <p className="text-lg sm:text-xl md:text-2xl font-light mb-4 drop-shadow-xl text-gray-100">
                             {currentSlideData.subtitle}
                         </p>
                         
                         {/* Description */}
-                        <p className="text-base sm:text-lg mb-8 drop-shadow-md">
+                        <p className="text-base sm:text-lg mb-8 drop-shadow-lg text-gray-200">
                             {currentSlideData.description}
                         </p>
                         
@@ -145,14 +145,14 @@ function Home() {
                 </div>
             </div>
 
-            {/* Main Content Section - UPDATED LIST */}
-            <div id="home-section" className="relative px-6 py-12 -mt-16 z-10">
+            {/* Main Content Section - Light background, different from hero */}
+            <div id="home-section" className="relative px-6 py-12 -mt-16 z-10 bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 min-h-screen">
                 <div className="h-8"></div>
                 <div className="w-full max-w-6xl bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 p-6 sm:p-8 lg:p-12 text-center mx-auto transform hover:-translate-y-3 border border-white/20">
                     
                     {/* Welcome Section */}
                     <div className="mb-8">
-                        <h2 id="hero-title" className="text-green-700 text-3xl sm:text-4xl font-bold mb-4 hover:text-green-800 transition-colors duration-300">
+                        <h2 id="hero-title" className="text-gray-800 text-3xl sm:text-4xl font-bold mb-4 hover:text-green-700 transition-colors duration-300">
                             Welcome to Your Financial Future! 🚀
                         </h2>
                         
@@ -188,7 +188,7 @@ function Home() {
                                 <div className="text-3xl mb-3 animate-bounce group-hover:scale-110 transition-transform duration-300" style={{animationDelay: `${index * 100}ms`}}>
                                     {feature.icon}
                                 </div>
-                                <h4 className="font-bold text-green-700 mb-2 text-base group-hover:text-green-800 transition-colors duration-300">{feature.title}</h4>
+                                <h4 className="font-bold text-gray-800 mb-2 text-base group-hover:text-green-700 transition-colors duration-300">{feature.title}</h4>
                                 <p className="text-sm text-gray-600 leading-tight group-hover:text-gray-700 transition-colors duration-300">{feature.desc}</p>
                             </div>
                         ))}
@@ -227,21 +227,21 @@ function Home() {
                         )}
                     </div>
 
-                    {/* Trust Indicators */}
-                    <div className="mt-12 pt-8 border-t border-gray-200">
+                    {/* Trust Indicators - REMOVED BORDER */}
+                    <div className="mt-12 pt-8">
                         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6">
                             <div className="flex flex-col sm:flex-row justify-center items-center gap-8 text-sm text-gray-600">
                                 <div className="flex items-center animate-pulse delay-100 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
                                     <span className="text-green-500 mr-2 text-lg">🔐</span>
-                                    <span className="font-medium">Bank-Level Security</span>
+                                    <span className="font-medium text-gray-800">Bank-Level Security</span>
                                 </div>
                                 <div className="flex items-center animate-pulse delay-300 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
                                     <span className="text-blue-500 mr-2 text-lg">⚡</span>
-                                    <span className="font-medium">Lightning Fast</span>
+                                    <span className="font-medium text-gray-800">Lightning Fast</span>
                                 </div>
                                 <div className="flex items-center animate-pulse delay-500 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
                                     <span className="text-purple-500 mr-2 text-lg">🌟</span>
-                                    <span className="font-medium">Trusted by Thousands</span>
+                                    <span className="font-medium text-gray-800">Trusted by Thousands</span>
                                 </div>
                             </div>
                         </div>
