@@ -94,15 +94,15 @@ function AIDashboard() {
 
     if (!isLoggedIn) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 p-4 sm:p-6 lg:p-8">
+            <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
                 <div className="max-w-4xl mx-auto">
                     
                     {/* Header */}
                     <div className="mb-8 text-center">
-                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
+                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
                             🤖 AI Financial Assistant
                         </h1>
-                        <p className="text-gray-600 text-lg">
+                        <p className="text-gray-700 text-lg">
                             Smart insights powered by AI to boost your savings journey
                         </p>
                     </div>
@@ -110,379 +110,180 @@ function AIDashboard() {
                     {/* AI Features Preview */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
                         
-                        {/* Smart Nudge Preview - DARK BACKGROUND, WHITE TEXT OK */}
-                        <div className="bg-gradient-to-br from-green-700 to-green-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300 opacity-75 relative">
+                        {/* Smart Nudge Feature */}
+                        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                             <div className="flex items-center mb-4">
-                                <div className="bg-white/20 rounded-full p-3 mr-4">
+                                <div className="bg-green-100 rounded-full p-3 mr-4">
                                     <span className="text-2xl">💡</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white">Smart Nudge</h3>
+                                <h3 className="text-xl font-bold text-gray-900">Smart Nudge</h3>
                             </div>
-                            <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
-                                <p className="text-lg leading-relaxed mb-3 text-white">
-                                    "Great job on your consistent savings! Consider increasing your weekly contribution by 10% to reach your goals faster."
+                            <div className="bg-green-50 rounded-lg p-4">
+                                <p className="text-gray-800 mb-3 font-medium">
+                                    AI analyzes your savings pattern and gives personalized encouragement to help you save more consistently.
                                 </p>
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="text-sm opacity-90 text-white">
-                                        💪 Personalized encouragement based on your savings pattern
+                                <div className="bg-green-100 rounded-lg p-3">
+                                    <p className="text-sm text-gray-700">
+                                        💪 Get motivated with smart insights about your progress
                                     </p>
                                 </div>
                             </div>
-                            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="text-4xl mb-2">🔒</div>
-                                    <p className="text-lg font-semibold text-white">Login Required</p>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* Loan Analysis Preview - DARK BACKGROUND, WHITE TEXT OK */}
-                        <div className="bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300 opacity-75 relative">
+                        {/* Loan Analysis Feature */}
+                        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                             <div className="flex items-center mb-4">
-                                <div className="bg-white/20 rounded-full p-3 mr-4">
+                                <div className="bg-blue-100 rounded-full p-3 mr-4">
                                     <span className="text-2xl">🏦</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white">Loan Analysis</h3>
+                                <h3 className="text-xl font-bold text-gray-900">Loan Analysis</h3>
                             </div>
-                            <div className="bg-white/10 rounded-lg p-4 backdrop-blur space-y-3">
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold text-white">Eligibility: Qualified</p>
+                            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                                <div className="bg-blue-100 rounded-lg p-3">
+                                    <p className="font-semibold text-gray-800">Check Your Eligibility</p>
                                 </div>
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold text-white">Max Amount: $2,500.00</p>
+                                <div className="bg-blue-100 rounded-lg p-3">
+                                    <p className="font-semibold text-gray-800">See Maximum Amount</p>
                                 </div>
-                                <p className="text-sm opacity-90 text-white">Based on your savings history, you qualify for our premium loan rates.</p>
-                            </div>
-                            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="text-4xl mb-2">🔒</div>
-                                    <p className="text-lg font-semibold text-white">Login Required</p>
-                                </div>
+                                <p className="text-sm text-gray-700">AI calculates your loan eligibility based on your savings history and gives you personalized recommendations.</p>
                             </div>
                         </div>
 
-                        {/* Savings Health Preview - DARK BACKGROUND, WHITE TEXT OK */}
-                        <div className="bg-gradient-to-br from-purple-700 to-purple-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300 opacity-75 relative">
+                        {/* Savings Health Feature */}
+                        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                             <div className="flex items-center mb-4">
-                                <div className="bg-white/20 rounded-full p-3 mr-4">
+                                <div className="bg-purple-100 rounded-full p-3 mr-4">
                                     <span className="text-2xl">📈</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white">Savings Health</h3>
+                                <h3 className="text-xl font-bold text-gray-900">Savings Health</h3>
                             </div>
-                            <div className="bg-white/10 rounded-lg p-4 backdrop-blur space-y-4">
+                            <div className="bg-purple-50 rounded-lg p-4 space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-lg font-semibold text-white">Health Score</span>
-                                    <div className="bg-white/20 rounded-full px-4 py-2">
-                                        <span className="text-2xl font-bold text-white">85/100</span>
+                                    <span className="text-lg font-semibold text-gray-800">Health Score</span>
+                                    <div className="bg-purple-100 rounded-full px-4 py-2">
+                                        <span className="text-xl font-bold text-gray-800">0-100</span>
                                     </div>
                                 </div>
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold mb-2 text-white">Status: Excellent</p>
-                                    <p className="text-sm opacity-90 text-white">Your savings consistency is outstanding!</p>
-                                </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="text-4xl mb-2">🔒</div>
-                                    <p className="text-lg font-semibold text-white">Login Required</p>
+                                <div className="bg-purple-100 rounded-lg p-3">
+                                    <p className="font-semibold mb-2 text-gray-800">Track Your Status</p>
+                                    <p className="text-sm text-gray-700">Get detailed analysis of your savings consistency and performance.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* AI Chatbot Preview */}
-                    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden opacity-75 relative">
-                        {/* DARK HEADER - WHITE TEXT OK */}
-                        <div className="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 text-white">
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 mb-12">
+                        {/* Header */}
+                        <div className="bg-gray-900 p-6">
                             <div className="flex items-center">
-                                <div className="bg-white/20 rounded-full p-3 mr-4">
+                                <div className="bg-gray-700 rounded-full p-3 mr-4">
                                     <span className="text-2xl">🤖</span>
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-bold mb-1 text-white">AI Assistant</h3>
-                                    <p className="opacity-90 text-white">Ask me about savings rules, loan terms, or financial advice!</p>
+                                    <h3 className="text-2xl font-bold mb-1 text-white">AI Chat Assistant</h3>
+                                    <p className="text-gray-300">Ask questions about savings rules, policies, and get financial advice!</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Chat Preview - LIGHT BACKGROUND, DARK TEXT */}
-                        <div className="h-96 overflow-y-auto p-6 space-y-4 bg-gray-50 relative">
-                            {/* Sample chat messages */}
-                            <div className="flex justify-end">
-                                <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-blue-600 text-white">
-                                    <p className="text-sm text-white">What are the loan terms?</p>
+                        {/* Chat Preview */}
+                        <div className="p-6 bg-gray-50">
+                            <div className="space-y-4 mb-6">
+                                <div className="text-center">
+                                    <p className="text-lg font-semibold text-gray-800 mb-4">🤖 What can I help you with?</p>
                                 </div>
-                            </div>
-                            
-                            <div className="flex justify-start">
-                                <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-white text-gray-800 shadow-md border">
-                                    <p className="text-sm text-gray-800">Our loans offer competitive rates starting at 2% monthly interest. You can borrow up to 3x your total savings with flexible repayment terms...</p>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end">
-                                <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-blue-600 text-white">
-                                    <p className="text-sm text-white">How do I increase my savings?</p>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-start">
-                                <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-white text-gray-800 shadow-md border">
-                                    <p className="text-sm text-gray-800">Here are some smart strategies: 1) Set up automatic transfers, 2) Save unexpected income, 3) Try the 50/30/20 rule...</p>
-                                </div>
-                            </div>
-
-                            {/* Blur overlay - DARK BACKGROUND, WHITE TEXT OK */}
-                            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center">
-                                <div className="text-center text-white">
-                                    <div className="text-6xl mb-4">🔒</div>
-                                    <p className="text-xl font-semibold mb-2 text-white">Login Required</p>
-                                    <p className="text-sm opacity-90 text-white">Sign in to chat with your AI assistant</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Disabled input - LIGHT BACKGROUND, DARK TEXT */}
-                        <div className="p-6 bg-white border-t">
-                            <div className="flex space-x-4">
-                                <input
-                                    type="text"
-                                    placeholder="Sign in to start chatting with AI..."
-                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-600 cursor-not-allowed"
-                                    disabled
-                                />
-                                <button
-                                    disabled
-                                    className="bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold cursor-not-allowed"
-                                >
-                                    Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Login Call to Action - DARK BACKGROUND, WHITE TEXT OK */}
-                    <div className="mt-12 text-center">
-                        <div className="bg-gradient-to-r from-blue-700 to-purple-800 rounded-2xl p-8 text-white">
-                            <h2 className="text-2xl font-bold mb-4 text-white">🚀 Unlock Your AI Financial Insights!</h2>
-                            <p className="text-lg mb-6 opacity-90 text-white">
-                                Get personalized financial advice, loan analysis, and smart savings recommendations tailored just for you.
-                            </p>
-                            <Link to="/login">
-                                <button className="bg-white text-blue-700 hover:bg-gray-100 px-8 py-4 rounded-full text-lg font-bold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                    🔑 Login to Access AI Dashboard
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (aiData.loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-                <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading your AI insights...</p>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
-                        🤖 AI Financial Assistant
-                    </h1>
-                    <p className="text-gray-600 text-lg">
-                        Smart insights powered by AI to boost your savings journey
-                    </p>
-                </div>
-
-                {/* Error Display */}
-                {aiData.error && (
-                    <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
-                        <p className="font-medium text-red-700">⚠️ {aiData.error}</p>
-                        <button 
-                            onClick={fetchAllAIData}
-                            className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                )}
-
-                {/* AI Insights Grid - DARK BACKGROUNDS, WHITE TEXT OK */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                    
-                    {/* Financial Nudge Card */}
-                    <div className="bg-gradient-to-br from-green-700 to-green-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
-                        <div className="flex items-center mb-4">
-                            <div className="bg-white/20 rounded-full p-3 mr-4">
-                                <span className="text-2xl">💡</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Smart Nudge</h3>
-                        </div>
-                        <p className="text-lg leading-relaxed mb-4 text-white">
-                            {aiData.nudge || "Keep up the great work with your savings!"}
-                        </p>
-                        <div className="bg-white/20 rounded-lg p-3">
-                            <p className="text-sm opacity-90 text-white">
-                                💪 Personalized encouragement based on your savings pattern
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Loan Analysis Card */}
-                    <div className="bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
-                        <div className="flex items-center mb-4">
-                            <div className="bg-white/20 rounded-full p-3 mr-4">
-                                <span className="text-2xl">🏦</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Loan Analysis</h3>
-                        </div>
-                        {aiData.loanAnalysis ? (
-                            <div className="space-y-3">
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold text-white">Eligibility: {aiData.loanAnalysis.eligibility}</p>
-                                </div>
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold text-white">Max Amount: ${aiData.loanAnalysis.recommendedAmount?.toFixed(2) || '0.00'}</p>
-                                </div>
-                                <p className="text-sm opacity-90 text-white">{aiData.loanAnalysis.advice}</p>
-                            </div>
-                        ) : (
-                            <p className="text-lg text-white">Building your loan profile...</p>
-                        )}
-                    </div>
-
-                    {/* Savings Health Card */}
-                    <div className="bg-gradient-to-br from-purple-700 to-purple-800 rounded-2xl shadow-xl p-6 text-white transform hover:scale-105 transition-all duration-300 lg:col-span-2 xl:col-span-1">
-                        <div className="flex items-center mb-4">
-                            <div className="bg-white/20 rounded-full p-3 mr-4">
-                                <span className="text-2xl">📈</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Savings Health</h3>
-                        </div>
-                        {aiData.healthInsight ? (
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-lg font-semibold text-white">Health Score</span>
-                                    <div className="bg-white/20 rounded-full px-4 py-2">
-                                        <span className="text-2xl font-bold text-white">{aiData.healthInsight.score}/100</span>
-                                    </div>
-                                </div>
-                                <div className="bg-white/20 rounded-lg p-3">
-                                    <p className="font-semibold mb-2 text-white">Status: {aiData.healthInsight.status}</p>
-                                    <p className="text-sm opacity-90 text-white">{aiData.healthInsight.insights}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-lg text-white">Analyzing your savings health...</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* AI Chatbot Section */}
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-                    {/* DARK HEADER - WHITE TEXT OK */}
-                    <div className="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 text-white">
-                        <div className="flex items-center">
-                            <div className="bg-white/20 rounded-full p-3 mr-4">
-                                <span className="text-2xl">🤖</span>
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold mb-1 text-white">AI Assistant</h3>
-                                <p className="opacity-90 text-white">Ask me about savings rules, loan terms, or financial advice!</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Chat Messages - LIGHT BACKGROUND, DARK TEXT */}
-                    <div className="h-96 overflow-y-auto p-6 space-y-4 bg-gray-50">
-                        {chatData.messages.length === 0 && (
-                            <div className="text-center text-gray-600 mt-8">
-                                <p className="text-lg mb-4 text-gray-800">👋 Hi! I'm your AI financial assistant.</p>
+                                
+                                {/* Sample Questions */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {[
-                                        "What are the loan terms?",
-                                        "How do savings rules work?",
-                                        "When can I borrow money?",
+                                        "What are the savings rules?",
+                                        "How do loans work?", 
+                                        "When can I withdraw money?",
                                         "What's the interest rate?"
-                                    ].map((suggestion, index) => (
-                                        <button
+                                    ].map((question, index) => (
+                                        <div
                                             key={index}
-                                            onClick={() => setChatData(prev => ({ ...prev, currentMessage: suggestion }))}
-                                            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm transition-colors font-medium"
+                                            className="bg-blue-100 border border-blue-200 px-4 py-3 rounded-lg text-center"
                                         >
-                                            {suggestion}
-                                        </button>
+                                            <p className="text-blue-800 font-medium text-sm">{question}</p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
-                        )}
 
-                        {chatData.messages.map((message, index) => (
-                            <div
-                                key={index}
-                                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                                        message.type === 'user'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-white text-gray-800 shadow-md border'
-                                    }`}
-                                >
-                                    <p className={`text-sm leading-relaxed ${
-                                        message.type === 'user' ? 'text-white' : 'text-gray-800'
-                                    }`}>
-                                        {message.content}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-
-                        {chatData.loading && (
-                            <div className="flex justify-start">
-                                <div className="bg-white text-gray-800 shadow-md border max-w-xs px-4 py-3 rounded-2xl">
-                                    <div className="flex space-x-1">
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                            {/* Features List */}
+                            <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                <h4 className="font-bold text-gray-900 mb-3">✨ AI Assistant Features:</h4>
+                                <div className="space-y-2">
+                                    <div className="flex items-center">
+                                        <span className="text-green-600 mr-2">✅</span>
+                                        <span className="text-gray-800">Explains savings rules and policies</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span className="text-green-600 mr-2">✅</span>
+                                        <span className="text-gray-800">Answers questions about loans and interest</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span className="text-green-600 mr-2">✅</span>
+                                        <span className="text-gray-800">Provides personalized financial advice</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span className="text-green-600 mr-2">✅</span>
+                                        <span className="text-gray-800">24/7 availability for instant help</span>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Chat Input - LIGHT BACKGROUND, DARK TEXT */}
-                    <div className="p-6 bg-white border-t">
-                        <div className="flex space-x-4">
-                            <input
-                                type="text"
-                                value={chatData.currentMessage}
-                                onChange={(e) => setChatData(prev => ({ ...prev, currentMessage: e.target.value }))}
-                                onKeyPress={handleKeyPress}
-                                placeholder="Ask about savings rules, loan terms, or get financial advice..."
-                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
-                                disabled={chatData.loading}
-                            />
-                            <button
-                                onClick={sendChatMessage}
-                                disabled={chatData.loading || !chatData.currentMessage.trim()}
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                            >
-                                <span className="hidden sm:inline text-white">Send</span>
-                                <span className="sm:hidden">📤</span>
-                            </button>
                         </div>
                     </div>
+
+                    {/* Login Call to Action */}
+                    <div className="text-center">
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+                            <div className="mb-6">
+                                <div className="text-5xl mb-4">🚀</div>
+                                <h2 className="text-2xl font-bold mb-4 text-white">Ready to Get Your AI Insights?</h2>
+                                <p className="text-lg text-gray-100 mb-6">
+                                    Login now to access personalized AI recommendations, chat with your financial assistant, and get smart insights about your savings!
+                                </p>
+                            </div>
+                            
+                            <Link to="/login">
+                                <button className="bg-white text-blue-600 hover:bg-gray-100 px-10 py-4 rounded-full text-xl font-bold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                    🔑 Login to Access AI Dashboard
+                                </button>
+                            </Link>
+                            
+                            <div className="mt-4">
+                                <p className="text-gray-200 text-sm">
+                                    Don't have an account? <Link to="/register" className="text-white font-semibold underline hover:text-gray-100">Sign up here</Link>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // If logged in, redirect or show logged-in message
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
+                <div className="text-4xl mb-4">🤖</div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">AI Dashboard</h1>
+                <p className="text-gray-700 mb-6">Full AI functionality will be implemented here for logged-in users.</p>
+                <div className="space-y-3">
+                    <Link to="/dashboard" className="block">
+                        <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            Go to Dashboard
+                        </button>
+                    </Link>
+                    <Link to="/my-profile" className="block">
+                        <button className="w-full bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                            Go to Profile
+                        </button>
+                    </Link>
                 </div>
             </div>
         </div>

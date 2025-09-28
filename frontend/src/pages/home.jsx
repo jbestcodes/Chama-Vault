@@ -47,8 +47,8 @@ function Home() {
 
     return (
         <div className="min-h-screen">
-            {/* Hero Section - NO IMAGE */}
-            <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[32rem] overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
+            {/* Hero Section - LAVENDER GRADIENT */}
+            <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[32rem] overflow-hidden bg-gradient-to-br from-purple-300 via-purple-400 to-lavender-500" style={{background: 'linear-gradient(135deg, #dda0dd, #e6e6fa, #b19cd9)'}}>
                 
                 {/* Hero Content with DARK TEXT */}
                 <div className="relative z-20 h-full flex items-center justify-center px-4">
