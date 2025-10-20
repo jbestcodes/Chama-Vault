@@ -46,140 +46,194 @@ function Home() {
     const currentSlideData = slides[currentSlide];
 
     return (
-        <div className="min-h-screen">
-            {/* Hero Section - LAVENDER GRADIENT */}
-            <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[32rem] overflow-hidden bg-gradient-to-br from-purple-300 via-purple-400 to-lavender-500" style={{background: 'linear-gradient(135deg, #dda0dd, #e6e6fa, #b19cd9)'}}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+            
+            {/* Hero Section - Modern Dark Design */}
+            <div className="relative w-full h-screen overflow-hidden">
                 
-                {/* Hero Content with DARK TEXT */}
+                {/* Animated Background Particles */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                    <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+                </div>
+                
+                {/* Hero Content */}
                 <div className="relative z-20 h-full flex items-center justify-center px-4">
-                    <div className="text-center max-w-4xl">
-                        {/* Title - DARK TEXT */}
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-gray-900">
-                            {currentSlideData.title}
+                    <div className="text-center max-w-5xl">
+                        
+                        {/* Main Title with Glow Effect */}
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 text-white drop-shadow-2xl animate-fade-in">
+                            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                                {currentSlideData.title}
+                            </span>
                         </h1>
                         
-                        {/* Subtitle - DARK TEXT */}
-                        <p className="text-lg sm:text-xl md:text-2xl font-light mb-4 text-gray-800">
+                        {/* Subtitle with Animation */}
+                        <p className="text-xl sm:text-2xl md:text-3xl font-light mb-6 text-gray-200 animate-slide-up">
                             {currentSlideData.subtitle}
                         </p>
                         
-                        {/* Description - DARK TEXT */}
-                        <p className="text-base sm:text-lg mb-8 text-gray-700">
-                            {currentSlideData.description}
-                        </p>
+                        {/* Description with Backdrop */}
+                        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-10 border border-white/20 animate-bounce-in">
+                            <p className="text-lg sm:text-xl text-gray-100 font-medium">
+                                {currentSlideData.description}
+                            </p>
+                        </div>
                         
-                        {/* Call to Action Button */}
+                        {/* Enhanced CTA Button */}
                         <Link to={currentSlideData.link}>
-                            <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-full text-lg font-bold transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
-                                {currentSlideData.linkText}
+                            <button className="group relative bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white px-12 py-5 rounded-full text-xl font-bold transform hover:scale-110 transition-all duration-500 shadow-2xl hover:shadow-purple-500/50 animate-float">
+                                <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+                                <span className="relative flex items-center justify-center gap-3">
+                                    ✨ {currentSlideData.linkText} ✨
+                                </span>
                             </button>
                         </Link>
+                        
+                        {/* Slide Indicators */}
+                        <div className="flex justify-center mt-12 space-x-3">
+                            {slides.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentSlide(index)}
+                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                        index === currentSlide 
+                                            ? 'bg-white scale-125 shadow-lg' 
+                                            : 'bg-white/40 hover:bg-white/60'
+                                    }`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Floating Animation Elements */}
-                <div className="absolute top-8 left-8 w-4 h-4 bg-yellow-400 rounded-full animate-bounce z-10 opacity-80"></div>
-                <div className="absolute top-16 right-12 w-6 h-6 bg-pink-400 rounded-full animate-bounce delay-300 z-10 opacity-80"></div>
-                <div className="absolute bottom-16 left-1/3 w-3 h-3 bg-purple-400 rounded-full animate-bounce delay-500 z-10 opacity-80"></div>
+                {/* Floating Geometric Elements */}
+                <div className="absolute top-1/4 left-8 w-6 h-6 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-bounce opacity-80"></div>
+                <div className="absolute top-1/3 right-12 w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-400 rotate-45 animate-wiggle opacity-80"></div>
+                <div className="absolute bottom-1/3 left-1/4 w-8 h-8 bg-gradient-to-r from-pink-400 to-blue-400 rounded-full animate-pulse opacity-80"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-400 rotate-12 animate-bounce delay-1000 opacity-80"></div>
             </div>
 
-            {/* Main Content Section - DIFFERENT COLOR: Purple/Pink background */}
-            <div id="home-section" className="relative px-6 py-12 -mt-16 z-10 bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50 min-h-screen">
-                <div className="h-8"></div>
-                <div className="w-full max-w-6xl bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 p-6 sm:p-8 lg:p-12 text-center mx-auto transform hover:-translate-y-3 border border-white/20">
+            {/* Main Content Section - Redesigned */}
+            <div id="home-section" className="relative px-4 py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+                <div className="max-w-7xl mx-auto">
                     
-                    {/* Welcome Section */}
-                    <div className="mb-8">
-                        <h2 id="hero-title" className="text-gray-900 text-3xl sm:text-4xl font-bold mb-4 hover:text-blue-700 transition-colors duration-300">
-                            Welcome to Your Financial Future! 🚀
-                        </h2>
+                    {/* Main Content Card */}
+                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 lg:p-16 text-center border border-white/50 hover:shadow-purple-200/50 transition-all duration-700 transform hover:-translate-y-2">
                         
-                        <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl p-6 mb-6">
-                            <p className="text-lg mb-6 text-gray-900 leading-relaxed">
-                                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold text-xl">
-                                    Chama Vault
-                                </span> is your gateway to collaborative wealth building! <br />
-                                Join thousands who are transforming their savings journey with our innovative platform.
-                            </p>
-                            <div className="bg-white/80 rounded-lg p-4 inline-block">
-                                <strong className="text-blue-600 text-xl animate-pulse">✨ Amazing Features ✨</strong>
+                        {/* Welcome Section - Enhanced */}
+                        <div className="mb-16">
+                            <h2 id="hero-title" className="text-gray-900 text-4xl sm:text-5xl lg:text-6xl font-black mb-8 hover:text-purple-700 transition-colors duration-300">
+                                <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 bg-clip-text text-transparent">
+                                    Welcome to Your Financial Future! 🚀
+                                </span>
+                            </h2>
+                            
+                            <div className="bg-gradient-to-r from-purple-100 via-blue-100 to-pink-100 rounded-3xl p-8 mb-8 border border-purple-200 shadow-lg">
+                                <p className="text-xl mb-8 text-gray-800 leading-relaxed font-medium">
+                                    <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-black text-2xl">
+                                        Chama Vault
+                                    </span> is your gateway to collaborative wealth building! <br />
+                                    Join thousands who are transforming their savings journey with our innovative platform.
+                                </p>
+                                <div className="bg-white/90 rounded-2xl p-6 inline-block shadow-lg border border-purple-100">
+                                    <strong className="text-purple-600 text-2xl animate-pulse font-black">✨ Amazing Features ✨</strong>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Interactive Features Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 my-8">
-                        {[
-                            { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard" },
-                            { icon: "🎯", title: "Goal Tracking", desc: "Personal savings milestones and progress tracking" },
-                            { icon: "🛡️", title: "Admin Control", desc: "Powerful admin panel for group management" },
-                            { icon: "📈", title: "Visual Analytics", desc: "Beautiful charts for group savings insights" },
-                            { icon: "🔒", title: "Bank-Level Security", desc: "Secure login and easy password recovery" },
-                            { icon: "📅", title: "History Tracking", desc: "Complete contribution history and weekly tracking" },
-                            { icon: "🏆", title: "Competitive Edge", desc: "Group-specific ranking and analytics" },
-                            { icon: "💡", title: "Smart Notifications", desc: "Stay updated with real-time alerts" }
-                        ].map((feature, index) => (
-                            <div
-                                key={index}
-                                className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl shadow-md hover:shadow-xl transform hover:scale-105 hover:-rotate-1 transition-all duration-300 cursor-pointer border border-blue-100 hover:border-blue-300 min-h-[160px] flex flex-col justify-center group"
-                            >
-                                <div className="text-3xl mb-3 animate-bounce group-hover:scale-110 transition-transform duration-300" style={{animationDelay: `${index * 100}ms`}}>
-                                    {feature.icon}
+                        {/* Enhanced Features Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 my-16">
+                            {{
+                                { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard", color: "from-blue-500 to-purple-500" },
+                                { icon: "🎯", title: "Goal Tracking", desc: "Personal savings milestones and progress tracking", color: "from-purple-500 to-pink-500" },
+                                { icon: "🛡️", title: "Admin Control", desc: "Powerful admin panel for group management", color: "from-pink-500 to-red-500" },
+                                { icon: "📈", title: "Visual Analytics", desc: "Beautiful charts for group savings insights", color: "from-green-500 to-blue-500" },
+                                { icon: "🔒", title: "Bank-Level Security", desc: "Secure login and easy password recovery", color: "from-yellow-500 to-orange-500" },
+                                { icon: "📅", title: "History Tracking", desc: "Complete contribution history and weekly tracking", color: "from-indigo-500 to-purple-500" },
+                                { icon: "🏆", title: "Competitive Edge", desc: "Group-specific ranking and analytics", color: "from-orange-500 to-red-500" },
+                                { icon: "💡", title: "Smart Notifications", desc: "Stay updated with real-time alerts", color: "from-teal-500 to-cyan-500" }
+                            }.map((feature, index) => (
+                                <div
+                                    key={index}
+                                    className="group relative bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl transform hover:scale-105 hover:rotate-1 transition-all duration-500 cursor-pointer border border-gray-100 hover:border-purple-300 min-h-[220px] flex flex-col justify-center overflow-hidden"
+                                >
+                                    {/* Gradient Background on Hover */}
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-3xl`}></div>
+                                    
+                                    <div className="relative z-10">
+                                        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" style={{animationDelay: `${index * 150}ms`}}>
+                                            {feature.icon}
+                                        </div>
+                                        <h4 className="font-black text-gray-900 mb-3 text-lg group-hover:text-purple-700 transition-colors duration-300">{feature.title}</h4>
+                                        <p className="text-sm text-gray-600 leading-relaxed group-hover:text-gray-800 transition-colors duration-300 font-medium">{feature.desc}</p>
+                                    </div>
+                                    
+                                    {/* Hover Border Glow */}
+                                    <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 bg-gradient-to-r ${feature.color} p-[2px] transition-opacity duration-500`}>
+                                        <div className="w-full h-full bg-white rounded-3xl"></div>
+                                    </div>
                                 </div>
-                                <h4 className="font-bold text-gray-900 mb-2 text-base group-hover:text-blue-700 transition-colors duration-300">{feature.title}</h4>
-                                <p className="text-sm text-gray-700 leading-tight group-hover:text-gray-800 transition-colors duration-300">{feature.desc}</p>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center items-center px-4">
-                        {!isLoggedIn && (
-                            <>
-                                <Link to="/register" className="w-full sm:w-auto">
-                                    <button className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto">
-                                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
-                                        <span className="relative">🎉 Join Now - It's Free!</span>
-                                    </button>
-                                </Link>
-                                <Link to="/login" className="w-full sm:w-auto">
-                                    <button className="group relative bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto">
-                                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
-                                        <span className="relative">🔑 Login Now</span>
-                                    </button>
-                                </Link>
-                            </>
-                        )}
-                        {isLoggedIn && (
-                            <button
-                                onClick={() => {
-                                    localStorage.removeItem("token");
-                                    localStorage.removeItem("role");
-                                    window.location.reload();
-                                }}
-                                className="group relative bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-none py-4 px-10 rounded-full text-lg cursor-pointer font-bold transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden w-full sm:w-auto"
-                            >
-                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
-                                <span className="relative">👋 Logout</span>
-                            </button>
-                        )}
-                    </div>
+                        {/* Enhanced Action Buttons */}
+                        <div className="mt-16 flex flex-col sm:flex-row gap-8 justify-center items-center">
+                            {!isLoggedIn && (
+                                <>
+                                    <Link to="/register" className="group">
+                                        <button className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 hover:from-purple-500 hover:via-blue-500 hover:to-pink-500 text-white py-6 px-12 rounded-full text-xl font-black transform hover:scale-110 transition-all duration-500 shadow-2xl hover:shadow-purple-500/50 overflow-hidden min-w-[280px]">
+                                            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                            <span className="relative flex items-center justify-center gap-3">
+                                                🎉 Join Now - It's Free! ✨
+                                            </span>
+                                        </button>
+                                    </Link>
+                                    <Link to="/login" className="group">
+                                        <button className="relative bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-6 px-12 rounded-full text-xl font-black transform hover:scale-110 transition-all duration-500 shadow-2xl hover:shadow-emerald-500/50 overflow-hidden min-w-[280px]">
+                                            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                            <span className="relative flex items-center justify-center gap-3">
+                                                🔑 Login Now 🚀
+                                            </span>
+                                        </button>
+                                    </Link>
+                                </>
+                            )}
+                            {isLoggedIn && (
+                                <button
+                                    onClick={() => {
+                                        localStorage.removeItem("token");
+                                        localStorage.removeItem("role");
+                                        window.location.reload();
+                                    }}
+                                    className="group relative bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white py-6 px-12 rounded-full text-xl font-black transform hover:scale-110 transition-all duration-500 shadow-2xl hover:shadow-red-500/50 overflow-hidden min-w-[280px]"
+                                >
+                                    <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-full"></span>
+                                    <span className="relative flex items-center justify-center gap-3">
+                                        👋 Logout 🚪
+                                    </span>
+                                </button>
+                            )}
+                        </div>
 
-                    {/* Trust Indicators */}
-                    <div className="mt-12 pt-8">
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                            <div className="flex flex-col sm:flex-row justify-center items-center gap-8 text-sm">
-                                <div className="flex items-center animate-pulse delay-100 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <span className="text-green-500 mr-2 text-lg">🔐</span>
-                                    <span className="font-medium text-gray-900">Bank-Level Security</span>
-                                </div>
-                                <div className="flex items-center animate-pulse delay-300 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <span className="text-blue-500 mr-2 text-lg">⚡</span>
-                                    <span className="font-medium text-gray-900">Lightning Fast</span>
-                                </div>
-                                <div className="flex items-center animate-pulse delay-500 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <span className="text-purple-500 mr-2 text-lg">🌟</span>
-                                    <span className="font-medium text-gray-900">Trusted by Thousands</span>
+                        {/* Enhanced Trust Indicators */}
+                        <div className="mt-16">
+                            <div className="bg-gradient-to-r from-gray-50 to-purple-50 rounded-3xl p-8 border border-purple-100 shadow-lg">
+                                <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
+                                    {{
+                                        { icon: "🔐", text: "Bank-Level Security", color: "from-green-500 to-emerald-500" },
+                                        { icon: "⚡", text: "Lightning Fast", color: "from-blue-500 to-cyan-500" },
+                                        { icon: "🌟", text: "Trusted by Thousands", color: "from-purple-500 to-pink-500" }
+                                    }.map((item, index) => (
+                                        <div key={index} className="group relative bg-white rounded-2xl px-8 py-4 shadow-md hover:shadow-xl transition-all duration-500 transform hover:scale-105 border border-gray-100 hover:border-purple-300">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{item.icon}</span>
+                                                <span className="font-black text-gray-900 text-lg group-hover:text-purple-700 transition-colors duration-300">{item.text}</span>
+                                            </div>
+                                            <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-10 bg-gradient-to-r ${item.color} transition-opacity duration-500`}></div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
