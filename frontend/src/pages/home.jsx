@@ -143,9 +143,9 @@ function Home() {
                             </div>
                         </div>
 
-                        {/* Enhanced Features Grid */}
+                        {/* Enhanced Features Grid  */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 my-16">
-                            {{
+                            {[
                                 { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard", color: "from-blue-500 to-purple-500" },
                                 { icon: "🎯", title: "Goal Tracking", desc: "Personal savings milestones and progress tracking", color: "from-purple-500 to-pink-500" },
                                 { icon: "🛡️", title: "Admin Control", desc: "Powerful admin panel for group management", color: "from-pink-500 to-red-500" },
@@ -154,7 +154,7 @@ function Home() {
                                 { icon: "📅", title: "History Tracking", desc: "Complete contribution history and weekly tracking", color: "from-indigo-500 to-purple-500" },
                                 { icon: "🏆", title: "Competitive Edge", desc: "Group-specific ranking and analytics", color: "from-orange-500 to-red-500" },
                                 { icon: "💡", title: "Smart Notifications", desc: "Stay updated with real-time alerts", color: "from-teal-500 to-cyan-500" }
-                            }.map((feature, index) => (
+                            ].map((feature, index) => (
                                 <div
                                     key={index}
                                     className="group relative bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl transform hover:scale-105 hover:rotate-1 transition-all duration-500 cursor-pointer border border-gray-100 hover:border-purple-300 min-h-[220px] flex flex-col justify-center overflow-hidden"
@@ -217,15 +217,15 @@ function Home() {
                             )}
                         </div>
 
-                        {/* Enhanced Trust Indicators */}
+                        {/* Enhanced Trust Indicators - FIXED SYNTAX */}
                         <div className="mt-16">
                             <div className="bg-gradient-to-r from-gray-50 to-purple-50 rounded-3xl p-8 border border-purple-100 shadow-lg">
                                 <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
-                                    {{
+                                    {[
                                         { icon: "🔐", text: "Bank-Level Security", color: "from-green-500 to-emerald-500" },
                                         { icon: "⚡", text: "Lightning Fast", color: "from-blue-500 to-cyan-500" },
                                         { icon: "🌟", text: "Trusted by Thousands", color: "from-purple-500 to-pink-500" }
-                                    }.map((item, index) => (
+                                    ].map((item, index) => (
                                         <div key={index} className="group relative bg-white rounded-2xl px-8 py-4 shadow-md hover:shadow-xl transition-all duration-500 transform hover:scale-105 border border-gray-100 hover:border-purple-300">
                                             <div className="flex items-center gap-4">
                                                 <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{item.icon}</span>
