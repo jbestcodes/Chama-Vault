@@ -5,6 +5,12 @@ const Member = require('../models/Member');
 const Savings = require('../models/Savings');
 const Loan = require('../models/Loan');
 const Milestone = require('../models/Milestone');
+const OpenAI = require('openai');
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // AI Financial Nudge endpoint
 router.get('/financial-nudge', authenticateToken, async (req, res) => {
@@ -132,7 +138,7 @@ router.get('/savings-health', authenticateToken, async (req, res) => {
     }
 });
 
-// AI Chat endpoint
+// UPDATED AI Chat endpoint with REAL OpenAI
 router.post('/chat', authenticateToken, async (req, res) => {
     try {
         const { question } = req.body;
@@ -147,45 +153,64 @@ router.post('/chat', authenticateToken, async (req, res) => {
         const savings = await Savings.find({ member_id: memberId });
         const totalSavings = savings.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
         const activeLoan = await Loan.findOne({ member_id: memberId, status: 'active' });
+        const milestone = await Milestone.findOne({ member_id: memberId }).sort({ createdAt: -1 });
+
+        // Create rich context for OpenAI
+        const userContext = `
+        User Profile:
+        - Name: ${member.full_name}
+        - Group: ${member.group_name}
+        - Total Savings: KSh ${totalSavings.toLocaleString()}
+        - Active Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
+        - Current Milestone: ${milestone ? `${milestone.milestone_name} (Target: KSh ${milestone.target_amount.toLocaleString()})` : 'None set'}
+        - Recent Savings Entries: ${savings.length}
         
-        let response = `Habari ${member.full_name}! I'm here to help with your Chama questions! 🤖`;
+        Chama Rules:
+        - Minimum savings for loan eligibility: KSh 500
+        - Maximum loan amount: 3x total savings
+        - Currency: Kenyan Shillings (KSh)
+        - Group-based savings and loans
+        `;
+
+        const systemPrompt = `You are a helpful financial advisor for a Kenyan Chama (table banking group). 
+        You help members with savings, loans, and financial planning questions. 
+        Always use KSh (Kenyan Shillings) for currency. 
+        Be encouraging, practical, and give specific actionable advice.
+        Answer in a friendly, supportive tone as if speaking to a friend.`;
+
+        const userPrompt = `${userContext}\n\nUser Question: ${question}\n\nPlease provide a helpful, personalized response.`;
+
+        // Call OpenAI API
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini", //  Cheapest option!
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ],
+            max_tokens: 200, //  Reduced tokens = lower cost
+            temperature: 0.7
+        });
+
+        const aiResponse = completion.choices[0].message.content;
+
+        res.json({ response: aiResponse });
+
+    } catch (error) {
+        console.error('OpenAI API error:', error);
+        
+        // Fallback to basic response if OpenAI fails
+        let fallbackResponse = `Hi ${member?.full_name || 'there'}! I'm having trouble accessing my AI brain right now. `;
         
         const lowerQuestion = question.toLowerCase();
-        
-        if (lowerQuestion.includes('loan')) {
-            if (activeLoan) {
-                response = `You currently have an active loan of KSh ${activeLoan.total_due.toLocaleString()}. Focus on completing your repayments before applying for new loans. You've got this! 💪`;
-            } else if (totalSavings >= 500) {
-                const maxLoan = totalSavings * 3;
-                response = `Great news! With KSh ${totalSavings.toLocaleString()} saved, you can borrow up to KSh ${maxLoan.toLocaleString()} from ${member.group_name}. Your consistent saving has paid off! 🎉`;
-            } else {
-                const needed = 500 - totalSavings;
-                response = `You need at least KSh 500 in savings to qualify for loans. You currently have KSh ${totalSavings.toLocaleString()}. Save KSh ${needed.toLocaleString()} more to unlock loan benefits! 📊`;
-            }
-        } else if (lowerQuestion.includes('withdraw')) {
-            if (activeLoan) {
-                response = `Withdrawal isn't possible while you have an active loan of KSh ${activeLoan.total_due.toLocaleString()}. Complete your loan repayments first for financial flexibility! 🔒`;
-            } else if (totalSavings > 0) {
-                response = `You can request to withdraw from your KSh ${totalSavings.toLocaleString()} savings. Remember, all withdrawal requests require admin approval in ${member.group_name}. Plan wisely! 💡`;
-            } else {
-                response = `You haven't started saving yet! Build your savings first before considering withdrawals. Every journey begins with a single step! 🌟`;
-            }
-        } else if (lowerQuestion.includes('save') || lowerQuestion.includes('contribution')) {
-            if (totalSavings === 0) {
-                response = `Welcome to ${member.group_name}! Start your savings journey today - even small amounts make a big difference over time! Your future self will thank you! 🌱`;
-            } else {
-                response = `Excellent work! You've saved KSh ${totalSavings.toLocaleString()} so far in ${member.group_name}. Keep up those regular contributions to grow your financial security! 📈`;
-            }
-        } else if (lowerQuestion.includes('group') || lowerQuestion.includes('chama')) {
-            response = `You're a valued member of ${member.group_name}! Your group operates with shared goals and mutual support. Together, you're building financial strength! 🤝`;
-        } else if (lowerQuestion.includes('balance') || lowerQuestion.includes('total')) {
-            response = `Your current balance in ${member.group_name} is KSh ${totalSavings.toLocaleString()}. ${totalSavings > 0 ? 'Keep up the great work!' : 'Ready to start your savings journey?'} 💰`;
+        if (lowerQuestion.includes('save') && lowerQuestion.includes('week')) {
+            fallbackResponse += `For weekly savings planning, try dividing your target amount by 52 weeks. For KSh 10,000 per year, that's about KSh 192 per week!`;
+        } else if (lowerQuestion.includes('loan')) {
+            fallbackResponse += `For loan questions, remember you need at least KSh 500 in savings to qualify!`;
+        } else {
+            fallbackResponse += `Please try asking again, or contact your group admin for specific guidance.`;
         }
         
-        res.json({ response });
-    } catch (error) {
-        console.error('AI chat error:', error);
-        res.status(500).json({ error: 'Failed to process chat message' });
+        res.json({ response: fallbackResponse });
     }
 });
 
