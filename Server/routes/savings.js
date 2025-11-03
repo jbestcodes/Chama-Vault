@@ -30,21 +30,34 @@ router.post('/add', authenticateToken, isAdmin, async (req, res) => {
     try {
         const adminId = req.user.id;
         const { full_name, phone } = req.body;
-        if (!full_name || !phone) return res.status(400).json({ error: 'Full name and phone required.' });
-
+        
+        if (!full_name || !phone) {
+            return res.status(400).json({ error: 'Full name and phone required.' });
+        }
+        
+        // Check if member already exists
+        const existingMember = await Member.findOne({ phone });
+        if (existingMember) {
+            return res.status(400).json({ error: 'Member with this phone number already exists.' });
+        }
+        
         const admin = await Member.findById(adminId);
         const groupId = admin?.group_id;
+        const groupName = admin?.group_name;
+        
         if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
         const newMember = new Member({
             full_name,
             phone,
             group_id: groupId,
-            status: 'pending',
+            group_name: groupName,
+            status: 'pending', // Will auto-approve when they register
             role: 'member'
         });
+        
         await newMember.save();
-        res.json({ message: 'Member added. Pending approval.' });
+        res.json({ message: 'Member added. They can now register with this phone number.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 // --- Configuration ---
-const BASE_URL = 'http://localhost:5000'; 
+const BASE_URL = 'https://chama-vault-1.onrender.com'; // ✅ Your live backend
 
 // --- Helper Components (Moved inside the same file) ---
 const LoadingSpinner = () => (

@@ -48,13 +48,16 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         if (existingMember) {
-            existingMember.password = hashedPassword;
-            // 👇 ADD THIS: Auto-approve if admin pre-added them
-            if (existingMember.status === 'pending') {
-                existingMember.status = 'approved';
+            // If admin pre-added them (no password yet)
+            if (!existingMember.password) {
+                existingMember.password = hashedPassword;
+                existingMember.status = 'approved'; // Auto-approve admin-added members
+                await existingMember.save();
+                return res.status(201).json({ message: 'Registration successful. You can now login.' });
+            } else {
+                // Member already has password (duplicate registration)
+                return res.status(400).json({ error: 'Account already exists. Please login.' });
             }
-            await existingMember.save();
-            return res.status(201).json({ message: 'Registration successful. You can now login.' });
         } else {
             const newMember = new Member({
                 full_name,

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const MemberSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   phone: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String }, 
   group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
   group_name: { type: String, required: true },
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
