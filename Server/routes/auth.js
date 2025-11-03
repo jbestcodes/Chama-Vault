@@ -10,6 +10,12 @@ const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 const jwtSecret = process.env.JWT_SECRET;
 
+// Add this at the top of your routes
+if (!jwtSecret) {
+    console.error('❌ JWT_SECRET is not set in environment variables!');
+    process.exit(1);
+}
+
 // Register route
 router.post('/register', async (req, res) => {
     const { full_name, phone, password, group_name, role } = req.body;
@@ -78,8 +84,15 @@ router.post('/login', async (req, res) => {
 
     try {
         const member = await Member.findOne({ phone });
-        if (!member || member.status !== 'approved') {
-            return res.status(401).json({ error: 'Account not approved yet.' });
+        
+        // Check if member exists
+        if (!member) {
+            return res.status(401).json({ error: 'Account does not exist. Please register first.' });
+        }
+        
+        // Check if account is approved
+        if (member.status !== 'approved') {
+            return res.status(401).json({ error: 'Account not approved yet. Please wait for admin approval.' });
         }
 
         const isMatch = await bcrypt.compare(password, member.password);
