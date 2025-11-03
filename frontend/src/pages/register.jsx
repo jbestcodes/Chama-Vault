@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
 
@@ -42,87 +43,92 @@ const Register = () => {
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '50px' }}>
-            <h2>Register</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            {success && <p style={{ color: 'green' }}>{success}</p>}
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '50px' }}>
+                    <h2>Register</h2>
+                    {error && <p style={{ color: 'red' }}>{error}</p>}
+                    {success && <p style={{ color: 'green' }}>{success}</p>}
 
-            <form onSubmit={handleRegister}>
-                <div>
-                    <label>Full Name:</label>
-                    <input
-                        type="text"
-                        value={full_name}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required
-                    />
+                    <form onSubmit={handleRegister}>
+                        <div>
+                            <label>Full Name:</label>
+                            <input
+                                type="text"
+                                value={full_name}
+                                onChange={(e) => setFullName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            <label>Phone Number:</label>
+                            <input
+                                type="text"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            <label>Password:</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            <label>Group Name:</label>
+                            <input
+                                type="text"
+                                value={group_name}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="admin"
+                                    checked={role === "admin"}
+                                    onChange={() => setRole("admin")}
+                                    required
+                                />{" "}
+                                Admin
+                            </label>
+                            <label style={{ marginLeft: 16 }}>
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="member"
+                                    checked={role === "member"}
+                                    onChange={() => setRole("member")}
+                                    required
+                                />{" "}
+                                Member
+                            </label>
+                        </div>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={agreed}
+                                    onChange={() => setAgreed(!agreed)}
+                                    required
+                                />{" "}
+                                I agree to the <Link to="/terms" target="_blank" style={{ color: "#1976d2" }}>Terms & Conditions</Link>
+                            </label>
+                        </div>
+                        <button type="submit" style={{ marginTop: '20px' }} disabled={!!success}>
+                            Register
+                        </button>
+                    </form>
                 </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label>Phone Number:</label>
-                    <input
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                    />
-                </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <div style={{ marginTop: '10px' }}>
-                    <label>Group Name:</label>
-                    <input
-                        type="text"
-                        value={group_name}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        required
-                    />
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                    <label>
-                        <input
-                            type="radio"
-                            name="role"
-                            value="admin"
-                            checked={role === "admin"}
-                            onChange={() => setRole("admin")}
-                            required
-                        />{" "}
-                        Admin
-                    </label>
-                    <label style={{ marginLeft: 16 }}>
-                        <input
-                            type="radio"
-                            name="role"
-                            value="member"
-                            checked={role === "member"}
-                            onChange={() => setRole("member")}
-                            required
-                        />{" "}
-                        Member
-                    </label>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={agreed}
-                            onChange={() => setAgreed(!agreed)}
-                            required
-                        />{" "}
-                        I agree to the <Link to="/terms" target="_blank" style={{ color: "#1976d2" }}>Terms & Conditions</Link>
-                    </label>
-                </div>
-                <button type="submit" style={{ marginTop: '20px' }} disabled={!!success}>
-                    Register
-                </button>
-            </form>
+            </div>
+            <Footer />
         </div>
     );
 };

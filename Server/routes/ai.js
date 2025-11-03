@@ -198,16 +198,15 @@ router.post('/chat', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('OpenAI API error:', error);
         
-        // Fallback to basic response if OpenAI fails
-        let fallbackResponse = `Hi ${member?.full_name || 'there'}! I'm having trouble accessing my AI brain right now. `;
+        // Smart fallback responses
+        let fallbackResponse = `Hi ${member?.full_name || 'there'}! `;
         
-        const lowerQuestion = question.toLowerCase();
-        if (lowerQuestion.includes('save') && lowerQuestion.includes('week')) {
-            fallbackResponse += `For weekly savings planning, try dividing your target amount by 52 weeks. For KSh 10,000 per year, that's about KSh 192 per week!`;
+        if (lowerQuestion.includes('save') && (lowerQuestion.includes('week') || lowerQuestion.includes('10'))) {
+            fallbackResponse += `To save KSh 10,000 in a year, you need about KSh 192 per week (KSh 10,000 ÷ 52 weeks). You currently have KSh ${totalSavings.toLocaleString()} saved! 📊`;
         } else if (lowerQuestion.includes('loan')) {
-            fallbackResponse += `For loan questions, remember you need at least KSh 500 in savings to qualify!`;
+            fallbackResponse += `You need at least KSh 500 to qualify for loans. You can borrow up to 3x your savings amount! 💰`;
         } else {
-            fallbackResponse += `Please try asking again, or contact your group admin for specific guidance.`;
+            fallbackResponse += `I'm temporarily offline for upgrades. Try asking about weekly savings goals or loan eligibility! 🔧`;
         }
         
         res.json({ response: fallbackResponse });
