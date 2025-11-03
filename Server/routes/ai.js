@@ -20,11 +20,14 @@ router.get('/financial-nudge', authenticateToken, async (req, res) => {
         const milestone = await Milestone.findOne({ member_id: memberId }).sort({ createdAt: -1 });
         
         let nudge;
-        if (milestone) {
+        if (totalSavings === 0) {
+            nudge = `Karibu ${member.full_name}! Welcome to ${member.group_name}. You haven't started saving yet - take the first step towards financial freedom today! 🌟`;
+        } else if (milestone) {
             const progress = (totalSavings / milestone.target_amount) * 100;
-            nudge = `Hi ${member.full_name}! You've saved $${totalSavings.toFixed(2)} towards your "${milestone.milestone_name}" goal. You're ${progress.toFixed(1)}% there - keep it up!`;
+            const remaining = milestone.target_amount - totalSavings;
+            nudge = `Hongera ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} towards your "${milestone.milestone_name}" goal. You're ${progress.toFixed(1)}% there! Only KSh ${remaining.toLocaleString()} to go! 💪`;
         } else {
-            nudge = `Great job ${member.full_name}! You've saved $${totalSavings.toFixed(2)} in ${member.group_name}. Consider setting a milestone to track your progress!`;
+            nudge = `Great work ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} in ${member.group_name}. Ready to set your first milestone? 🎯`;
         }
         
         res.json({ nudge });
@@ -48,25 +51,26 @@ router.get('/loan-analysis', authenticateToken, async (req, res) => {
         // Calculate eligibility
         const maxLoanAmount = totalSavings * 3; // 3x savings rule
         const hasActiveLoan = !!activeLoan;
-        const meetsMinimum = totalSavings >= 100; // Minimum $100 savings
+        const meetsMinimum = totalSavings >= 500; // Minimum KSh 500 savings
         
         let eligibility, recommendation;
         
         if (hasActiveLoan) {
             eligibility = 'Not Eligible';
-            recommendation = `You have an active loan of $${activeLoan.total_due}. Please repay your current loan before applying for a new one.`;
+            recommendation = `You have an active loan of KSh ${activeLoan.total_due.toLocaleString()}. Please complete your current loan repayments before applying for a new loan.`;
         } else if (!meetsMinimum) {
+            const needed = 500 - totalSavings;
             eligibility = 'Not Eligible';
-            recommendation = 'Save at least $100 before becoming eligible for loans.';
+            recommendation = `Build your savings first! You need KSh ${needed.toLocaleString()} more to reach the minimum KSh 500 requirement for loan eligibility.`;
         } else {
             eligibility = 'Qualified';
-            recommendation = `Based on your $${totalSavings.toFixed(2)} savings in ${member.group_name}, you qualify for competitive rates.`;
+            recommendation = `Excellent! Based on your KSh ${totalSavings.toLocaleString()} savings in ${member.group_name}, you qualify for loans with competitive rates. Your financial discipline shows! 🏆`;
         }
         
         const analysis = {
             eligibility,
-            maxAmount: hasActiveLoan ? '$0' : `$${maxLoanAmount.toFixed(2)}`,
-            currentSavings: `$${totalSavings.toFixed(2)}`,
+            maxAmount: hasActiveLoan ? 'KSh 0' : `KSh ${maxLoanAmount.toLocaleString()}`,
+            currentSavings: `KSh ${totalSavings.toLocaleString()}`,
             recommendation
         };
         
@@ -94,25 +98,29 @@ router.get('/savings-health', authenticateToken, async (req, res) => {
         
         let score, status, summary;
         
-        if (consistencyScore >= 75) {
+        if (totalSavings === 0) {
+            score = 0;
+            status = 'Getting Started';
+            summary = `Welcome to your financial journey ${member.full_name}! Every expert was once a beginner. Start with small, consistent savings to build momentum! 🌱`;
+        } else if (consistencyScore >= 75) {
             score = 85 + Math.random() * 10;
             status = 'Excellent';
-            summary = `Outstanding work ${member.full_name}! Your consistent saving pattern shows great financial discipline.`;
+            summary = `Outstanding work ${member.full_name}! Your consistent saving pattern of KSh ${totalSavings.toLocaleString()} shows exceptional financial discipline. You're a role model! 🌟`;
         } else if (consistencyScore >= 50) {
             score = 60 + Math.random() * 20;
             status = 'Good';
-            summary = `Good progress ${member.full_name}! Try to save more consistently to improve your financial health.`;
-        } else {
+            summary = `Good progress ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()}. Try to maintain more regular contributions to maximize your financial growth! 📈`;
+        } else if (consistencyScore > 0) {
             score = 30 + Math.random() * 25;
             status = 'Needs Improvement';
-            summary = `${member.full_name}, consider setting up a regular savings routine to build financial stability.`;
+            summary = `You're on the right track ${member.full_name} with KSh ${totalSavings.toLocaleString()} saved! Consider setting a weekly savings routine to boost your financial health! 💪`;
         }
         
         const health = {
             score: Math.round(score),
             status,
             summary,
-            totalSavings: `$${totalSavings.toFixed(2)}`,
+            totalSavings: `KSh ${totalSavings.toLocaleString()}`,
             recentEntries: recentSavings.length,
             groupName: member.group_name
         };
@@ -140,31 +148,38 @@ router.post('/chat', authenticateToken, async (req, res) => {
         const totalSavings = savings.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
         const activeLoan = await Loan.findOne({ member_id: memberId, status: 'active' });
         
-        let response = `Hi ${member.full_name}! I'm here to help with your Chama questions!`;
+        let response = `Habari ${member.full_name}! I'm here to help with your Chama questions! 🤖`;
         
         const lowerQuestion = question.toLowerCase();
         
         if (lowerQuestion.includes('loan')) {
             if (activeLoan) {
-                response = `You currently have an active loan of $${activeLoan.total_due}. Focus on repaying this before applying for new loans.`;
-            } else if (totalSavings >= 100) {
+                response = `You currently have an active loan of KSh ${activeLoan.total_due.toLocaleString()}. Focus on completing your repayments before applying for new loans. You've got this! 💪`;
+            } else if (totalSavings >= 500) {
                 const maxLoan = totalSavings * 3;
-                response = `Great news! With $${totalSavings.toFixed(2)} saved, you can borrow up to $${maxLoan.toFixed(2)} from ${member.group_name}.`;
+                response = `Great news! With KSh ${totalSavings.toLocaleString()} saved, you can borrow up to KSh ${maxLoan.toLocaleString()} from ${member.group_name}. Your consistent saving has paid off! 🎉`;
             } else {
-                response = `You need at least $100 in savings to qualify for loans. You currently have $${totalSavings.toFixed(2)}.`;
+                const needed = 500 - totalSavings;
+                response = `You need at least KSh 500 in savings to qualify for loans. You currently have KSh ${totalSavings.toLocaleString()}. Save KSh ${needed.toLocaleString()} more to unlock loan benefits! 📊`;
             }
         } else if (lowerQuestion.includes('withdraw')) {
             if (activeLoan) {
-                response = `You can't withdraw while you have an active loan of $${activeLoan.total_due}. Please repay your loan first.`;
+                response = `Withdrawal isn't possible while you have an active loan of KSh ${activeLoan.total_due.toLocaleString()}. Complete your loan repayments first for financial flexibility! 🔒`;
+            } else if (totalSavings > 0) {
+                response = `You can request to withdraw from your KSh ${totalSavings.toLocaleString()} savings. Remember, all withdrawal requests require admin approval in ${member.group_name}. Plan wisely! 💡`;
             } else {
-                response = `You can request to withdraw from your $${totalSavings.toFixed(2)} savings. All withdrawal requests require admin approval in ${member.group_name}.`;
+                response = `You haven't started saving yet! Build your savings first before considering withdrawals. Every journey begins with a single step! 🌟`;
             }
         } else if (lowerQuestion.includes('save') || lowerQuestion.includes('contribution')) {
-            response = `You've saved $${totalSavings.toFixed(2)} so far in ${member.group_name}. Keep up the regular contributions to improve your loan eligibility!`;
+            if (totalSavings === 0) {
+                response = `Welcome to ${member.group_name}! Start your savings journey today - even small amounts make a big difference over time! Your future self will thank you! 🌱`;
+            } else {
+                response = `Excellent work! You've saved KSh ${totalSavings.toLocaleString()} so far in ${member.group_name}. Keep up those regular contributions to grow your financial security! 📈`;
+            }
         } else if (lowerQuestion.includes('group') || lowerQuestion.includes('chama')) {
-            response = `You're part of ${member.group_name}. Your group operates independently with its own rules and contribution amounts managed by your admin.`;
+            response = `You're a valued member of ${member.group_name}! Your group operates with shared goals and mutual support. Together, you're building financial strength! 🤝`;
         } else if (lowerQuestion.includes('balance') || lowerQuestion.includes('total')) {
-            response = `Your current balance in ${member.group_name} is $${totalSavings.toFixed(2)}.`;
+            response = `Your current balance in ${member.group_name} is KSh ${totalSavings.toLocaleString()}. ${totalSavings > 0 ? 'Keep up the great work!' : 'Ready to start your savings journey?'} 💰`;
         }
         
         res.json({ response });
