@@ -1,29 +1,39 @@
 //routes/loans.js
 const express = require('express');
 const router = express.Router();
-const moment = require('moment'); // npm install moment
+const moment = require('moment');
+const Loan = require('../models/Loan');
+const LoanRepayment = require('../models/LoanRepayment');
+const Member = require('../models/Member');
 
-// create a new loan (admin direct creation)
+// Create a new loan (admin direct creation)
 router.post('/', async (req, res) => {
-    const db = req.db;
     try {
         const { member_id, amount, interest_rate, fees, due_date, installment_number } = req.body;
         if (!member_id || !amount || !interest_rate || !due_date || !installment_number) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        // calculate total due
+        // Calculate total due
         const total_due = Number(amount) + (Number(amount) * Number(interest_rate) / 100) + (fees ? Number(fees) : 0);
 
-        // insert loan
-        const [result] = await db.query(
-            'INSERT INTO loans (member_id, amount, interest_rate, fees, due_date, total_due, installment_number) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-            [member_id, amount, interest_rate, fees || 0, due_date, total_due, installment_number]
-        );
+        // Create new loan
+        const newLoan = new Loan({
+            member_id,
+            amount,
+            interest_rate,
+            fees: fees || 0,
+            due_date,
+            total_due,
+            installment_number
+        });
+
+        await newLoan.save();
+        
         res.status(201).json({
             message: 'Loan created successfully',
             loan: {
-                id: result.insertId,
+                id: newLoan._id,
                 member_id,
                 amount,
                 interest_rate,
@@ -41,19 +51,23 @@ router.post('/', async (req, res) => {
 
 // Member requests a loan (status: 'requested')
 router.post('/request', require('../middleware/auth').authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const member_id = req.user.id;
         const { amount, reason } = req.body;
         if (!amount) {
             return res.status(400).json({ message: 'Amount is required' });
         }
-        // Insert loan request with status 'requested'
-        const [result] = await db.query(
-            'INSERT INTO loans (member_id, amount, status, created_at, reason) VALUES (?, ?, ?, NOW(), ?)',
-            [member_id, amount, 'requested', reason || null]
-        );
-        res.status(201).json({ message: 'Loan request sent', loan_id: result.insertId });
+
+        // Create loan request
+        const newLoan = new Loan({
+            member_id,
+            amount,
+            status: 'requested',
+            reason: reason || null
+        });
+
+        await newLoan.save();
+        res.status(201).json({ message: 'Loan request sent', loan_id: newLoan._id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -62,14 +76,16 @@ router.post('/request', require('../middleware/auth').authenticateToken, async (
 
 // Get all loans for the logged-in member
 router.get('/my', require('../middleware/auth').authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const memberId = req.user.id;
-        const [loans] = await db.query('SELECT * FROM loans WHERE member_id = ?', [memberId]);
+        const loans = await Loan.find({ member_id: memberId });
+        
+        // Add repayments to each loan
         for (const loan of loans) {
-            const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+            const repayments = await LoanRepayment.find({ loan_id: loan._id });
             loan.repayments = repayments;
         }
+        
         res.json(loans);
     } catch (error) {
         console.error(error);
@@ -77,21 +93,23 @@ router.get('/my', require('../middleware/auth').authenticateToken, async (req, r
     }
 });
 
-// Get all loans for the admin's group (with JOIN)
+// Get all loans for the admin's group (with populate)
 router.get('/group', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const groupId = req.user.group_id;
-        // Join loans with members to get all loans for this group
-        const [loans] = await db.query(
-            `SELECT loans.* FROM loans
-             JOIN members ON loans.member_id = members.id
-             WHERE members.group_id = ?`, [groupId]
-        );
+        
+        // Find all members in the group, then find their loans
+        const members = await Member.find({ group_id: groupId });
+        const memberIds = members.map(member => member._id);
+        
+        const loans = await Loan.find({ member_id: { $in: memberIds } }).populate('member_id');
+        
+        // Add repayments to each loan
         for (const loan of loans) {
-            const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+            const repayments = await LoanRepayment.find({ loan_id: loan._id });
             loan.repayments = repayments;
         }
+        
         res.json(loans);
     } catch (error) {
         console.error(error);
@@ -101,7 +119,6 @@ router.get('/group', require('../middleware/auth').authenticateToken, require('.
 
 // Admin offers loan terms (status: 'offered')
 router.post('/offer', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const { loan_id, amount, interest_rate, fees, due_date, installment_number } = req.body;
         if (!loan_id || !amount || !interest_rate || !due_date || !installment_number) {
@@ -109,12 +126,12 @@ router.post('/offer', require('../middleware/auth').authenticateToken, require('
         }
 
         // Check loan status before offering
-        const [loans] = await db.query('SELECT status FROM loans WHERE id = ?', [loan_id]);
-        if (!loans.length) {
+        const loan = await Loan.findById(loan_id);
+        if (!loan) {
             return res.status(404).json({ message: 'Loan not found' });
         }
-        const currentStatus = loans[0].status;
-        if (["active", "rejected"].includes(currentStatus)) {
+        
+        if (["active", "rejected"].includes(loan.status)) {
             return res.status(400).json({ message: 'Cannot offer terms on an already accepted or rejected loan.' });
         }
 
@@ -122,10 +139,19 @@ router.post('/offer', require('../middleware/auth').authenticateToken, require('
         const firstDueDate = moment(due_date);
         const lastDueDate = firstDueDate.clone().add(installment_number - 1, 'months').format('YYYY-MM-DD');
         const installment_amount = (Number(total_due) / Number(installment_number)).toFixed(2);
-        await db.query(
-            'UPDATE loans SET amount=?, interest_rate=?, fees=?, due_date=?, last_due_date=?, total_due=?, installment_number=?, installment_amount=?, status=? WHERE id=?',
-            [amount, interest_rate, fees || 0, due_date, lastDueDate, total_due, installment_number, installment_amount, 'offered', loan_id]
-        );
+        
+        await Loan.findByIdAndUpdate(loan_id, {
+            amount,
+            interest_rate,
+            fees: fees || 0,
+            due_date,
+            last_due_date: lastDueDate,
+            total_due,
+            installment_number,
+            installment_amount,
+            status: 'offered'
+        });
+        
         res.json({ message: 'Loan offer sent to member' });
     } catch (error) {
         console.error(error);
@@ -135,20 +161,22 @@ router.post('/offer', require('../middleware/auth').authenticateToken, require('
 
 // Member accepts or rejects the loan offer
 router.post('/offer-action', require('../middleware/auth').authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const member_id = req.user.id;
         const { loan_id, action } = req.body; // action: 'accept' or 'reject'
         if (!loan_id || !['accept', 'reject'].includes(action)) {
             return res.status(400).json({ message: 'Invalid request' });
         }
+
         // Only allow the member who requested the loan to accept/reject
-        const [rows] = await db.query('SELECT * FROM loans WHERE id=? AND member_id=?', [loan_id, member_id]);
-        if (rows.length === 0) {
+        const loan = await Loan.findOne({ _id: loan_id, member_id: member_id });
+        if (!loan) {
             return res.status(403).json({ message: 'Not authorized' });
         }
+
         const newStatus = action === 'accept' ? 'active' : 'rejected';
-        await db.query('UPDATE loans SET status=? WHERE id=?', [newStatus, loan_id]);
+        await Loan.findByIdAndUpdate(loan_id, { status: newStatus });
+        
         res.json({ message: `Loan ${action}ed` });
     } catch (error) {
         console.error(error);
@@ -158,19 +186,27 @@ router.post('/offer-action', require('../middleware/auth').authenticateToken, as
 
 // Get loan details (admin or member who requested the loan)
 router.get('/:id', require('../middleware/auth').authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const loanId = req.params.id;
         const memberId = req.user.id;
+        
         // Check if the loan exists and if the requester is authorized to view it
-        const [loans] = await db.query('SELECT * FROM loans WHERE id=? AND (member_id=? OR ?)', [loanId, memberId, req.user.isAdmin]);
-        if (loans.length === 0) {
+        const loan = await Loan.findOne({
+            _id: loanId,
+            $or: [
+                { member_id: memberId },
+                ...(req.user.isAdmin ? [{}] : []) // If admin, allow access to any loan
+            ]
+        });
+        
+        if (!loan) {
             return res.status(404).json({ message: 'Loan not found' });
         }
-        const loan = loans[0];
+
         // Also fetch the repayment schedule for the loan
-        const [repayments] = await db.query('SELECT * FROM loan_repayments WHERE loan_id = ?', [loan.id]);
+        const repayments = await LoanRepayment.find({ loan_id: loan._id });
         loan.repayments = repayments;
+        
         res.json(loan);
     } catch (error) {
         console.error(error);
@@ -180,18 +216,25 @@ router.get('/:id', require('../middleware/auth').authenticateToken, async (req, 
 
 // Update loan details (admin only)
 router.put('/:id', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const loanId = req.params.id;
         const { amount, interest_rate, fees, due_date, installment_number, status } = req.body;
         if (!amount || !interest_rate || !due_date || !installment_number || !status) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
+
         const total_due = Number(amount) + (Number(amount) * Number(interest_rate) / 100) + (fees ? Number(fees) : 0);
-        await db.query(
-            'UPDATE loans SET amount=?, interest_rate=?, fees=?, due_date=?, total_due=?, installment_number=?, status=? WHERE id=?',
-            [amount, interest_rate, fees || 0, due_date, total_due, installment_number, status, loanId]
-        );
+        
+        await Loan.findByIdAndUpdate(loanId, {
+            amount,
+            interest_rate,
+            fees: fees || 0,
+            due_date,
+            total_due,
+            installment_number,
+            status
+        });
+        
         res.json({ message: 'Loan updated successfully' });
     } catch (error) {
         console.error(error);
@@ -201,13 +244,15 @@ router.put('/:id', require('../middleware/auth').authenticateToken, require('../
 
 // Delete a loan (admin only)
 router.delete('/:id', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const loanId = req.params.id;
+        
         // First, delete all repayments associated with the loan
-        await db.query('DELETE FROM loan_repayments WHERE loan_id = ?', [loanId]);
+        await LoanRepayment.deleteMany({ loan_id: loanId });
+        
         // Then, delete the loan itself
-        await db.query('DELETE FROM loans WHERE id = ?', [loanId]);
+        await Loan.findByIdAndDelete(loanId);
+        
         res.json({ message: 'Loan deleted successfully' });
     } catch (error) {
         console.error(error);

@@ -1,18 +1,17 @@
-const mysql = require('mysql2/promise');
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '28494217',
-    database: 'Chama_Vault'
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('🎉 Connected to MongoDB database!');
+  } catch (error) {
+    console.error('❌ Error connecting to MongoDB:', error);
+    process.exit(1); // Exit if we can't connect
+  }
 };
-// Export the connection function directly
-module.exports = async () => {
-    try {
-        const connection = await mysql.createConnection(dbConfig);
-        console.log('connected to mysql database');
-        return connection;
-    } catch (error) {
-        console.error('Error connecting to the database:', error);
-        throw error; // Re-throw the error so it can be caught in index.js
-    }
-};
+
+module.exports = connectDB;

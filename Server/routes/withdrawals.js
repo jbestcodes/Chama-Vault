@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, isAdmin } = require('../middleware/auth');
+const Member = require('../models/Member');
+const Savings = require('../models/Savings');
+const Loan = require('../models/Loan');
+const LoanRepayment = require('../models/LoanRepayment');
+const WithdrawalRequest = require('../models/WithdrawalRequest');
 
 // Member: Request withdrawal
 router.post('/request', authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const { amount, reason, request_type, loan_id } = req.body;
         const member_id = req.user.id;
@@ -25,11 +29,8 @@ router.post('/request', authenticateToken, async (req, res) => {
         }
 
         // Check member's total savings
-        const [savingsRows] = await db.query(
-            'SELECT COALESCE(SUM(amount), 0) as total_savings FROM savings WHERE member_id = ?',
-            [member_id]
-        );
-        const totalSavings = Number(savingsRows[0]?.total_savings || 0);
+        const memberSavings = await Savings.find({ member_id });
+        const totalSavings = memberSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
 
         if (amount > totalSavings) {
             return res.status(400).json({
@@ -40,19 +41,19 @@ router.post('/request', authenticateToken, async (req, res) => {
 
         // If it's a loan payment, verify the loan exists and amount is valid
         if (request_type === 'loan_payment' && loan_id) {
-            const [loanRows] = await db.query(
-                'SELECT * FROM loans WHERE id = ? AND member_id = ? AND status IN ("active", "approved")',
-                [loan_id, member_id]
-            );
+            const loan = await Loan.findOne({
+                _id: loan_id,
+                member_id: member_id,
+                status: { $in: ['active', 'approved'] }
+            });
 
-            if (loanRows.length === 0) {
+            if (!loan) {
                 return res.status(404).json({
                     success: false,
                     message: 'Active loan not found'
                 });
             }
 
-            const loan = loanRows[0];
             if (amount > loan.total_due) {
                 return res.status(400).json({
                     success: false,
@@ -62,17 +63,21 @@ router.post('/request', authenticateToken, async (req, res) => {
         }
 
         // Create withdrawal request
-        const [result] = await db.query(
-            `INSERT INTO withdrawal_requests 
-             (member_id, amount, reason, request_type, loan_id, status, created_at) 
-             VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
-            [member_id, amount, reason, request_type, loan_id || null]
-        );
+        const newRequest = new WithdrawalRequest({
+            member_id,
+            amount,
+            reason,
+            request_type,
+            loan_id: loan_id || null,
+            status: 'pending'
+        });
+
+        await newRequest.save();
 
         res.json({
             success: true,
             message: 'Withdrawal request submitted successfully. Waiting for admin approval.',
-            request_id: result.insertId
+            request_id: newRequest._id
         });
 
     } catch (error) {
@@ -86,26 +91,35 @@ router.post('/request', authenticateToken, async (req, res) => {
 
 // Member: Get own withdrawal history
 router.get('/my-requests', authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const member_id = req.user.id;
 
-        const [requests] = await db.query(`
-            SELECT 
-                wr.*,
-                l.amount as loan_original_amount,
-                l.total_due as loan_remaining,
-                admin.full_name as processed_by_name
-            FROM withdrawal_requests wr
-            LEFT JOIN loans l ON wr.loan_id = l.id
-            LEFT JOIN members admin ON wr.processed_by = admin.id
-            WHERE wr.member_id = ?
-            ORDER BY wr.created_at DESC
-        `, [member_id]);
+        const requests = await WithdrawalRequest.find({ member_id })
+            .populate('loan_id', 'amount total_due')
+            .populate('processed_by', 'full_name')
+            .sort({ createdAt: -1 });
+
+        // Format the response to match the old structure
+        const formattedRequests = requests.map(request => ({
+            id: request._id,
+            member_id: request.member_id,
+            amount: request.amount,
+            reason: request.reason,
+            request_type: request.request_type,
+            loan_id: request.loan_id?._id,
+            status: request.status,
+            admin_notes: request.admin_notes,
+            processed_by: request.processed_by?._id,
+            created_at: request.createdAt,
+            updated_at: request.updatedAt,
+            loan_original_amount: request.loan_id?.amount,
+            loan_remaining: request.loan_id?.total_due,
+            processed_by_name: request.processed_by?.full_name
+        }));
 
         res.json({
             success: true,
-            requests
+            requests: formattedRequests
         });
 
     } catch (error) {
@@ -119,21 +133,30 @@ router.get('/my-requests', authenticateToken, async (req, res) => {
 
 // Member: Get active loans for loan payment selection
 router.get('/my-loans', authenticateToken, async (req, res) => {
-    const db = req.db;
     try {
         const member_id = req.user.id;
 
-        const [loans] = await db.query(`
-            SELECT id, amount, total_due, monthly_payment, 
-                   DATEDIFF(due_date, CURDATE()) as days_until_due
-            FROM loans 
-            WHERE member_id = ? AND status IN ('active', 'approved') AND total_due > 0
-            ORDER BY due_date ASC
-        `, [member_id]);
+        const loans = await Loan.find({
+            member_id: member_id,
+            status: { $in: ['active', 'approved'] },
+            total_due: { $gt: 0 }
+        }).sort({ due_date: 1 });
+
+        // Format the response to calculate days until due
+        const formattedLoans = loans.map(loan => {
+            const daysUntilDue = loan.due_date ? Math.ceil((new Date(loan.due_date) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+            return {
+                id: loan._id,
+                amount: loan.amount,
+                total_due: loan.total_due,
+                monthly_payment: loan.installment_amount,
+                days_until_due: daysUntilDue
+            };
+        });
 
         res.json({
             success: true,
-            loans
+            loans: formattedLoans
         });
 
     } catch (error) {
@@ -147,51 +170,63 @@ router.get('/my-loans', authenticateToken, async (req, res) => {
 
 // Admin: Get all withdrawal requests
 router.get('/admin/all', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const adminId = req.user.id;
         const { status } = req.query;
         
         // Get admin's group
-        const [adminRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [adminId]);
-        const groupId = adminRows[0]?.group_id;
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
         if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
-        let query = `
-            SELECT 
-                wr.*,
-                m.full_name as member_name,
-                m.phone as member_phone,
-                l.amount as loan_original_amount,
-                l.total_due as loan_remaining,
-                admin.full_name as processed_by_name,
-                COALESCE(savings_total.total_savings, 0) as member_total_savings
-            FROM withdrawal_requests wr
-            JOIN members m ON wr.member_id = m.id
-            LEFT JOIN loans l ON wr.loan_id = l.id
-            LEFT JOIN members admin ON wr.processed_by = admin.id
-            LEFT JOIN (
-                SELECT member_id, COALESCE(SUM(amount), 0) as total_savings
-                FROM savings 
-                GROUP BY member_id
-            ) savings_total ON wr.member_id = savings_total.member_id
-            WHERE m.group_id = ?
-        `;
+        // Find all members in the group
+        const groupMembers = await Member.find({ group_id: groupId });
+        const memberIds = groupMembers.map(member => member._id);
 
-        const params = [groupId];
-
+        // Build query
+        let query = { member_id: { $in: memberIds } };
         if (status && status !== 'all') {
-            query += ' AND wr.status = ?';
-            params.push(status);
+            query.status = status;
         }
 
-        query += ' ORDER BY wr.created_at DESC';
+        const requests = await WithdrawalRequest.find(query)
+            .populate('member_id', 'full_name phone')
+            .populate('loan_id', 'amount total_due')
+            .populate('processed_by', 'full_name')
+            .sort({ createdAt: -1 });
 
-        const [requests] = await db.query(query, params);
+        // Get member savings totals
+        const allSavings = await Savings.find({ member_id: { $in: memberIds } });
+        const memberSavings = {};
+        allSavings.forEach(saving => {
+            if (!memberSavings[saving.member_id]) memberSavings[saving.member_id] = 0;
+            memberSavings[saving.member_id] += Number(saving.amount || 0);
+        });
+
+        // Format the response
+        const formattedRequests = requests.map(request => ({
+            id: request._id,
+            member_id: request.member_id._id,
+            amount: request.amount,
+            reason: request.reason,
+            request_type: request.request_type,
+            loan_id: request.loan_id?._id,
+            status: request.status,
+            admin_notes: request.admin_notes,
+            processed_by: request.processed_by?._id,
+            created_at: request.createdAt,
+            updated_at: request.updatedAt,
+            member_name: request.member_id.full_name,
+            member_phone: request.member_id.phone,
+            loan_original_amount: request.loan_id?.amount,
+            loan_remaining: request.loan_id?.total_due,
+            processed_by_name: request.processed_by?.full_name,
+            member_total_savings: memberSavings[request.member_id._id] || 0
+        }));
 
         res.json({
             success: true,
-            requests
+            requests: formattedRequests
         });
 
     } catch (error) {
@@ -205,7 +240,6 @@ router.get('/admin/all', authenticateToken, isAdmin, async (req, res) => {
 
 // Admin: Process withdrawal request
 router.put('/admin/process/:requestId', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const { requestId } = req.params;
         const { status, admin_notes } = req.body;
@@ -219,70 +253,79 @@ router.put('/admin/process/:requestId', authenticateToken, isAdmin, async (req, 
         }
 
         // Get the withdrawal request
-        const [requestRows] = await db.query(
-            'SELECT * FROM withdrawal_requests WHERE id = ? AND status = "pending"',
-            [requestId]
-        );
+        const request = await WithdrawalRequest.findOne({
+            _id: requestId,
+            status: 'pending'
+        });
 
-        if (requestRows.length === 0) {
+        if (!request) {
             return res.status(404).json({
                 success: false,
                 message: 'Pending withdrawal request not found'
             });
         }
 
-        const request = requestRows[0];
-
-        // Start transaction
-        await db.query('START TRANSACTION');
-
+        // Start MongoDB session for transaction
+        const session = await WithdrawalRequest.startSession();
+        
         try {
-            // Update the request status
-            await db.query(
-                `UPDATE withdrawal_requests 
-                 SET status = ?, admin_notes = ?, processed_by = ?, updated_at = NOW()
-                 WHERE id = ?`,
-                [status, admin_notes || null, admin_id, requestId]
-            );
-
-            if (status === 'approved') {
-                // Get current week number
-                const [weekResult] = await db.query('SELECT WEEK(NOW()) as current_week');
-                const currentWeek = weekResult[0].current_week;
-
-                // Deduct from savings (negative entry)
-                await db.query(
-                    `INSERT INTO savings (member_id, week_number, amount, created_at)
-                     VALUES (?, ?, ?, NOW())`,
-                    [request.member_id, currentWeek, -request.amount]
+            await session.withTransaction(async () => {
+                // Update the request status
+                await WithdrawalRequest.findByIdAndUpdate(
+                    requestId,
+                    {
+                        status,
+                        admin_notes: admin_notes || null,
+                        processed_by: admin_id,
+                        updatedAt: new Date()
+                    },
+                    { session }
                 );
 
-                // If it's a loan payment, create a repayment entry (integrating with your existing system)
-                if (request.request_type === 'loan_payment' && request.loan_id) {
-                    // Create loan repayment entry (using your existing table structure)
-                    await db.query(
-                        'INSERT INTO loan_repayments (loan_id, amount, paid_date, status, confirmed_at) VALUES (?, ?, NOW(), "approved", NOW())',
-                        [request.loan_id, request.amount]
-                    );
+                if (status === 'approved') {
+                    // Get current week number (simplified - you can adjust this logic)
+                    const currentWeek = Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
 
-                    // Update loan balance (using your existing logic)
-                    const [loanRows] = await db.query('SELECT * FROM loans WHERE id = ?', [request.loan_id]);
-                    if (loanRows.length > 0) {
-                        const loan = loanRows[0];
-                        let newTotalDue = loan.total_due - Number(request.amount);
-                        if (newTotalDue < 0) newTotalDue = 0;
-                        
-                        const newStatus = newTotalDue === 0 ? 'paid' : loan.status;
-                        
-                        await db.query(
-                            'UPDATE loans SET total_due = ?, status = ? WHERE id = ?',
-                            [newTotalDue, newStatus, request.loan_id]
-                        );
+                    // Deduct from savings (negative entry)
+                    const withdrawalSaving = new Savings({
+                        member_id: request.member_id,
+                        week_number: currentWeek,
+                        amount: -request.amount
+                    });
+                    await withdrawalSaving.save({ session });
+
+                    // If it's a loan payment, create a repayment entry
+                    if (request.request_type === 'loan_payment' && request.loan_id) {
+                        // Create loan repayment entry
+                        const repayment = new LoanRepayment({
+                            loan_id: request.loan_id,
+                            amount: request.amount,
+                            paid_date: new Date(),
+                            status: 'approved',
+                            confirmed_at: new Date()
+                        });
+                        await repayment.save({ session });
+
+                        // Update loan balance
+                        const loan = await Loan.findById(request.loan_id).session(session);
+                        if (loan) {
+                            let newTotalDue = loan.total_due - Number(request.amount);
+                            if (newTotalDue < 0) newTotalDue = 0;
+                            
+                            const newStatus = newTotalDue === 0 ? 'paid' : loan.status;
+                            
+                            await Loan.findByIdAndUpdate(
+                                request.loan_id,
+                                {
+                                    total_due: newTotalDue,
+                                    status: newStatus
+                                },
+                                { session }
+                            );
+                        }
                     }
                 }
-            }
-
-            await db.query('COMMIT');
+            });
 
             res.json({
                 success: true,
@@ -290,8 +333,9 @@ router.put('/admin/process/:requestId', authenticateToken, isAdmin, async (req, 
             });
 
         } catch (error) {
-            await db.query('ROLLBACK');
             throw error;
+        } finally {
+            await session.endSession();
         }
 
     } catch (error) {
@@ -305,32 +349,56 @@ router.put('/admin/process/:requestId', authenticateToken, isAdmin, async (req, 
 
 // Admin: Get withdrawal statistics
 router.get('/admin/stats', authenticateToken, isAdmin, async (req, res) => {
-    const db = req.db;
     try {
         const adminId = req.user.id;
         
         // Get admin's group
-        const [adminRows] = await db.query('SELECT group_id FROM members WHERE id = ?', [adminId]);
-        const groupId = adminRows[0]?.group_id;
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
         if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
-        // Get withdrawal statistics
-        const [stats] = await db.query(`
-            SELECT 
-                COUNT(*) as total_requests,
-                COUNT(CASE WHEN wr.status = 'pending' THEN 1 END) as pending_requests,
-                COUNT(CASE WHEN wr.status = 'approved' THEN 1 END) as approved_requests,
-                COUNT(CASE WHEN wr.status = 'rejected' THEN 1 END) as rejected_requests,
-                COALESCE(SUM(CASE WHEN wr.status = 'approved' THEN wr.amount ELSE 0 END), 0) as total_approved_amount,
-                COALESCE(SUM(CASE WHEN wr.status = 'pending' THEN wr.amount ELSE 0 END), 0) as pending_amount
-            FROM withdrawal_requests wr
-            JOIN members m ON wr.member_id = m.id
-            WHERE m.group_id = ?
-        `, [groupId]);
+        // Find all members in the group
+        const groupMembers = await Member.find({ group_id: groupId });
+        const memberIds = groupMembers.map(member => member._id);
+
+        // Get withdrawal statistics using aggregation
+        const stats = await WithdrawalRequest.aggregate([
+            { $match: { member_id: { $in: memberIds } } },
+            {
+                $group: {
+                    _id: null,
+                    total_requests: { $sum: 1 },
+                    pending_requests: {
+                        $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
+                    },
+                    approved_requests: {
+                        $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] }
+                    },
+                    rejected_requests: {
+                        $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
+                    },
+                    total_approved_amount: {
+                        $sum: { $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0] }
+                    },
+                    pending_amount: {
+                        $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0] }
+                    }
+                }
+            }
+        ]);
+
+        const result = stats[0] || {
+            total_requests: 0,
+            pending_requests: 0,
+            approved_requests: 0,
+            rejected_requests: 0,
+            total_approved_amount: 0,
+            pending_amount: 0
+        };
 
         res.json({
             success: true,
-            stats: stats[0]
+            stats: result
         });
 
     } catch (error) {

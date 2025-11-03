@@ -77,10 +77,42 @@ const HomePageContent = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const slides = [
-        { title: "💰 Welcome to Chama Vault", subtitle: "Your Smart Group Savings Platform", link: "/login", linkText: "Login to Your Account", description: "Secure • Smart • Simple Group Savings" },
-        { title: "🤝 Why Choose Us?", subtitle: "Trusted by Thousands of Chamas", link: "/why-us", linkText: "Learn Why Us", description: "Discover what makes us the preferred choice" },
-        { title: "📋 Terms & Conditions", subtitle: "Transparent & Fair Policies", link: "/terms-and-conditions", linkText: "Read Terms", description: "Clear guidelines for secure savings" },
-        { title: "🎯 Join Our Community", subtitle: "Start Your Savings Journey", link: "/register", linkText: "Register Now", description: "Create account and join successful savers" }
+        { 
+            title: "💰 Welcome to Chama Vault", 
+            description: "Your Smart Group Savings Platform. Secure, Smart, and Simple group savings for everyone.",
+            link: "/login", 
+            linkText: "Login to Your Account",
+            bgColor: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900",
+            cardColor: "bg-slate-800/90",
+            accentColor: "from-purple-600 to-blue-600"
+        },
+        { 
+            title: "🤝 Why Choose Us?", 
+            description: "Trusted by thousands of Chamas across the region. Discover what makes us the preferred choice.",
+            link: "/why-us", 
+            linkText: "Learn Why Us",
+            bgColor: "bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900",
+            cardColor: "bg-slate-800/90",
+            accentColor: "from-emerald-600 to-teal-600"
+        },
+        { 
+            title: "📋 Terms & Conditions", 
+            description: "Transparent and fair policies. Clear guidelines for secure savings and group management.",
+            link: "/terms-and-conditions", 
+            linkText: "Read Terms",
+            bgColor: "bg-gradient-to-br from-slate-900 via-orange-900 to-slate-900",
+            cardColor: "bg-slate-800/90",
+            accentColor: "from-orange-600 to-red-600"
+        },
+        { 
+            title: "🎯 Join Our Community", 
+            description: "Start your savings journey today. Create your account and join thousands of successful savers.",
+            link: "/register", 
+            linkText: "Register Now",
+            bgColor: "bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900",
+            cardColor: "bg-slate-800/90",
+            accentColor: "from-indigo-600 to-purple-600"
+        }
     ];
 
     useEffect(() => {
@@ -96,71 +128,67 @@ const HomePageContent = () => {
         <div className="bg-gray-100 dark:bg-slate-900 transition-colors duration-500">
             <Header />
             
-            {/* Hero Section */}
-            <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-24">
-                <div className="absolute inset-0 bg-gray-100 dark:bg-gradient-to-br dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"></div>
+            {/* Hero Section - Clean Card Design */}
+            <div className={`relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-24 transition-all duration-1000 ${currentSlideData.bgColor}`}>
                 
+                {/* Subtle Background Elements */}
                 <div className="absolute inset-0">
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                    <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/10 dark:bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+                    <div className="absolute top-20 left-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-20 right-10 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
                 </div>
                 
-                <div className="relative z-20 text-center max-w-5xl mx-auto px-4">
-                    {/* Boxed container for hero text with increased padding */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-10 md:p-16 border border-gray-200 dark:border-slate-700 shadow-xl">
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 text-gray-800 dark:text-white drop-shadow-2xl animate-fade-in">
-                            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-500 bg-clip-text text-transparent">
-                                {currentSlideData.title}
-                            </span>
-                        </h1>
+                <div className="relative z-20 text-center max-w-4xl mx-auto px-4">
+                    {/* Main Slide Card */}
+                    <div className={`${currentSlideData.cardColor} backdrop-blur-xl rounded-3xl p-12 md:p-16 border border-slate-700/50 shadow-2xl transition-all duration-700 transform hover:scale-[1.02]`}>
                         
-                        <p className="text-xl sm:text-2xl md:text-3xl font-light mb-6 text-gray-600 dark:text-gray-200 animate-slide-up">
-                            {currentSlideData.subtitle}
-                        </p>
+                        {/* Title Container */}
+                        <div className="bg-slate-900/60 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-slate-600/50 shadow-lg">
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white">
+                                <span className={`bg-gradient-to-r ${currentSlideData.accentColor} bg-clip-text text-transparent`}>
+                                    {currentSlideData.title}
+                                </span>
+                            </h1>
+                        </div>
                         
-                        <div className="bg-black/5 dark:bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-10 border border-black/10 dark:border-white/20 animate-bounce-in">
-                            <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-100 font-medium">
+                        {/* Description Container */}
+                        <div className="bg-slate-700/40 backdrop-blur-md rounded-xl p-6 mb-12 border border-slate-600/30 shadow-md">
+                            <p className="text-xl sm:text-2xl text-gray-200 leading-relaxed font-light">
                                 {currentSlideData.description}
                             </p>
                         </div>
                         
-                        <Link to={currentSlideData.link}>
-                            <button className="group relative bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white px-12 py-5 rounded-full text-xl font-bold transform hover:scale-110 transition-all duration-500 shadow-2xl hover:shadow-purple-500/50 animate-float">
-                                <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-                                <span className="relative flex items-center justify-center gap-3">
-                                    ✨ {currentSlideData.linkText} ✨
-                                </span>
-                            </button>
-                        </Link>
+                        {/* CTA Button Container */}
+                        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-600/40 shadow-lg inline-block">
+                            <Link to={currentSlideData.link}>
+                                <button className={`bg-gradient-to-r ${currentSlideData.accentColor} hover:shadow-2xl text-white px-12 py-6 rounded-full text-xl font-bold transform hover:scale-105 transition-all duration-500 shadow-xl`}>
+                                    {currentSlideData.linkText} →
+                                </button>
+                            </Link>
+                        </div>
                     </div>
                     
-                    <div className="flex justify-center mt-12 space-x-3">
-                        {slides.map((_, index) => (
+                    {/* Slide Indicators */}
+                    <div className="flex justify-center mt-12 space-x-4">
+                        {slides.map((slide, index) => (
                             <button
                                 key={index}
                                 onClick={() => setCurrentSlide(index)}
-                                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                className={`w-4 h-4 rounded-full transition-all duration-500 ${
                                     index === currentSlide 
-                                        ? 'bg-purple-600 dark:bg-white scale-125 shadow-lg' 
-                                        : 'bg-gray-400/40 dark:bg-white/40 hover:bg-gray-500/60 dark:hover:bg-white/60'
+                                        ? `bg-gradient-to-r ${slide.accentColor} scale-125 shadow-lg` 
+                                        : 'bg-gray-500/40 hover:bg-gray-400/60'
                                 }`}
                             />
                         ))}
                     </div>
                 </div>
-
-                <div className="absolute top-1/4 left-8 w-6 h-6 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-bounce opacity-50 dark:opacity-80"></div>
-                <div className="absolute top-1/3 right-12 w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-400 rotate-45 animate-wiggle opacity-50 dark:opacity-80"></div>
-                <div className="absolute bottom-1/3 left-1/4 w-8 h-8 bg-gradient-to-r from-pink-400 to-blue-400 rounded-full animate-pulse opacity-50 dark:opacity-80"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-400 rotate-12 animate-bounce delay-1000 opacity-50 dark:opacity-80"></div>
             </div>
 
             {/* Welcome Section */}
             <div className="relative px-4 pt-10 pb-20 bg-gray-100 dark:bg-slate-900">
                 <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-gray-900 dark:text-gray-100 text-4xl font-semibold animate-fade-in">
-                            Welcome to Chama Vault
+                    <h2 className="text-gray-900 dark:text-gray-100 text-4xl font-semibold animate-fade-in mb-6">
+                        Welcome to Chama Vault
                     </h2>
                     <p className="text-xl text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
                         Chama Vault is your gateway to collaborative wealth building! <br />
