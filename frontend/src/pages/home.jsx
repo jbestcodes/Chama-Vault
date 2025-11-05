@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from '../components/Footer';
+import heroImage from '../media/hero.jpg';
 
 const Home = () => {
     const isLoggedIn = !!localStorage.getItem("token");
@@ -44,33 +45,19 @@ const Home = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
-            {/* Header */}
-            <header className="fixed top-0 left-0 w-full z-50 p-4 bg-white/90 backdrop-blur-sm border-b border-gray-200 shadow-lg">
-                <div className="max-w-6xl mx-auto flex justify-between items-center">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        ChamaVault
-                    </h1>
-                    <div className="flex items-center gap-4">
-                        {isLoggedIn && (
-                            <button
-                                onClick={() => {
-                                    localStorage.removeItem("token");
-                                    localStorage.removeItem("role");
-                                    window.location.reload();
-                                }}
-                                className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300"
-                            >
-                                Logout
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            <div className="flex-1 pt-20">
+            <div className="flex-1">
                 {/* Hero Section */}
-                <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center p-8">
-                    <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl w-full text-center">
+                <div 
+                    className="flex items-center justify-center p-8 relative"
+                    style={{
+                        height: '70vh', // 70% of viewport height
+                        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(147, 51, 234, 0.8) 100%), url(${heroImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
+                >
+                    <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 max-w-4xl w-full text-center relative z-10">
                         {/* Current Slide Content */}
                         <div className="mb-8">
                             <div className="text-6xl mb-6">🏦</div>
@@ -112,6 +99,7 @@ const Home = () => {
                             ✨ Amazing Features ✨
                         </h2>
 
+                        {/* Features Section - Fixed Animations */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                             {[
                                 { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard" },
@@ -123,13 +111,13 @@ const Home = () => {
                             ].map((feature, index) => (
                                 <div
                                     key={index}
-                                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer hover:border-blue-200"
+                                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 cursor-pointer hover:border-blue-300 group"
                                 >
-                                    <div className="text-5xl mb-4">{feature.icon}</div>
-                                    <h4 className="font-bold text-gray-800 mb-3 text-lg">
+                                    <div className="text-5xl mb-4 group-hover:animate-bounce">{feature.icon}</div>
+                                    <h4 className="font-bold text-gray-800 mb-3 text-lg group-hover:text-blue-600 transition-colors duration-300">
                                         {feature.title}
                                     </h4>
-                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                    <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
                                         {feature.desc}
                                     </p>
                                 </div>

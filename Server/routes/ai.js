@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const User = require('../models/User');
 const Member = require('../models/Member');
 const Savings = require('../models/Savings');
 const Loan = require('../models/Loan');
 const Milestone = require('../models/Milestone');
+const Group = require('../models/Group');
 const OpenAI = require('openai');
 
 // Initialize OpenAI
@@ -142,18 +144,24 @@ router.get('/savings-health', authenticateToken, async (req, res) => {
 router.post('/chat', authenticateToken, async (req, res) => {
     try {
         const { question } = req.body;
-        const memberId = req.user.id;
+        const userId = req.user.id;
+        
+        // Get user and their group settings
+        const member = await User.findById(userId).populate('group_id');
+        const group = await Group.findById(member.group_id);
+        
+        const groupMinSavings = group?.minimum_loan_savings || 500;
+        const groupInterestRate = group?.interest_rate || 5.0;
         
         if (!question) {
             return res.status(400).json({ error: 'Question is required' });
         }
 
         // Get user context for personalized responses
-        const member = await Member.findById(memberId);
-        const savings = await Savings.find({ member_id: memberId });
+        const savings = await Savings.find({ member_id: userId });
         const totalSavings = savings.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-        const activeLoan = await Loan.findOne({ member_id: memberId, status: 'active' });
-        const milestone = await Milestone.findOne({ member_id: memberId }).sort({ createdAt: -1 });
+        const activeLoan = await Loan.findOne({ member_id: userId, status: 'active' });
+        const milestone = await Milestone.findOne({ member_id: userId }).sort({ createdAt: -1 });
 
         // Create rich context for OpenAI
         const userContext = `
@@ -166,7 +174,7 @@ router.post('/chat', authenticateToken, async (req, res) => {
         - Recent Savings Entries: ${savings.length}
         
         Chama Rules:
-        - Minimum savings for loan eligibility: KSh 500
+        - Minimum savings for loan eligibility: KSh ${groupMinSavings}
         - Maximum loan amount: 3x total savings
         - Currency: Kenyan Shillings (KSh)
         - Group-based savings and loans
@@ -176,7 +184,11 @@ router.post('/chat', authenticateToken, async (req, res) => {
         You help members with savings, loans, and financial planning questions. 
         Always use KSh (Kenyan Shillings) for currency. 
         Be encouraging, practical, and give specific actionable advice.
-        Answer in a friendly, supportive tone as if speaking to a friend.`;
+        Answer in a friendly, supportive tone as if speaking to a friend.
+        The current group has these settings:
+        - Minimum savings for loan eligibility: KSh ${groupMinSavings}
+        - Interest rate: ${groupInterestRate}%
+        Always use these group-specific values when giving advice about loans.`;
 
         const userPrompt = `${userContext}\n\nUser Question: ${question}\n\nPlease provide a helpful, personalized response.`;
 
@@ -199,12 +211,12 @@ router.post('/chat', authenticateToken, async (req, res) => {
         console.error('OpenAI API error:', error);
         
         // Smart fallback responses
-        let fallbackResponse = `Hi ${member?.full_name || 'there'}! `;
+        let fallbackResponse = `Hi ${member?.full_name || 'there'}! I'm Akiba, your financial assistant. `;
         
         if (lowerQuestion.includes('save') && (lowerQuestion.includes('week') || lowerQuestion.includes('10'))) {
-            fallbackResponse += `To save KSh 10,000 in a year, you need about KSh 192 per week (KSh 10,000 ÷ 52 weeks). You currently have KSh ${totalSavings.toLocaleString()} saved! 📊`;
+            fallbackResponse += `To save KSh 10,000 in a year, you need about KSh 192 per week. You currently have KSh ${totalSavings.toLocaleString()} saved! Hongera! 📊`;
         } else if (lowerQuestion.includes('loan')) {
-            fallbackResponse += `You need at least KSh 500 to qualify for loans. You can borrow up to 3x your savings amount! 💰`;
+            fallbackResponse += `You need at least KSh ${minSavings.toLocaleString()} to qualify for loans in your group. You can borrow up to 3x your savings amount! 💰`;
         } else {
             fallbackResponse += `I'm temporarily offline for upgrades. Try asking about weekly savings goals or loan eligibility! 🔧`;
         }

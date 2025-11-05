@@ -10,6 +10,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
+import GroupSettings from '../components/GroupSettings';
 
 const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
 
@@ -179,7 +180,11 @@ function SavingsAdmin() {
   return (
     <div style={{ overflowX: "auto", padding: 20 }}>
       <h2>Admin Savings Matrix (Your Group)</h2>
-      {/* Loans & Repayments Link - move to top */}
+      
+      {/* ADD GROUP SETTINGS HERE */}
+      <GroupSettings />
+      
+    
       <div style={{ margin: "16px 0" }}>
         <a
           href="/loans"
