@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, isAdmin } = require('../middleware/auth'); // ✅
+
 const Group = require('../models/Group');
 const Member = require('../models/Member'); // Moved Member import here
 
