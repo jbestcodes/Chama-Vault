@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Milestone = require('../models/Milestone');
+const Invitation = require('../models/Invitation');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -16,9 +17,18 @@ if (!jwtSecret) {
     process.exit(1);
 }
 
+// Update auth.js registration with better normalization
+const normalizeGroupName = (name) => {
+    return name
+        .trim()                    // Remove spaces
+        .toLowerCase()             // Convert to lowercase
+        .replace(/\s+/g, ' ')     // Replace multiple spaces with single space
+        .replace(/[^\w\s]/g, ''); // Remove special characters except spaces
+};
+
 // Register route
 router.post('/register', async (req, res) => {
-    const { full_name, phone, password, group_name, role } = req.body;
+    const { full_name, phone, password, group_name, invite_code, role } = req.body;
     const useRole = role && role.toLowerCase() === 'admin' ? 'admin' : 'member';
 
     if (!full_name || !phone || !password || !group_name) {
@@ -28,103 +38,133 @@ router.post('/register', async (req, res) => {
     try {
         const normalizedGroupName = group_name.trim().toLowerCase();
 
+        // Check if member already exists
+        const existingMember = await Member.findOne({ phone });
+        if (existingMember) {
+            return res.status(400).json({ error: 'Phone number already registered' });
+        }
+
         // Find or create group
         let group = await Group.findOne({ group_name: normalizedGroupName });
+        
         if (!group) {
-            group = new Group({ group_name: normalizedGroupName });
+            if (useRole !== 'admin') {
+                return res.status(400).json({ error: 'Group does not exist. Only admins can create groups.' });
+            }
+            
+            // Admin creates new group
+            group = new Group({ 
+                group_name: normalizedGroupName,
+                interest_rate: 5.0,
+                minimum_loan_savings: 500.00
+            });
             await group.save();
         }
 
-        // Check if admin already exists for this group
+        // Determine status based on role and invite
+        let status = 'pending'; // Default: needs approval
+        
         if (useRole === 'admin') {
-            const existingAdmin = await Member.findOne({ role: 'admin', group_id: group._id });
-            if (existingAdmin) {
-                return res.status(400).json({ error: 'Group already has an admin' });
-            }
-        }
-
-        // Check if phone already exists
-        const existingMember = await Member.findOne({ phone });
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        if (existingMember) {
-            // If admin pre-added them (no password yet)
-            if (!existingMember.password) {
-                existingMember.password = hashedPassword;
-                existingMember.status = 'approved'; // Auto-approve admin-added members
-                await existingMember.save();
-                return res.status(201).json({ message: 'Registration successful. You can now login.' });
-            } else {
-                // Member already has password (duplicate registration)
-                return res.status(400).json({ error: 'Account already exists. Please login.' });
-            }
-        } else {
-            const newMember = new Member({
-                full_name,
-                phone,
-                password: hashedPassword,
-                group_id: group._id,
-                group_name: normalizedGroupName,
-                role: useRole,
-                status: useRole === 'admin' ? 'approved' : 'pending',
-                is_admin: useRole === 'admin'
+            status = 'approved'; // Admins auto-approved
+        } else if (invite_code) {
+            // Check if valid invitation exists
+            const invitation = await Invitation.findOne({ 
+                group_id: group._id, 
+                phone: phone,
+                status: 'pending',
+                expires_at: { $gt: new Date() }
             });
-            await newMember.save();
-            return res.status(201).json({ message: 'Registration successful.' });
+            
+            if (invitation) {
+                status = 'approved'; // Invited members auto-approved
+                invitation.status = 'accepted';
+                await invitation.save();
+            }
         }
+
+        // Create member
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newMember = new Member({
+            full_name,
+            phone,
+            password: hashedPassword,
+            group_id: group._id,
+            role: useRole,
+            is_admin: useRole === 'admin',
+            status: status
+        });
+
+        await newMember.save();
+
+        // Update group admin if this is admin
+        if (useRole === 'admin') {
+            await Group.findByIdAndUpdate(group._id, { admin_id: newMember._id });
+        }
+
+        res.status(201).json({ 
+            message: status === 'approved' ? 'Registration successful!' : 'Registration submitted. Awaiting admin approval.',
+            status: status
+        });
+
     } catch (error) {
-        console.error('Error registering member:', error);
-        res.status(500).json({ error: 'Internal server error', message: error.message });
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Login route
 router.post('/login', async (req, res) => {
     const { phone, password } = req.body;
+
     if (!phone || !password) {
-        return res.status(400).json({ error: 'Phone number and password are required' });
+        return res.status(400).json({ error: 'Phone and password are required' });
     }
 
     try {
         const member = await Member.findOne({ phone });
-        
-        // Check if member exists
         if (!member) {
-            return res.status(401).json({ error: 'Account does not exist. Please register first.' });
-        }
-        
-        // Check if account is approved
-        if (member.status !== 'approved') {
-            return res.status(401).json({ error: 'Account not approved yet. Please wait for admin approval.' });
+            return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        const isMatch = await bcrypt.compare(password, member.password);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid phone number or password' });
+        // Check member status
+        if (member.status === 'denied') {
+            return res.status(403).json({ 
+                error: 'Your membership was denied. Please contact admin or apply to a different group.',
+                rejection_reason: member.rejection_reason
+            });
         }
 
+        if (member.status === 'pending') {
+            return res.status(403).json({ error: 'Your membership is still pending admin approval.' });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, member.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        // Generate token for approved members only
         const token = jwt.sign(
-            {
-                id: member._id,
-                phone: member.phone,
-                is_admin: member.is_admin,
-                role: member.role,
-                group_id: member.group_id 
-            },
-            jwtSecret,
-            { expiresIn: '1h' }
+            { id: member._id, phone: member.phone, is_admin: member.is_admin },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
         );
 
-        return res.status(200).json({
+        res.json({
             message: 'Login successful',
             token,
-            role: member.role,
-            full_name: member.full_name,
-            group_id: member.group_id 
+            member: {
+                id: member._id,
+                full_name: member.full_name,
+                phone: member.phone,
+                role: member.role,
+                is_admin: member.is_admin
+            }
         });
+
     } catch (error) {
-        console.error('Error logging in:', error);
-        res.status(500).json({ error: 'Internal server error', message: error.message });
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

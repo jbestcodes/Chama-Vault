@@ -2,44 +2,21 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const Group = require('../models/Group');
-
-// Admin create a new group
-router.post('/', authenticateToken, async (req, res) => {
-    const { group_name } = req.body;
-    
-    if (!req.user.is_admin) {
-        return res.status(403).json({ message: 'Access denied. Admins only.' });
-    }
-    
-    if (!group_name) {
-        return res.status(400).json({ message: 'Group name is required.' });
-    }
-    
-    try {
-        // Check if group already exists
-        const existingGroup = await Group.findOne({ group_name: group_name.trim().toLowerCase() });
-        if (existingGroup) {
-            return res.status(400).json({ message: 'Group already exists.' });
-        }
-        
-        // Create new group
-        const newGroup = new Group({
-            group_name: group_name.trim().toLowerCase()
-        });
-        
-        await newGroup.save();
-        res.status(201).json({ message: 'Group created successfully.' });
-    } catch (error) {
-        console.error('Error creating group:', error);
-        res.status(500).json({ message: 'Internal server error.' });
-    }
-});
+const Member = require('../models/Member'); // Moved Member import here
 
 // Update group settings endpoint
-router.put('/settings/:groupId', authenticateToken, async (req, res) => {
+router.put('/settings', authenticateToken, async (req, res) => {
     try {
-        const { groupId } = req.params;
         const { interest_rate, minimum_loan_savings } = req.body;
+        
+        // Find member's group
+        const member = await Member.findById(req.user.id);
+        
+        if (!member || !member.group_id) {
+            return res.status(404).json({ error: 'Member not in any group' });
+        }
+        
+        const groupId = member.group_id;
         
         // Verify user is admin of this group
         const group = await Group.findById(groupId);
@@ -80,9 +57,16 @@ router.put('/settings/:groupId', authenticateToken, async (req, res) => {
 });
 
 // Get group settings endpoint
-router.get('/settings/:groupId', authenticateToken, async (req, res) => {
+router.get('/settings', authenticateToken, async (req, res) => {
     try {
-        const { groupId } = req.params;
+        // Find member's group
+        const member = await Member.findById(req.user.id);
+        
+        if (!member || !member.group_id) {
+            return res.status(404).json({ error: 'Member not in any group' });
+        }
+        
+        const groupId = member.group_id;
         
         const group = await Group.findById(groupId).select('interest_rate minimum_loan_savings');
         
@@ -98,6 +82,87 @@ router.get('/settings/:groupId', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Get group settings error:', error);
         res.status(500).json({ error: 'Failed to fetch group settings' });
+    }
+});
+
+// Get pending members
+router.get('/pending-members', authenticateToken, async (req, res) => {
+    try {
+        const member = await Member.findById(req.user.id);
+        if (!member || !member.is_admin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const pendingMembers = await Member.find({ 
+            group_id: member.group_id, 
+            status: 'pending' 
+        }).select('full_name phone created_at');
+
+        res.json({ pending_members: pendingMembers });
+    } catch (error) {
+        console.error('Error fetching pending members:', error);
+        res.status(500).json({ error: 'Failed to fetch pending members' });
+    }
+});
+
+// Approve member
+router.put('/approve-member/:memberId', authenticateToken, async (req, res) => {
+    try {
+        const adminMember = await Member.findById(req.user.id);
+        if (!adminMember || !adminMember.is_admin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const targetMember = await Member.findById(req.params.memberId);
+        if (!targetMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (targetMember.group_id.toString() !== adminMember.group_id.toString()) {
+            return res.status(403).json({ error: 'Can only approve members in your group' });
+        }
+
+        targetMember.status = 'approved';
+        await targetMember.save();
+
+        res.json({ 
+            message: 'Member approved successfully',
+            member_name: targetMember.full_name
+        });
+
+    } catch (error) {
+        console.error('Error approving member:', error);
+        res.status(500).json({ error: 'Failed to approve member' });
+    }
+});
+
+// Reject member
+router.put('/reject-member/:memberId', authenticateToken, async (req, res) => {
+    try {
+        const { reason } = req.body;
+        
+        const adminMember = await Member.findById(req.user.id);
+        if (!adminMember || !adminMember.is_admin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const targetMember = await Member.findById(req.params.memberId);
+        if (!targetMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        targetMember.status = 'denied';
+        if (reason) targetMember.rejection_reason = reason;
+        await targetMember.save();
+
+        res.json({ 
+            message: 'Member rejected',
+            member_name: targetMember.full_name
+        });
+
+    } catch (error) {
+        console.error('Error rejecting member:', error);
+        res.status(500).json({ error: 'Failed to reject member' });
     }
 });
 

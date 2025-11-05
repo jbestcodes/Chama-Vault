@@ -5,6 +5,7 @@ const Member = require('../models/Member');
 const Savings = require('../models/Savings');
 const Milestone = require('../models/Milestone');
 const Group = require('../models/Group');
+const Invitation = require('../models/Invitation'); // New model for invitations
 
 // Get all members in admin's group
 router.get('/group', authenticateToken, isAdmin, async (req, res) => {
@@ -42,22 +43,32 @@ router.post('/add', authenticateToken, isAdmin, async (req, res) => {
         }
         
         const admin = await Member.findById(adminId);
-        const groupId = admin?.group_id;
-        const groupName = admin?.group_name;
+        const group = await Group.findById(admin.group_id);
         
-        if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+        if (!group) return res.status(400).json({ error: 'No group assigned.' });
 
-        const newMember = new Member({
+        // Create invitation
+        const invitation = new Invitation({
             full_name,
             phone,
-            group_id: groupId,
-            group_name: groupName,
-            status: 'pending', // Will auto-approve when they register
-            role: 'member'
+            group_id: admin.group_id,
+            group_name: group.group_name,
+            invited_by: adminId,
+            status: 'pending',
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
         });
         
-        await newMember.save();
-        res.json({ message: 'Member added. They can now register with this phone number.' });
+        await invitation.save();
+        
+        // Generate invite link
+        const inviteLink = `${process.env.FRONTEND_URL}/register?invite=${invitation._id}&group=${encodeURIComponent(group.group_name)}&phone=${phone}`;
+        
+        res.json({ 
+            message: 'Invitation created successfully!',
+            invite_link: inviteLink,
+            instructions: 'Share this link with the member. They will be auto-approved when they register.',
+            expires_in: '7 days'
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });

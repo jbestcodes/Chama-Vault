@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const User = require('../models/User');
+const authenticateToken = require('../middleware/authenticateToken');
 const Member = require('../models/Member');
+const Group = require('../models/Group');
 const Savings = require('../models/Savings');
 const Loan = require('../models/Loan');
 const Milestone = require('../models/Milestone');
-const Group = require('../models/Group');
 const OpenAI = require('openai');
 
 // Initialize OpenAI
@@ -17,15 +16,15 @@ const openai = new OpenAI({
 // AI Financial Nudge endpoint
 router.get('/financial-nudge', authenticateToken, async (req, res) => {
     try {
-        const memberId = req.user.id;
+        const userId = req.user.id;
         
-        // Get user's actual data
-        const member = await Member.findById(memberId);
-        const savings = await Savings.find({ member_id: memberId });
+        // Get member's data
+        const member = await Member.findById(userId); // Changed from User to Member
+        const savings = await Savings.find({ member_id: userId });
         const totalSavings = savings.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
         
         // Get milestone if exists
-        const milestone = await Milestone.findOne({ member_id: memberId }).sort({ createdAt: -1 });
+        const milestone = await Milestone.findOne({ member_id: userId }).sort({ createdAt: -1 });
         
         let nudge;
         if (totalSavings === 0) {
@@ -41,7 +40,7 @@ router.get('/financial-nudge', authenticateToken, async (req, res) => {
         res.json({ nudge });
     } catch (error) {
         console.error('Financial nudge error:', error);
-        res.status(500).json({ error: 'Failed to get financial nudge' });
+        res.status(500).json({ error: 'Failed to generate financial nudge' });
     }
 });
 
@@ -117,7 +116,7 @@ router.get('/savings-health', authenticateToken, async (req, res) => {
         } else if (consistencyScore >= 50) {
             score = 60 + Math.random() * 20;
             status = 'Good';
-            summary = `Good progress ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()}. Try to maintain more regular contributions to maximize your financial growth! 📈`;
+            summary = `Good progress ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} in ${member.group_name}. Try to maintain more regular contributions to maximize your financial growth! 📈`;
         } else if (consistencyScore > 0) {
             score = 30 + Math.random() * 25;
             status = 'Needs Improvement';
@@ -146,9 +145,13 @@ router.post('/chat', authenticateToken, async (req, res) => {
         const { question } = req.body;
         const userId = req.user.id;
         
-        // Get user and their group settings
-        const member = await User.findById(userId).populate('group_id');
+        // Get member and their group settings
+        const member = await Member.findById(userId).populate('group_id'); // Changed from User to Member
         const group = await Group.findById(member.group_id);
+        
+        // Get member's total savings
+        const userSavings = await Savings.find({ member_id: userId });
+        const totalSavings = userSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
         
         const groupMinSavings = group?.minimum_loan_savings || 500;
         const groupInterestRate = group?.interest_rate || 5.0;
@@ -159,7 +162,6 @@ router.post('/chat', authenticateToken, async (req, res) => {
 
         // Get user context for personalized responses
         const savings = await Savings.find({ member_id: userId });
-        const totalSavings = savings.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
         const activeLoan = await Loan.findOne({ member_id: userId, status: 'active' });
         const milestone = await Milestone.findOne({ member_id: userId }).sort({ createdAt: -1 });
 
