@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../middleware/authenticateToken');
+const { authenticateToken } = require('../middleware/auth');
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Savings = require('../models/Savings');
