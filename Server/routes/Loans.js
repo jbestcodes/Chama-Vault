@@ -5,6 +5,7 @@ const moment = require('moment');
 const Loan = require('../models/Loan');
 const LoanRepayment = require('../models/LoanRepayment');
 const Member = require('../models/Member');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 // Create a new loan (admin direct creation)
 router.post('/', async (req, res) => {
@@ -50,7 +51,7 @@ router.post('/', async (req, res) => {
 });
 
 // Member requests a loan (status: 'requested')
-router.post('/request', require('../middleware/auth').authenticateToken, async (req, res) => {
+router.post('/request', authenticateToken, async (req, res) => {
     try {
         const member_id = req.user.id;
         const { amount, reason } = req.body;
@@ -75,7 +76,7 @@ router.post('/request', require('../middleware/auth').authenticateToken, async (
 });
 
 // Get all loans for the logged-in member
-router.get('/my', require('../middleware/auth').authenticateToken, async (req, res) => {
+router.get('/my', authenticateToken, async (req, res) => {
     try {
         const memberId = req.user.id;
         const loans = await Loan.find({ member_id: memberId });
@@ -94,7 +95,7 @@ router.get('/my', require('../middleware/auth').authenticateToken, async (req, r
 });
 
 // Get all loans for the admin's group (with populate)
-router.get('/group', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
+router.get('/group', authenticateToken, isAdmin, async (req, res) => {
     try {
         const groupId = req.user.group_id;
         
@@ -118,7 +119,7 @@ router.get('/group', require('../middleware/auth').authenticateToken, require('.
 });
 
 // Admin offers loan terms (status: 'offered')
-router.post('/offer', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
+router.post('/offer', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { loan_id, amount, interest_rate, fees, due_date, installment_number } = req.body;
         if (!loan_id || !amount || !interest_rate || !due_date || !installment_number) {
@@ -160,7 +161,7 @@ router.post('/offer', require('../middleware/auth').authenticateToken, require('
 });
 
 // Member accepts or rejects the loan offer
-router.post('/offer-action', require('../middleware/auth').authenticateToken, async (req, res) => {
+router.post('/offer-action', authenticateToken, async (req, res) => {
     try {
         const member_id = req.user.id;
         const { loan_id, action } = req.body; // action: 'accept' or 'reject'
@@ -185,7 +186,7 @@ router.post('/offer-action', require('../middleware/auth').authenticateToken, as
 });
 
 // Get loan details (admin or member who requested the loan)
-router.get('/:id', require('../middleware/auth').authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const loanId = req.params.id;
         const memberId = req.user.id;
@@ -215,7 +216,7 @@ router.get('/:id', require('../middleware/auth').authenticateToken, async (req, 
 });
 
 // Update loan details (admin only)
-router.put('/:id', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const loanId = req.params.id;
         const { amount, interest_rate, fees, due_date, installment_number, status } = req.body;
@@ -243,7 +244,7 @@ router.put('/:id', require('../middleware/auth').authenticateToken, require('../
 });
 
 // Delete a loan (admin only)
-router.delete('/:id', require('../middleware/auth').authenticateToken, require('../middleware/auth').isAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const loanId = req.params.id;
         
