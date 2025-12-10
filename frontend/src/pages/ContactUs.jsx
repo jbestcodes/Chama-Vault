@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Footer from '../components/Footer';
+
 
 function ContactUs() {
   const [form, setForm] = useState({
@@ -233,7 +233,7 @@ function ContactUs() {
         </div>
       </div>
       
-      <Footer />
+      
     </div>
   );
 }

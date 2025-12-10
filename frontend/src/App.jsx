@@ -17,7 +17,6 @@ import AIDashboard from './pages/AIDashboard';
 import WithdrawalRequest from './pages/WithdrawalRequest';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Footer from './components/Footer';
 
 
 function App() {
@@ -40,12 +39,32 @@ function App() {
         <Route path="/loans" element={<LoansAndRepayments />} /> 
         <Route path="/ai-dashboard" element={<AIDashboard />} />
         <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
-        <Route path="/Footer" element={<Footer />} />
+        
         {/* Add more routes as needed */}
       </Routes>
-      <footer style={{ textAlign: "center", padding: "16px 0", background: "black", marginTop: 40 }}>
-        <a href="/terms" style={{ marginRight: 16, color: "#1976d2" }}>Terms & Conditions</a>
-        <a href="/privacy" style={{ color: "#1976d2" }}>Privacy Policy</a>
+      <footer style ={{ background: "black", marginTop: 40, padding: "16px 0"}}>
+        <div className="max-w-7xl mx-auto">
+          {/*responsive flex container
+          on small screens, stack vertically, on medium screens align horizintally*/}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-left">
+            <div style={{ color: "#1976d2" }}
+            className="text-sm font-semibold">
+              &copy; 2026 Jaza Nyumba. Secure savings made simple.
+          </div>
+          <div className="flex justify-centre gap-4 text-sm">
+            <a href="/terms" style={{ color: "#1976d2"}}>Terms & Conditions</a>
+            <a href="/privacy" style={{ color: "#1976d2"}}>Privacy Policy</a>
+          </div>
+          <div style={{ color: "#1976d2" }} className="text-sm">
+            Built with ❤️ by{' '}
+            <a href="https://jbestcodes.github.io/Portfolio-website/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#1976d2", textDecoration: "underline" }}
+            >Julie</a>
+          </div>
+        </div>
+      </div>
       </footer>
     </>
   );

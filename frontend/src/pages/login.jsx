@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import Footer from '../components/Footer';
+
 
 const apiUrl = import.meta.env.VITE_API_URL; 
 
@@ -296,7 +296,7 @@ const Login = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+            
         </div>
     );
 };

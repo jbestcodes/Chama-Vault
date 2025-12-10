@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Footer from '../components/Footer';
 import heroImage from '../media/hero.jpg';
 
 const Home = () => {
@@ -145,7 +144,7 @@ const Home = () => {
                 </div>
             </div>
 
-            <Footer />
+            
         </div>
     );
 };

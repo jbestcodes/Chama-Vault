@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
+
 
 const AIDashboard = () => {
     const BASE_URL = 'https://chama-vault-1.onrender.com';
@@ -284,7 +284,7 @@ const AIDashboard = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+            
         </div>
     );
 };
