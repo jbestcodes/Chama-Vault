@@ -41,6 +41,7 @@ function WhyUs() {
           listStylePosition: "inside"
         }}>
           <li style={{ marginBottom: 8 }}>Group-specific dashboards and analytics for clear financial tracking</li>
+          <li style={{ marginBottom: 8 }}>Automated reminders for contributions and meetings</li>
           <li style={{ marginBottom: 8 }}>Masked leaderboards to protect member privacy</li>
           <li style={{ marginBottom: 8 }}>Personal milestones and progress tracking for every member</li>
           <li style={{ marginBottom: 8 }}>Admin panel for easy group management and savings oversight</li>
