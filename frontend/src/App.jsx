@@ -17,6 +17,8 @@ import AIDashboard from './pages/AIDashboard';
 import WithdrawalRequest from './pages/WithdrawalRequest';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Footer from './components/Footer';
+
 
 function App() {
   return (
@@ -38,9 +40,10 @@ function App() {
         <Route path="/loans" element={<LoansAndRepayments />} /> 
         <Route path="/ai-dashboard" element={<AIDashboard />} />
         <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
+        <Route path="/Footer" element={<Footer />} />
         {/* Add more routes as needed */}
       </Routes>
-      <footer style={{ textAlign: "center", padding: "16px 0", background: "#f5f5f5", marginTop: 40 }}>
+      <footer style={{ textAlign: "center", padding: "16px 0", background: "black", marginTop: 40 }}>
         <a href="/terms" style={{ marginRight: 16, color: "#1976d2" }}>Terms & Conditions</a>
         <a href="/privacy" style={{ color: "#1976d2" }}>Privacy Policy</a>
       </footer>

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from './media/logo.png'; // Add this import
+import logoImage from './media/logo.png'; 
 
 function Navbar () {
     const navigate = useNavigate();

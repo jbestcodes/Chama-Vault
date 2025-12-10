@@ -6,7 +6,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4 text-center sm:text-left">
                     <div className="text-sm text-gray-800 font-semibold">
-                        © {new Date().getFullYear()} Jaza Nyumba. Secure savings made simple.
+                        &copy; 2026 Jaza Nyumba. Secure savings made simple.
                     </div>
                     <div className="text-sm text-gray-700">
                         Built with ❤️ by{' '}
@@ -16,7 +16,7 @@ const Footer = () => {
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 font-semibold hover:underline transition-colors duration-300"
                         >
-                            JBest Codes
+                            Julie
                         </a>
                     </div>
                 </div>
