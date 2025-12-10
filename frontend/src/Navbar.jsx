@@ -64,11 +64,11 @@ function Navbar () {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <img 
                         src={logoImage} 
-                        alt="ChamaVault Logo" 
+                        alt="Jaza Nyumba Logo" 
                         style={{ height: "32px", width: "32px", objectFit: "contain" }}
                     />
                     <span style={{ color: "#fff", fontWeight: "bold", fontSize: "18px" }}>
-                        ChamaVault
+                        Jaza Nyumba
                     </span>
                 </div>
 

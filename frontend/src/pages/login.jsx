@@ -82,7 +82,7 @@ const Login = () => {
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '16px'
-                            }}>Sign in to your ChamaVault account</p>
+                            }}>Sign in to your Jaza Nyumba account</p>
                         </div>
 
                         {/* Error Message */}

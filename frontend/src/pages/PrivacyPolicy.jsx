@@ -5,7 +5,7 @@ function PrivacyPolicy() {
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>Privacy Policy</h2>
       <p>
-        Chama Vault values your privacy. This policy explains how we collect, use, and protect your information.
+        Jaza Nyumba values your privacy. This policy explains how we collect, use, and protect your information.
       </p>
       <ul>
         <li>

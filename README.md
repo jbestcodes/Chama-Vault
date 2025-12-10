@@ -1,8 +1,8 @@
-# Chama Vault
+# Jaza Nyumba
 
 **🌟 Live Demo: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
 
-Chama Vault is a secure, web-based savings and loan management platform built for table banking groups (Chamas). It enables members to track weekly savings, manage loans, view anonymous group rankings, set personal milestones, and get AI-powered financial insights.
+Jaza Nyumba is a secure, web-based savings and loan management platform built for table banking groups (Chamas). It enables members to track weekly savings, manage loans, view anonymous group rankings, set personal milestones, and get AI-powered financial insights.
 
 ## 🌟 Try the Live Demo
 **Visit: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
@@ -235,6 +235,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ---
 
-**Chama Vault** - Empowering community savings with modern technology and AI 🏦✨🤖
+**Jaza Nyumba** - Empowering community savings with modern technology and AI 🏦✨🤖
 
 **Try it now: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**

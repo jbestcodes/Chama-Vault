@@ -16,7 +16,7 @@ function WhyUs() {
         borderRadius: "12px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
       }}>
-        <h2 style={{ color: "#2d7b4f", marginBottom: 16 }}>Why Choose Chama Vault?</h2>
+        <h2 style={{ color: "#2d7b4f", marginBottom: 16 }}>Why Choose Jaza Nyumba?</h2>
         
         <h3 style={{ color: "#1976d2", marginTop: 24 }}>Tagline</h3>
         <p style={{ fontSize: "1.15em", fontStyle: "italic" }}>

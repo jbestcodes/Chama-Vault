@@ -107,13 +107,13 @@ class OpenAIService {
     async chatbotResponse(userQuestion, context = '') {
         try {
             const systemPrompt = `
-            You are a helpful Chama Vault financial assistant. You specialize in:
+            You are a helpful Jaza Nyumba financial assistant. You specialize in:
             1. Chama savings rules and regulations
             2. Loan terms and conditions
             3. Group savings best practices
             4. Financial literacy for group savings
             
-            Key Chama Vault Rules:
+            Key Jaza Nyumba Rules:
             - Weekly savings contributions required
             - Members can borrow up to 3x their savings
             - Loan interest rate: 2% per month

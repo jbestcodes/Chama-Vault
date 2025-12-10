@@ -7,7 +7,7 @@ function TermsAndConditions() {
       <ol>
         <li>
           <strong>Introduction</strong><br />
-          Welcome to Chama Vault ("us", "we", or "our")! Our platform enables users to manage group savings and investments. These Terms of Service ("Terms") govern your access and use of our website, app, and services.
+          Welcome to Jaza Nyumba ("us", "we", or "our")! Our platform enables users to manage group savings and investments. These Terms of Service ("Terms") govern your access and use of our website, app, and services.
         </li>
         <li>
           <strong>Acceptance of Terms</strong><br />

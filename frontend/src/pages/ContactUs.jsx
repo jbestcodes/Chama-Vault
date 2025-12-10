@@ -34,7 +34,7 @@ function ContactUs() {
           group_name: form.group_name,
           message: form.message,
           reason: form.reason,
-          subject: `ChamaVault Contact: ${form.reason}`,
+          subject: `Jaza Nyumba Contact: ${form.reason}`,
         })
       });
 
@@ -85,7 +85,7 @@ function ContactUs() {
             </h1>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               We'd love to hear from you! Whether you found a bug, have a feature request, 
-              or just want to share feedback about ChamaVault.
+              or just want to share feedback about Jaza Nyumba.
             </p>
           </div>
 

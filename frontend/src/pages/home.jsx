@@ -9,7 +9,7 @@ const Home = () => {
 
     const slides = [
         { 
-            title: "💰 Welcome to ChamaVault", 
+            title: "💰 Welcome to Jaza Nyumba", 
             description: "Your Smart Group Savings Platform. Secure, Smart, and Simple group savings for everyone.",
             link: "/login", 
             linkText: "Login to Your Account"

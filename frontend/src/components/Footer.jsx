@@ -6,7 +6,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4 text-center sm:text-left">
                     <div className="text-sm text-gray-800 font-semibold">
-                        © {new Date().getFullYear()} ChamaVault. Secure savings made simple.
+                        © {new Date().getFullYear()} Jaza Nyumba. Secure savings made simple.
                     </div>
                     <div className="text-sm text-gray-700">
                         Built with ❤️ by{' '}
