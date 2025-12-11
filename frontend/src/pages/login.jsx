@@ -177,7 +177,11 @@ const Login = () => {
                                 ⚠️ {error}
                                 
                                 {/* Show resend verification button if phone verification error */}
-                                {(error.includes('verify your phone') || error.includes('phone number first')) && (
+                                {(error.includes('verify your phone') || 
+                                  error.includes('phone number first') || 
+                                  error.includes('Please verify your phone number first') ||
+                                  error.includes('pending admin approval') ||
+                                  error.includes('membership is pending')) && (
                                     <div style={{ marginTop: '10px' }}>
                                         <button
                                             type="button"
@@ -578,6 +582,62 @@ const Login = () => {
                                 </div>
                             </form>
                         )}  
+                        
+                        {/* Phone Verification Help */}
+                        <div style={{
+                            textAlign: 'center',
+                            marginTop: '20px',
+                            padding: '16px',
+                            border: '1px solid #e1e5e9',
+                            borderRadius: '10px',
+                            background: '#fafafa'
+                        }}>
+                            <p style={{
+                                margin: '0 0 12px 0',
+                                fontSize: '14px',
+                                color: '#666',
+                                fontWeight: '500'
+                            }}>
+                                📱 Having trouble logging in?
+                            </p>
+                            <button
+                                type="button"
+                                onClick={resendPhoneVerification}
+                                disabled={isLoading || !phone}
+                                style={{
+                                    background: phone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#ccc',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    cursor: (isLoading || !phone) ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    opacity: (isLoading || !phone) ? 0.6 : 1
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isLoading && phone) {
+                                        e.target.style.transform = 'translateY(-1px)';
+                                        e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isLoading && phone) {
+                                        e.target.style.transform = 'translateY(0)';
+                                        e.target.style.boxShadow = 'none';
+                                    }
+                                }}
+                            >
+                                📲 Resend Phone Verification
+                            </button>
+                            <p style={{
+                                margin: '8px 0 0 0',\n                                fontSize: '12px',
+                                color: '#888'
+                            }}>
+                                Enter your phone number above first
+                            </p>
+                        </div>
                         
                         {/* Register Link */}
                         <p style={{
