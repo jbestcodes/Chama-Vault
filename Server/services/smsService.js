@@ -62,7 +62,7 @@ class SMSLeopardService {
                 }
             }
 
-            const response = await axios.post(`${this.baseURL}/sms`, {
+            const response = await axios.post(this.baseURL, {
                 message: message,
                 destination: to,
                 source: this.senderId
