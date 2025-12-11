@@ -1,10 +1,10 @@
-# 🤝 Contributing to ChamaVault
+# 🤝 Contributing to Jaza Nyumba
 
-Welcome to the ChamaVault project! This guide will help you understand how to contribute effectively to our Chama management system.
+Welcome to the Jaza Nyumba project! This guide will help you understand how to contribute effectively to our Chama management system.
 
 ## 📋 Project Overview
 
-ChamaVault is a modern web application that helps investment groups (Chamas) manage their finances, with features like OTP authentication, AI insights, subscription management, and SMS notifications.
+Jaza Nyumba is a modern web application that helps investment groups (Chamas) manage their finances, with features like OTP authentication, AI insights, subscription management, and SMS notifications.
 
 ### Tech Stack
 - **Frontend**: React 18 + Vite + Tailwind CSS
@@ -567,4 +567,4 @@ sudo systemctl status mongod
 
 ---
 
-Thank you for contributing to ChamaVault! Your help makes this project better for everyone. 🙏
+Thank you for contributing to Jaza Nyumba! Your help makes this project better for everyone. 🙏

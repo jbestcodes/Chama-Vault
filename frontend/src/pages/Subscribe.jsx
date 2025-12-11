@@ -136,7 +136,7 @@ function Subscribe() {
     }
 
     const componentProps = {
-        email: user?.email || `${user?.phoneNumber}@chamavault.com`,
+        email: user?.email || `${user?.phoneNumber}@Jaza Nyumba.com`,
         amount: plans[selectedPlan].price,
         publicKey,
         text: `Subscribe - KES ${plans[selectedPlan].price / 100}`,

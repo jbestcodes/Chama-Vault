@@ -1,4 +1,4 @@
-# ChamaVault API Documentation
+# Jaza Nyumba API Documentation
 
 ## Base URL
 - **Development**: `http://localhost:5000`

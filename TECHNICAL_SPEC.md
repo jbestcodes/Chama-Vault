@@ -1,8 +1,8 @@
-# 📋 ChamaVault Technical Specification
+# 📋 Jaza Nyumba Technical Specification
 
 ## 🎯 Project Scope
 
-ChamaVault is a comprehensive digital platform for Chama (investment group) management in Kenya, featuring secure authentication, payment processing, AI-powered insights, and automated SMS communications.
+Jaza Nyumba is a comprehensive digital platform for Chama (investment group) management in Kenya, featuring secure authentication, payment processing, AI-powered insights, and automated SMS communications.
 
 ### Target Market
 - **Primary**: Kenyan Chama groups (5-50 members)
@@ -926,4 +926,4 @@ class AIService {
 
 ---
 
-This technical specification serves as the definitive guide for understanding, developing, and maintaining the ChamaVault system. All implementations should align with these specifications to ensure consistency and reliability.
+This technical specification serves as the definitive guide for understanding, developing, and maintaining the Jaza Nyumba system. All implementations should align with these specifications to ensure consistency and reliability.

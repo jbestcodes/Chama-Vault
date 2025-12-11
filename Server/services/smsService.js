@@ -64,11 +64,11 @@ class SMSLeopardService {
 
             // Try multiple SMS Leopard API formats
             const formats = [
-                // Format 1: recipient + sender_id
+                // Format 1: source (what SMS Leopard expects based on error)
                 {
-                    recipient: to,
+                    recipients: [to],
                     message: message,
-                    sender_id: this.senderId
+                    source: this.senderId
                 },
                 // Format 2: destination + source
                 {
@@ -76,17 +76,29 @@ class SMSLeopardService {
                     message: message,
                     source: this.senderId
                 },
-                // Format 3: recipients array + sender_name
+                // Format 3: recipients + source 
                 {
                     recipients: [to],
                     message: message,
-                    sender_name: this.senderId
+                    source: this.senderId
                 },
-                // Format 4: Simple format
+                // Format 4: recipient + sender_id
+                {
+                    recipient: to,
+                    message: message,
+                    sender_id: this.senderId
+                },
+                // Format 5: Simple format with 'from'
                 {
                     number: to,
                     message: message,
-                    sender: this.senderId
+                    from: this.senderId
+                },
+                // Format 6: Standard format
+                {
+                    to: to,
+                    message: message,
+                    source: this.senderId
                 }
             ];
 

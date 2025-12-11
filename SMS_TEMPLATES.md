@@ -1,6 +1,6 @@
 # 📊 SMS Templates Reference
 
-This document outlines all SMS templates used in the ChamaVault system for easy management and customization.
+This document outlines all SMS templates used in the Jaza Nyumba system for easy management and customization.
 
 ## 🔐 Authentication Templates
 

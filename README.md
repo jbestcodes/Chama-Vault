@@ -1,8 +1,8 @@
-# ChamaVault - Digital Chama Management System
+# Jaza Nyumba - Digital Chama Management System
 
 **🌟 Live Demo: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
 
-ChamaVault is a comprehensive digital platform for managing Chama (savings group) operations in Kenya. It features SMS notifications, AI-powered financial insights, loan management, and subscription-based services.
+Jaza Nyumba is a comprehensive digital platform for managing Chama (savings group) operations in Kenya. It features SMS notifications, AI-powered financial insights, loan management, and subscription-based services.
 
 ## ✨ Key Features
 
@@ -88,8 +88,8 @@ Create `Server/.env` with the following:
 
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/chamavault
-# or MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/chamavault
+MONGODB_URI=mongodb://localhost:27017/Jaza Nyumba
+# or MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/Jaza Nyumba
 
 # JWT Secret (generate a strong secret)
 JWT_SECRET=your-super-secret-jwt-key-here

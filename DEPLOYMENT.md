@@ -1,4 +1,4 @@
-# ChamaVault Deployment Guide
+# Jaza Nyumba Deployment Guide
 
 ## 🚀 Production Deployment
 
@@ -57,7 +57,7 @@ NODE_ENV=production
 PORT=5000
 
 # Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/chamavault
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/Jaza Nyumba
 
 # JWT Secret (generate strong secret)
 JWT_SECRET=super-secret-production-key-change-this
@@ -93,7 +93,7 @@ Create PM2 ecosystem file:
 ```javascript
 module.exports = {
   apps: [{
-    name: 'chamavault-api',
+    name: 'Jaza Nyumba-api',
     script: './Server/index.js',
     env_production: {
       NODE_ENV: 'production',
@@ -128,7 +128,7 @@ sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -
 
 Create Nginx configuration:
 
-**/etc/nginx/sites-available/chamavault:**
+**/etc/nginx/sites-available/Jaza Nyumba:**
 ```nginx
 server {
     listen 80;
@@ -161,7 +161,7 @@ server {
 
 Enable site:
 ```bash
-sudo ln -s /etc/nginx/sites-available/chamavault /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/Jaza Nyumba /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -324,7 +324,7 @@ web: node Server/index.js
 heroku login
 
 # Create app
-heroku create chamavault-api
+heroku create Jaza Nyumba-api
 
 # Add MongoDB addon
 heroku addons:create mongolab:sandbox
@@ -467,7 +467,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'chamavault' },
+  defaultMeta: { service: 'Jaza Nyumba' },
   transports: [
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
     new winston.transports.File({ filename: 'combined.log' })
@@ -499,10 +499,10 @@ app.get('/health', (req, res) => {
 **Self-hosted MongoDB:**
 ```bash
 # Daily backup script
-mongodump --uri="mongodb://localhost:27017/chamavault" --out=/backups/$(date +%Y%m%d)
+mongodump --uri="mongodb://localhost:27017/Jaza Nyumba" --out=/backups/$(date +%Y%m%d)
 
 # Automated backup with cron
-0 2 * * * /usr/local/bin/mongodump --uri="mongodb://localhost:27017/chamavault" --out=/backups/$(date +\%Y\%m\%d)
+0 2 * * * /usr/local/bin/mongodump --uri="mongodb://localhost:27017/Jaza Nyumba" --out=/backups/$(date +\%Y\%m\%d)
 ```
 
 ### 2. Code Backups
@@ -575,4 +575,4 @@ mongosh "mongodb+srv://cluster.mongodb.net/test" --username username
 
 ---
 
-**Success!** Your ChamaVault application is now deployed and ready for production use! 🎉
+**Success!** Your Jaza Nyumba application is now deployed and ready for production use! 🎉

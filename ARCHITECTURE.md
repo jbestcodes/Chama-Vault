@@ -1,8 +1,8 @@
-# 🏗️ ChamaVault System Architecture
+# 🏗️ Jaza Nyumba System Architecture
 
 ## 📋 Project Overview
 
-ChamaVault is a comprehensive Chama (investment group) management system built with modern web technologies. It features OTP authentication, AI-powered financial insights, subscription management, and SMS notifications.
+Jaza Nyumba is a comprehensive Chama (investment group) management system built with modern web technologies. It features OTP authentication, AI-powered financial insights, subscription management, and SMS notifications.
 
 ### Key Features
 - **OTP-based Authentication** with SMS verification

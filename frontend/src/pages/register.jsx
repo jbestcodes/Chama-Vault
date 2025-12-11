@@ -111,7 +111,7 @@ const Register = () => {
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '16px'
-                            }}>{step === 1 ? 'Join ChamaVault and start your financial journey' : 'Enter the 6-digit code sent to your phone'}</p>
+                            }}>{step === 1 ? 'Join Jaza Nyumba and start your financial journey' : 'Enter the 6-digit code sent to your phone'}</p>
                         </div>
 
                         {/* Error Message */}

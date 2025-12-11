@@ -191,7 +191,7 @@ const Login = () => {
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '16px'
-                            }}>{step === 1 ? 'Sign in to your ChamaVault account' : 'Enter the 6-digit code sent to your phone'}</p>
+                            }}>{step === 1 ? 'Sign in to your Jaza Nyumba account' : 'Enter the 6-digit code sent to your phone'}</p>
                         </div>
 
                         {/* Error Message */}

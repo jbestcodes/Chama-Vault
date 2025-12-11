@@ -52,7 +52,7 @@ const AIDashboard = () => {
         } else {
             setMessages([
                 {
-                    text: "Welcome to ChamaVault AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first to access your data. Please login or register to get started! 🔐",
+                    text: "Welcome to Jaza Nyumba AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first to access your data. Please login or register to get started! 🔐",
                     isUser: false,
                     timestamp: new Date()
                 }

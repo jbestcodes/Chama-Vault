@@ -1,6 +1,6 @@
-# 🔧 ChamaVault Setup Guide
+# 🔧 Jaza Nyumba Setup Guide
 
-This guide will help you set up the complete ChamaVault system with all required API keys and configurations.
+This guide will help you set up the complete Jaza Nyumba system with all required API keys and configurations.
 
 ## 📋 Prerequisites
 
@@ -76,7 +76,7 @@ Fill in your `.env` file with:
 
 ```env
 # Database (MongoDB Atlas recommended)
-MONGODB_URI=mongodb+srv://username:password@cluster.xxxxx.mongodb.net/chamavault
+MONGODB_URI=mongodb+srv://username:password@cluster.xxxxx.mongodb.net/Jaza Nyumba
 
 # JWT Secret (generate a secure random string)
 JWT_SECRET=your-super-secret-jwt-key-here
@@ -278,7 +278,7 @@ OpenAI API error
 
 - **Documentation**: Check [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
 - **Issues**: Create GitHub issue with error details
-- **Support**: Contact support@chamavault.com
+- **Support**: Contact support@Jaza Nyumba.com
 
 ## 📚 Next Steps
 
@@ -300,6 +300,6 @@ OpenAI API error
 ---
 
 **Need Help?** 
-- 📧 Email: support@chamavault.com
+- 📧 Email: support@Jaza Nyumba.com
 - 📱 Phone: +254700000000
 - 📖 Documentation: See the other `.md` files in this repository
