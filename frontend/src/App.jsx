@@ -23,6 +23,28 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
   return (
     <>
+      <style>{`
+        /* Fix button active states */
+        button:active,
+        button:focus,
+        input[type="button"]:active,
+        input[type="submit"]:active {
+          background: inherit !important;
+          outline: none !important;
+        }
+        
+        /* Animation keyframes */
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

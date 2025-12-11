@@ -75,183 +75,585 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl border border-gray-100">
-                
-                <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-6">
-                    {step === 1 ? 'Create Your Account' : 'Verify Your Phone'}
-                </h2>
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div style={{
+                    minHeight: '100vh',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '20px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                        padding: '40px',
+                        maxWidth: '450px',
+                        width: '100%',
+                        transform: 'translateY(0)',
+                        transition: 'all 0.3s ease'
+                    }}>
+                        {/* Header */}
+                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                            <div style={{
+                                fontSize: '48px',
+                                marginBottom: '10px'
+                            }}>🏦</div>
+                            <h2 style={{
+                                margin: '0 0 8px 0',
+                                color: '#333',
+                                fontSize: '28px',
+                                fontWeight: 'bold'
+                            }}>{step === 1 ? 'Create Your Account' : 'Verify Your Phone'}</h2>
+                            <p style={{
+                                margin: 0,
+                                color: '#666',
+                                fontSize: '16px'
+                            }}>{step === 1 ? 'Join ChamaVault and start your financial journey' : 'Enter the 6-digit code sent to your phone'}</p>
+                        </div>
 
-                {/* Error/Success Messages */}
-                {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm">{error}</p>}
-                {success && <p className="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-sm">{success}</p>}
+                        {/* Error Message */}
+                        {error && (
+                            <div style={{
+                                background: '#fee',
+                                border: '1px solid #fcc',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                marginBottom: '20px',
+                                color: '#c33',
+                                fontSize: '14px',
+                                animation: 'shake 0.5s ease-in-out'
+                            }}>
+                                ⚠️ {error}
+                            </div>
+                        )}
 
-                {step === 1 ? (
-                    <form onSubmit={handleRegister} className="space-y-4">
-                        {/* Full Name */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name:</label>
-                            <input
-                                type="text"
-                                value={full_name}
-                                onChange={(e) => setFullName(e.target.value)}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="e.g., Julie Achon"
-                            />
-                        </div>
+                        {/* Success Message */}
+                        {success && (
+                            <div style={{
+                                background: '#efe',
+                                border: '1px solid #cfc',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                marginBottom: '20px',
+                                color: '#3c3',
+                                fontSize: '14px'
+                            }}>
+                                ✅ {success}
+                            </div>
+                        )}
+
+                        {step === 1 ? (
+                            <form onSubmit={handleRegister}>
+                                {/* Full Name */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="full_name" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        👤 Full Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="full_name"
+                                        value={full_name}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        placeholder="e.g., Julie Achon"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Phone Number */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="phone" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        📱 Phone Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="phone"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        placeholder="e.g., 0712345678 or +254712345678"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Password */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="password" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        🔒 Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Must be at least 6 characters"
+                                        required
+                                        minLength="6"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Group Name */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="group_name" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        🏢 Group Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="group_name"
+                                        value={group_name}
+                                        onChange={(e) => setGroupName(e.target.value)}
+                                        placeholder="e.g., Smart Savers Chama"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Role Selection */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{
+                                        display: 'block',
+                                        marginBottom: '12px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        💼 Role Selection
+                                    </label>
+                                    <div style={{ display: 'flex', gap: '16px' }}>
+                                        <label style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '12px 16px',
+                                            border: role === 'admin' ? '2px solid #667eea' : '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            background: role === 'admin' ? '#f0f4ff' : '#fafafa',
+                                            flex: 1
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name="role"
+                                                value="admin"
+                                                checked={role === "admin"}
+                                                onChange={() => setRole("admin")}
+                                                required
+                                                style={{ marginRight: '8px' }}
+                                            />
+                                            <span style={{
+                                                color: role === 'admin' ? '#667eea' : '#666',
+                                                fontWeight: role === 'admin' ? '600' : '400'
+                                            }}>🔑 Admin</span>
+                                        </label>
+                                        <label style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '12px 16px',
+                                            border: role === 'member' ? '2px solid #667eea' : '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            background: role === 'member' ? '#f0f4ff' : '#fafafa',
+                                            flex: 1
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name="role"
+                                                value="member"
+                                                checked={role === "member"}
+                                                onChange={() => setRole("member")}
+                                                required
+                                                style={{ marginRight: '8px' }}
+                                            />
+                                            <span style={{
+                                                color: role === 'member' ? '#667eea' : '#666',
+                                                fontWeight: role === 'member' ? '600' : '400'
+                                            }}>👥 Member</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                {/* Terms & Conditions */}
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label style={{
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        padding: '12px',
+                                        border: '2px solid #e1e5e9',
+                                        borderRadius: '10px',
+                                        background: '#fafafa',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={agreed}
+                                            onChange={() => setAgreed(!agreed)}
+                                            required
+                                            style={{
+                                                marginTop: '2px',
+                                                marginRight: '8px',
+                                                width: '16px',
+                                                height: '16px'
+                                            }}
+                                        />
+                                        <span style={{
+                                            fontSize: '14px',
+                                            color: '#666',
+                                            lineHeight: '1.4'
+                                        }}>
+                                            I agree to the <Link to="/terms" target="_blank" style={{
+                                                color: '#667eea',
+                                                textDecoration: 'none',
+                                                fontWeight: '500'
+                                            }}>Terms & Conditions</Link> and <Link to="/privacy" target="_blank" style={{
+                                                color: '#667eea',
+                                                textDecoration: 'none',
+                                                fontWeight: '500'
+                                            }}>Privacy Policy</Link>
+                                        </span>
+                                    </label>
+                                </div>
+                                
+                                {/* Register Button */}
+                                <button 
+                                    type="submit" 
+                                    disabled={!agreed}
+                                    style={{
+                                        width: '100%',
+                                        background: !agreed ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        padding: '14px 20px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        cursor: !agreed ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        marginBottom: '20px',
+                                        transform: 'translateY(0)',
+                                        boxShadow: !agreed ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.3)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (agreed) {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (agreed) {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                        }
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.style.outline = 'none';
+                                    }}
+                                    onMouseDown={(e) => {
+                                        e.target.style.background = !agreed ? '#ccc' : 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)';
+                                    }}
+                                    onMouseUp={(e) => {
+                                        e.target.style.background = !agreed ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                    }}
+                                    onActive={(e) => {
+                                        e.target.style.background = !agreed ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                    }}
+                                >
+                                    📱 Register & Send Verification Code
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handlePhoneVerification}>
+                                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                                    <p style={{
+                                        color: '#666',
+                                        fontSize: '14px',
+                                        marginBottom: '8px'
+                                    }}>
+                                        We sent a 6-digit verification code to:
+                                    </p>
+                                    <p style={{
+                                        fontWeight: '600',
+                                        fontSize: '16px',
+                                        color: '#667eea'
+                                    }}>{phone}</p>
+                                </div>
+                                
+                                {/* OTP Input */}
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label htmlFor="otp" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        🔢 Verification Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="otp"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        placeholder="Enter 6-digit code"
+                                        maxLength="6"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '20px',
+                                            textAlign: 'center',
+                                            letterSpacing: '5px',
+                                            fontWeight: 'bold',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Verify Button */}
+                                <button 
+                                    type="submit"
+                                    style={{
+                                        width: '100%',
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        padding: '14px 20px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        marginBottom: '20px',
+                                        transform: 'translateY(0)',
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.transform = 'translateY(-2px)';
+                                        e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.transform = 'translateY(0)';
+                                        e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.style.outline = 'none';
+                                    }}
+                                >
+                                    ✅ Verify Phone Number
+                                </button>
+                                
+                                {/* Resend & Back buttons */}
+                                <div style={{ textAlign: 'center', gap: '20px', display: 'flex', justifyContent: 'space-between' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(1)}
+                                        style={{ 
+                                            color: '#667eea',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.color = '#764ba2';
+                                            e.target.style.textDecoration = 'underline';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.color = '#667eea';
+                                            e.target.style.textDecoration = 'none';
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.outline = 'none';
+                                        }}
+                                    >
+                                        ← Back to Registration
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={resendVerification}
+                                        style={{ 
+                                            color: '#667eea',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.color = '#764ba2';
+                                            e.target.style.textDecoration = 'underline';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.color = '#667eea';
+                                            e.target.style.textDecoration = 'none';
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.outline = 'none';
+                                        }}
+                                    >
+                                        📱 Resend Code
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                         
-                        {/* Phone Number */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number:</label>
-                            <input
-                                type="text"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="e.g., 0712345678 or +254712345678"
-                            />
-                        </div>
-                        
-                        {/* Password */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password:</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Must be at least 6 characters"
-                                minLength="6"
-                            />
-                        </div>
-                        
-                        {/* Group Name */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Group Name:</label>
-                            <input
-                                type="text"
-                                value={group_name}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                required
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="e.g., Smart Savers Chama"
-                            />
-                        </div>
-                        
-                        {/* Role Selection */}
-                        <div className="flex justify-start space-x-6 pt-2">
-                            <label className="flex items-center text-sm font-medium text-gray-700">
-                                <input
-                                    type="radio"
-                                    name="role"
-                                    value="admin"
-                                    checked={role === "admin"}
-                                    onChange={() => setRole("admin")}
-                                    required
-                                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className="ml-2">Admin</span>
-                            </label>
-                            <label className="flex items-center text-sm font-medium text-gray-700">
-                                <input
-                                    type="radio"
-                                    name="role"
-                                    value="member"
-                                    checked={role === "member"}
-                                    onChange={() => setRole("member")}
-                                    required
-                                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className="ml-2">Member</span>
-                            </label>
-                        </div>
-                        
-                        {/* Terms & Conditions */}
-                        <div className="pt-2">
-                            <label className="flex items-start text-sm text-gray-600">
-                                <input
-                                    type="checkbox"
-                                    checked={agreed}
-                                    onChange={() => setAgreed(!agreed)}
-                                    required
-                                    className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="ml-2">
-                                    I agree to the <Link to="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 font-medium">Terms & Conditions</Link>
-                                </span>
-                            </label>
-                        </div>
-                        
-                        {/* Register Button */}
-                        <button 
-                            type="submit" 
-                            disabled={!agreed}
-                            className={`w-full py-3 px-4 rounded-lg text-white font-semibold transition duration-200 
-                                ${!agreed 
-                                    ? 'bg-gray-400 cursor-not-allowed' 
-                                    : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50'
-                                }`}
-                        >
-                            📱 Register & Send Verification Code
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handlePhoneVerification} className="space-y-4">
-                        <div className="text-center mb-6">
-                            <p className="text-gray-600">
-                                We sent a 6-digit verification code to:
-                            </p>
-                            <p className="font-semibold text-lg text-blue-600">{phone}</p>
-                        </div>
-                        
-                        {/* OTP Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code:</label>
-                            <input
-                                type="text"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                required
-                                maxLength="6"
-                                className="w-full p-3 text-center text-xl font-bold border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 tracking-widest"
-                                placeholder="000000"
-                            />
-                        </div>
-                        
-                        {/* Verify Button */}
-                        <button 
-                            type="submit"
-                            className="w-full py-3 px-4 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 transition duration-200"
-                        >
-                            ✅ Verify Phone Number
-                        </button>
-                        
-                        {/* Resend & Back buttons */}
-                        <div className="flex justify-between items-center pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setStep(1)}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                                ← Back to Registration
-                            </button>
-                            <button
-                                type="button"
-                                onClick={resendVerification}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                                📱 Resend Code
-                            </button>
-                        </div>
-                    </form>
-                )}
-                
-                <p className="mt-6 text-center text-sm text-gray-600">
-                    Already have an account? <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">Log In</Link>
-                </p>
+                        <p style={{
+                            marginTop: '24px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            color: '#666'
+                        }}>
+                            Already have an account? <Link to="/login" style={{
+                                color: '#667eea',
+                                textDecoration: 'none',
+                                fontWeight: '500'
+                            }} onMouseEnter={(e) => {
+                                e.target.style.color = '#764ba2';
+                                e.target.style.textDecoration = 'underline';
+                            }} onMouseLeave={(e) => {
+                                e.target.style.color = '#667eea';
+                                e.target.style.textDecoration = 'none';
+                            }}>Log In</Link>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

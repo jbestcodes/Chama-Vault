@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const authWithSMSRoutes = require('./routes/authWithSMS');
 const savingsRoutes = require('./routes/savings');
 const groupsRoutes = require('./routes/groups');
 const loansRoutes = require('./routes/Loans');
@@ -28,6 +29,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/sms-auth', authWithSMSRoutes);
 app.use('/api/savings', savingsRoutes);
 app.use('/api/groups', groupsRoutes);
 app.use('/api/contact', require('./routes/contact'));
