@@ -1,10 +1,19 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from './media/logo.png'; 
+import logoImage from './media/logo.png';
 
-function Navbar () {
+function Navbar() {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+
+    // Responsive handler
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 600);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -12,6 +21,7 @@ function Navbar () {
         window.location.href = '/login';
     };
 
+    // Auto-logout on inactivity
     useEffect(() => {
         let timeout;
         const logout = () => {
@@ -37,7 +47,6 @@ function Navbar () {
     }, [navigate]);
 
     return (
-        <>
         <nav
             style={{
                 width: "100%",
@@ -54,17 +63,18 @@ function Navbar () {
                     maxWidth: 900,
                     margin: "0 auto",
                     display: "flex",
-                    justifyContent: "space-between", // Changed from center
+                    justifyContent: "space-between",
                     alignItems: "center",
                     gap: "28px",
-                    padding: "0 8px"
+                    padding: "0 8px",
+                    flexWrap: "wrap",
                 }}
             >
-                {/* Logo Section - Far Left */}
+                {/* Logo Section */}
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <img 
-                        src={logoImage} 
-                        alt="Jaza Nyumba Logo" 
+                    <img
+                        src={logoImage}
+                        alt="Jaza Nyumba Logo"
                         style={{ height: "32px", width: "32px", objectFit: "contain" }}
                     />
                     <span style={{ color: "#fff", fontWeight: "bold", fontSize: "18px" }}>
@@ -72,27 +82,51 @@ function Navbar () {
                     </span>
                 </div>
 
-                {/* Navigation Links - Center */}
-                <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-                    <Link to="/" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                {/* Hamburger Menu Toggle Button */}
+                {isMobile && (
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#fff',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            order: 1,
+                        }}
+                        aria-label="Toggle menu"
+                    >
+                        {isMenuOpen ? '✕' : '≡'}
+                    </button>
+                )}
+
+                {/* Navigation Links Container */}
+                <div
+                    style={{
+                        display: isMobile ? (isMenuOpen ? "flex" : "none") : "flex",
+                        flexDirection: isMobile ? "column" : "row",
+                        alignItems: "center",
+                        gap: isMobile ? "10px" : "28px",
+                        marginTop: isMobile ? "10px" : "0",
+                        flex: 1,
+                        justifyContent: isMobile ? "flex-start" : "flex-end",
+                    }}
+                >
+                    <Link to="/" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         Home
                     </Link>
-                    <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         Dashboard
                     </Link>
-                    <Link to="/why-us" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    <Link to="/why-us" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         Why Us
                     </Link>
-                    <Link to="/contact" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                    <Link to="/contact" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         Contact Us
                     </Link>
-                    <Link to="/ai-dashboard" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
-                         AI Assistant
+                    <Link to="/ai-dashboard" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                        AI Assistant
                     </Link>
-                </div>
-
-                {/* Logout Button - Far Right */}
-                <div>
                     {token && (
                         <button
                             onClick={handleLogout}
@@ -103,7 +137,9 @@ function Navbar () {
                                 borderRadius: "4px",
                                 padding: "5px 14px",
                                 fontWeight: "bold",
-                                cursor: "pointer"
+                                cursor: "pointer",
+                                marginLeft: isMobile ? 0 : "10px",
+                                marginTop: isMobile ? "10px" : 0,
                             }}
                         >
                             Logout
@@ -112,7 +148,7 @@ function Navbar () {
                 </div>
             </div>
         </nav>
-        </>
     );
 }
+
 export default Navbar;
