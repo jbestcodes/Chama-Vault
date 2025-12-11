@@ -135,14 +135,21 @@ router.post('/register', async (req, res) => {
 
 // Step 2: Verify phone number
 router.post('/verify-phone', async (req, res) => {
-    const { memberId, otp } = req.body;
+    const { memberId, otp, phone } = req.body;
 
-    if (!memberId || !otp) {
-        return res.status(400).json({ error: 'Member ID and OTP are required' });
+    if ((!memberId && !phone) || !otp) {
+        return res.status(400).json({ error: 'Phone/Member ID and OTP are required' });
     }
 
     try {
-        const member = await Member.findById(memberId);
+        let member;
+        if (phone) {
+            const formattedPhone = formatPhoneNumber(phone);
+            member = await Member.findOne({ phone: formattedPhone });
+        } else {
+            member = await Member.findById(memberId);
+        }
+        
         if (!member) {
             return res.status(404).json({ error: 'Member not found' });
         }

@@ -9,6 +9,8 @@ const Login = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -108,10 +110,40 @@ const Login = () => {
             if (response.data.debug?.verificationCode) {
                 setSuccess(`Verification code: ${response.data.debug.verificationCode} (SMS failed, use this code)`);
             }
+            setShowVerificationModal(true);
         } catch (error) {
             setError(
                 error.response?.data?.error ||
                 'Failed to resend verification code. Please try again.'
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const submitVerificationCode = async () => {
+        if (!verificationCode || verificationCode.length !== 6) {
+            setError('Please enter a valid 6-digit verification code');
+            return;
+        }
+
+        setError('');
+        setIsLoading(true);
+        
+        try {
+            const response = await axios.post(`${apiUrl}/api/sms-auth/verify-phone`, {
+                memberId: 'temp', // We'll find by phone
+                otp: verificationCode,
+                phone: phone
+            });
+            
+            setSuccess('Phone verified successfully! You can now log in.');
+            setShowVerificationModal(false);
+            setVerificationCode('');
+        } catch (error) {
+            setError(
+                error.response?.data?.error ||
+                'Verification failed. Please try again.'
             );
         } finally {
             setIsLoading(false);
@@ -661,6 +693,137 @@ const Login = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* Verification Code Modal */}
+            {showVerificationModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '20px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                        padding: '40px',
+                        maxWidth: '400px',
+                        width: '90%',
+                        maxHeight: '90vh',
+                        overflow: 'auto'
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '10px' }}>📱</div>
+                            <h2 style={{
+                                margin: '0 0 8px 0',
+                                color: '#333',
+                                fontSize: '24px',
+                                fontWeight: 'bold'
+                            }}>Enter Verification Code</h2>
+                            <p style={{
+                                margin: 0,
+                                color: '#666',
+                                fontSize: '14px'
+                            }}>Enter the 6-digit code sent to {phone}</p>
+                        </div>
+
+                        {error && (
+                            <div style={{
+                                background: '#fee',
+                                border: '1px solid #fcc',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                marginBottom: '20px',
+                                color: '#c33',
+                                fontSize: '14px'
+                            }}>
+                                ⚠️ {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div style={{
+                                background: '#efe',
+                                border: '1px solid #cfc',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                marginBottom: '20px',
+                                color: '#3c3',
+                                fontSize: '14px'
+                            }}>
+                                ✅ {success}
+                            </div>
+                        )}
+
+                        <div style={{ marginBottom: '25px' }}>
+                            <input
+                                type="text"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="Enter 6-digit code"
+                                maxLength="6"
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 16px',
+                                    border: '2px solid #e1e5e9',
+                                    borderRadius: '10px',
+                                    fontSize: '20px',
+                                    textAlign: 'center',
+                                    letterSpacing: '5px',
+                                    fontWeight: 'bold',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => {
+                                    setShowVerificationModal(false);
+                                    setVerificationCode('');
+                                    setError('');
+                                }}
+                                style={{
+                                    flex: 1,
+                                    background: '#f5f5f5',
+                                    color: '#666',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '12px',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitVerificationCode}
+                                disabled={isLoading || verificationCode.length !== 6}
+                                style={{
+                                    flex: 2,
+                                    background: (isLoading || verificationCode.length !== 6) ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    cursor: (isLoading || verificationCode.length !== 6) ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {isLoading ? 'Verifying...' : 'Verify'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
         </div>
     );

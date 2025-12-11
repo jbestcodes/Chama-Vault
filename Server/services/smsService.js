@@ -63,9 +63,9 @@ class SMSLeopardService {
             }
 
             const response = await axios.post(this.baseURL, {
+                recipients: [to], // SMS Leopard might expect array
                 message: message,
-                destination: to,
-                source: this.senderId
+                sender_name: this.senderId
             }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -86,9 +86,9 @@ class SMSLeopardService {
             console.error('SMS sending failed:', error.response?.data || error.message);
             console.error('SMS request URL:', this.baseURL);
             console.error('SMS request payload:', {
+                recipients: [to],
                 message: message,
-                destination: to,
-                source: this.senderId
+                sender_name: this.senderId
             });
             console.error('SMS request headers:', {
                 'Content-Type': 'application/json',
