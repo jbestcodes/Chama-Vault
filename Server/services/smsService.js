@@ -62,33 +62,72 @@ class SMSLeopardService {
                 }
             }
 
-            const response = await axios.post(this.baseURL, {
-                recipients: [to], // SMS Leopard might expect array
-                message: message,
-                sender_name: this.senderId
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': this.generateAuthHeader()
+            // Try multiple SMS Leopard API formats
+            const formats = [
+                // Format 1: recipient + sender_id
+                {
+                    recipient: to,
+                    message: message,
+                    sender_id: this.senderId
+                },
+                // Format 2: destination + source
+                {
+                    destination: to,
+                    message: message,
+                    source: this.senderId
+                },
+                // Format 3: recipients array + sender_name
+                {
+                    recipients: [to],
+                    message: message,
+                    sender_name: this.senderId
+                },
+                // Format 4: Simple format
+                {
+                    number: to,
+                    message: message,
+                    sender: this.senderId
                 }
-            });
+            ];
 
-            console.log(`SMS sent to ${to}: ${message}`);
+            let lastError;
             
-            // Update usage if memberId provided
-            if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
-                await this.updateSMSUsage(memberId);
+            for (let i = 0; i < formats.length; i++) {
+                try {
+                    console.log(`Trying SMS format ${i + 1}:`, formats[i]);
+                    
+                    const response = await axios.post(this.baseURL, formats[i], {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': this.generateAuthHeader()
+                        }
+                    });
+
+                    console.log(`✅ SMS sent successfully with format ${i + 1} to ${to}: ${message}`);
+                    
+                    // Update usage if memberId provided
+                    if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
+                        await this.updateSMSUsage(memberId);
+                    }
+
+                    return { success: true, data: response.data, format: i + 1 };
+                } catch (formatError) {
+                    lastError = formatError;
+                    console.log(`❌ Format ${i + 1} failed:`, formatError.response?.data || formatError.message);
+                    continue;
+                }
             }
 
-            return { success: true, data: response.data };
+            // If all formats failed, throw the last error
+            throw lastError;
         } catch (error) {
             console.error('SMS sending failed:', error.response?.data || error.message);
             console.error('SMS request URL:', this.baseURL);
             console.error('SMS request payload:', {
-                recipients: [to],
+                recipient: to,
                 message: message,
-                sender_name: this.senderId
+                sender_id: this.senderId
             });
             console.error('SMS request headers:', {
                 'Content-Type': 'application/json',

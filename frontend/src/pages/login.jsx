@@ -664,7 +664,8 @@ const Login = () => {
                                 📲 Resend Phone Verification
                             </button>
                             <p style={{
-                                margin: '8px 0 0 0',\n                                fontSize: '12px',
+                                margin: '8px 0 0 0',
+                                fontSize: '12px',
                                 color: '#888'
                             }}>
                                 Enter your phone number above first
