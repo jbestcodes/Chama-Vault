@@ -96,6 +96,28 @@ const Login = () => {
         }
     };
 
+    const resendPhoneVerification = async () => {
+        setError('');
+        setIsLoading(true);
+        
+        try {
+            const response = await axios.post(`${apiUrl}/api/sms-auth/resend-verification-phone`, {
+                phone
+            });
+            setSuccess(response.data.message);
+            if (response.data.debug?.verificationCode) {
+                setSuccess(`Verification code: ${response.data.debug.verificationCode} (SMS failed, use this code)`);
+            }
+        } catch (error) {
+            setError(
+                error.response?.data?.error ||
+                'Failed to resend verification code. Please try again.'
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
@@ -153,6 +175,43 @@ const Login = () => {
                                 animation: 'shake 0.5s ease-in-out'
                             }}>
                                 ⚠️ {error}
+                                
+                                {/* Show resend verification button if phone verification error */}
+                                {(error.includes('verify your phone') || error.includes('phone number first')) && (
+                                    <div style={{ marginTop: '10px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={resendPhoneVerification}
+                                            disabled={isLoading}
+                                            style={{
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                padding: '8px 16px',
+                                                fontSize: '12px',
+                                                fontWeight: '500',
+                                                cursor: isLoading ? 'not-allowed' : 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                opacity: isLoading ? 0.6 : 1
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isLoading) {
+                                                    e.target.style.transform = 'translateY(-1px)';
+                                                    e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isLoading) {
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = 'none';
+                                                }
+                                            }}
+                                        >
+                                            📱 Resend Verification Code
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -518,7 +577,27 @@ const Login = () => {
                                     </button>
                                 </div>
                             </form>
-                        )}
+                        )}  
+                        
+                        {/* Register Link */}
+                        <p style={{
+                            marginTop: '24px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            color: '#666'
+                        }}>
+                            Don't have an account? <Link to="/register" style={{
+                                color: '#667eea',
+                                textDecoration: 'none',
+                                fontWeight: '500'
+                            }} onMouseEnter={(e) => {
+                                e.target.style.color = '#764ba2';
+                                e.target.style.textDecoration = 'underline';
+                            }} onMouseLeave={(e) => {
+                                e.target.style.color = '#667eea';
+                                e.target.style.textDecoration = 'none';
+                            }}>Register Now</Link>
+                        </p>
                     </div>
                 </div>
             </div>

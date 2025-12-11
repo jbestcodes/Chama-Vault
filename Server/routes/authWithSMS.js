@@ -314,4 +314,92 @@ router.post('/verify-login', async (req, res) => {
     }
 });
 
+// Resend verification OTP using phone number
+router.post('/resend-verification-phone', async (req, res) => {
+    const { phone } = req.body;
+
+    if (!phone) {
+        return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    try {
+        const formattedPhone = formatPhoneNumber(phone);
+        const member = await Member.findOne({ phone: formattedPhone });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'No account found with this phone number' });
+        }
+
+        if (member.phone_verified) {
+            return res.status(400).json({ error: 'Phone already verified. You can now log in.' });
+        }
+
+        // Generate new OTP
+        const verificationOTP = smsService.generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        member.verification_otp = verificationOTP;
+        member.otp_expires = otpExpires;
+        await member.save();
+
+        console.log(`Manual verification code for ${formattedPhone}: ${verificationOTP}`);
+        
+        // Try to send SMS, but don't fail if it doesn't work
+        try {
+            await smsService.sendVerificationOTP(member.phone, verificationOTP, member.full_name);
+            res.json({ 
+                message: 'Verification code sent to your phone',
+                memberId: member._id
+            });
+        } catch (smsError) {
+            console.error('SMS failed, but verification code generated:', verificationOTP);
+            res.json({ 
+                message: 'SMS sending failed, but verification code generated. Check server logs.',
+                memberId: member._id,
+                debug: process.env.NODE_ENV === 'development' ? { verificationCode: verificationOTP } : undefined
+            });
+        }
+
+    } catch (error) {
+        console.error('Error resending verification:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Manual phone verification (for testing/emergency)
+router.post('/manual-verify', async (req, res) => {
+    const { phone, emergencyCode } = req.body;
+
+    // Simple emergency bypass (you can remove this in production)
+    if (emergencyCode !== 'VERIFY_EMERGENCY_2024') {
+        return res.status(403).json({ error: 'Invalid emergency code' });
+    }
+
+    try {
+        const formattedPhone = formatPhoneNumber(phone);
+        const member = await Member.findOne({ phone: formattedPhone });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'No account found with this phone number' });
+        }
+
+        // Manually verify the phone
+        member.phone_verified = true;
+        member.verification_otp = null;
+        member.otp_expires = null;
+        await member.save();
+
+        console.log(`Manual verification completed for ${formattedPhone}`);
+        
+        res.json({ 
+            message: 'Phone verified manually. You can now log in.',
+            success: true
+        });
+
+    } catch (error) {
+        console.error('Error in manual verification:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 module.exports = router;
