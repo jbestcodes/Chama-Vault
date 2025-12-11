@@ -7,7 +7,7 @@ class SMSLeopardService {
     constructor() {
         this.apiKey = process.env.SMS_LEOPARD_API_KEY;
         this.apiSecret = process.env.SMS_LEOPARD_API_SECRET;
-        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || 'SMS_Leopard';
+        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || null; // Allow null for default sender
         this.baseURL = 'https://api.smsleopard.com/v1/sms/send';
     }
 
@@ -64,41 +64,39 @@ class SMSLeopardService {
 
             // Try multiple SMS Leopard API formats
             const formats = [
-                // Format 1: source (what SMS Leopard expects based on error)
+                // Format 1: Without sender ID (use SMS Leopard default)
                 {
-                    recipients: [to],
-                    message: message,
-                    source: this.senderId
+                    to: to,
+                    message: message
                 },
-                // Format 2: destination + source
-                {
-                    destination: to,
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 3: recipients + source 
-                {
-                    recipients: [to],
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 4: recipient + sender_id
-                {
-                    recipient: to,
-                    message: message,
-                    sender_id: this.senderId
-                },
-                // Format 5: Simple format with 'from'
-                {
-                    number: to,
-                    message: message,
-                    from: this.senderId
-                },
-                // Format 6: Standard format
-                {
+                // Format 2: With sender if provided
+                ...(this.senderId ? [{
                     to: to,
                     message: message,
                     source: this.senderId
+                }] : []),
+                // Format 3: Recipients array without sender
+                {
+                    recipients: [to],
+                    message: message
+                },
+                // Format 4: Recipients with sender if provided
+                ...(this.senderId ? [{
+                    recipients: [to],
+                    message: message,
+                    source: this.senderId
+                }] : []),
+                // Format 5: Standard format with common sender names
+                {
+                    to: to,
+                    message: message,
+                    source: 'CHAMA'
+                },
+                // Format 6: Another common format
+                {
+                    to: to,
+                    message: message,
+                    source: 'INFO'
                 }
             ];
 
