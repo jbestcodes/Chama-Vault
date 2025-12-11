@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
+import TrialStatus from '../components/TrialStatus';
 
 const apiUrl = import.meta.env.VITE_API_URL; 
 
@@ -59,6 +60,9 @@ const Dashboard = () => {
           Hello {userName}
         </h2>
       )}
+
+      {/* AI Trial & Subscription Status */}
+      <TrialStatus />
 
       {/* Show admin panel link only for admins */}
       {role && role.toLowerCase() === 'admin' && (

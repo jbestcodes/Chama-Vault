@@ -8,27 +8,31 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const Login = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [step, setStep] = useState(1); // 1: credentials, 2: OTP verification
+    const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setIsLoading(true);
+        
         try {
-            const response = await axios.post(`${apiUrl}/api/auth/login`, {
+            const response = await axios.post(`${apiUrl}/api/sms-auth/login`, {
                 phone,
                 password
             });
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role.toLowerCase());
-                localStorage.setItem('full_name', response.data.full_name);
-
-                // Redirect ALL users to dashboard after login
-                navigate('/dashboard');
+            
+            if (response.data.requiresOTP) {
+                setMemberId(response.data.memberId);
+                setSuccess(response.data.message);
+                setStep(2); // Move to OTP verification step
             }
         } catch (error) {
             setError(
@@ -36,6 +40,57 @@ const Login = () => {
                 error.response?.data?.message ||
                 'Login failed. Please try again.'
             );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleOTPVerification = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+        
+        try {
+            const response = await axios.post(`${apiUrl}/api/sms-auth/verify-login`, {
+                memberId,
+                otp
+            });
+            
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('role', response.data.role.toLowerCase());
+                localStorage.setItem('full_name', response.data.full_name);
+                localStorage.setItem('memberId', response.data.memberId);
+
+                // Check AI trial status if available
+                if (response.data.trialInfo) {
+                    localStorage.setItem('aiTrialInfo', JSON.stringify(response.data.trialInfo));
+                }
+
+                navigate('/dashboard');
+            }
+        } catch (error) {
+            setError(
+                error.response?.data?.error ||
+                error.response?.data?.message ||
+                'OTP verification failed. Please try again.'
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const resendOTP = async () => {
+        setError('');
+        setIsLoading(true);
+        
+        try {
+            await axios.post(`${apiUrl}/api/sms-auth/resend-login-otp`, {
+                memberId
+            });
+            setSuccess('New OTP sent to your phone');
+        } catch (error) {
+            setError('Failed to resend OTP. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -77,12 +132,12 @@ const Login = () => {
                                 color: '#333',
                                 fontSize: '28px',
                                 fontWeight: 'bold'
-                            }}>Welcome Back!</h2>
+                            }}>{step === 1 ? 'Welcome Back!' : 'Enter Verification Code'}</h2>
                             <p style={{
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '16px'
-                            }}>Sign in to your Jaza Nyumba account</p>
+                            }}>{step === 1 ? 'Sign in to your ChamaVault account' : 'Enter the 6-digit code sent to your phone'}</p>
                         </div>
 
                         {/* Error Message */}
@@ -101,73 +156,44 @@ const Login = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleLogin}>
-                            {/* Phone Input */}
-                            <div style={{ marginBottom: '20px' }}>
-                                <label htmlFor="phone" style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#333',
-                                    fontWeight: '500',
-                                    fontSize: '14px'
-                                }}>
-                                    📱 Phone Number
-                                </label>
-                                <input
-                                    type="text"
-                                    id="phone"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="Enter your phone number"
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px 16px',
-                                        border: '2px solid #e1e5e9',
-                                        borderRadius: '10px',
-                                        fontSize: '16px',
-                                        transition: 'all 0.3s ease',
-                                        outline: 'none',
-                                        background: '#fafafa',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onFocus={(e) => {
-                                        e.target.style.borderColor = '#667eea';
-                                        e.target.style.background = 'white';
-                                        e.target.style.transform = 'translateY(-2px)';
-                                        e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
-                                    }}
-                                    onBlur={(e) => {
-                                        e.target.style.borderColor = '#e1e5e9';
-                                        e.target.style.background = '#fafafa';
-                                        e.target.style.transform = 'translateY(0)';
-                                        e.target.style.boxShadow = 'none';
-                                    }}
-                                />
+                        {/* Success Message */}
+                        {success && (
+                            <div style={{
+                                background: '#efe',
+                                border: '1px solid #cfc',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                marginBottom: '20px',
+                                color: '#3c3',
+                                fontSize: '14px'
+                            }}>
+                                ✅ {success}
                             </div>
+                        )}
 
-                            {/* Password Input */}
-                            <div style={{ marginBottom: '25px' }}>
-                                <label htmlFor="password" style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#333',
-                                    fontWeight: '500',
-                                    fontSize: '14px'
-                                }}>
-                                    🔒 Password
-                                </label>
-                                <div style={{ position: 'relative' }}>
+                        {step === 1 ? (
+                            <form onSubmit={handleLogin}>
+                                {/* Phone Input */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="phone" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        📱 Phone Number
+                                    </label>
                                     <input
-                                        type={showPassword ? "text" : "password"}
-                                        id="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Enter your password"
+                                        type="text"
+                                        id="phone"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        placeholder="Enter your phone number"
                                         required
                                         style={{
                                             width: '100%',
-                                            padding: '12px 45px 12px 16px',
+                                            padding: '12px 16px',
                                             border: '2px solid #e1e5e9',
                                             borderRadius: '10px',
                                             fontSize: '16px',
@@ -189,110 +215,310 @@ const Login = () => {
                                             e.target.style.boxShadow = 'none';
                                         }}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={togglePasswordVisibility}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '12px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            background: 'none',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            fontSize: '18px',
-                                            color: '#666',
-                                            padding: '4px',
-                                            borderRadius: '4px',
+                                </div>
+
+                                {/* Password Input */}
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label htmlFor="password" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        🔒 Password
+                                    </label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            id="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter your password"
+                                            required
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px 45px 12px 16px',
+                                                border: '2px solid #e1e5e9',
+                                                borderRadius: '10px',
+                                                fontSize: '16px',
+                                                transition: 'all 0.3s ease',
+                                                outline: 'none',
+                                                background: '#fafafa',
+                                                boxSizing: 'border-box'
+                                            }}
+                                            onFocus={(e) => {
+                                                e.target.style.borderColor = '#667eea';
+                                                e.target.style.background = 'white';
+                                                e.target.style.transform = 'translateY(-2px)';
+                                                e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                            }}
+                                            onBlur={(e) => {
+                                                e.target.style.borderColor = '#e1e5e9';
+                                                e.target.style.background = '#fafafa';
+                                                e.target.style.transform = 'translateY(0)';
+                                                e.target.style.boxShadow = 'none';
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={togglePasswordVisibility}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '12px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontSize: '18px',
+                                                color: '#666',
+                                                padding: '4px',
+                                                borderRadius: '4px',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.color = '#333';
+                                                e.target.style.background = '#f0f0f0';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.color = '#666';
+                                                e.target.style.background = 'none';
+                                            }}
+                                        >
+                                            {showPassword ? '🙈' : '👁️'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Login Button */}
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    style={{
+                                        width: '100%',
+                                        background: isLoading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        padding: '14px 20px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        marginBottom: '20px',
+                                        transform: 'translateY(0)',
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isLoading) {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isLoading) {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                        }
+                                    }}
+                                >
+                                    {isLoading ? (
+                                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <span style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                border: '2px solid #fff',
+                                                borderTop: '2px solid transparent',
+                                                borderRadius: '50%',
+                                                animation: 'spin 1s linear infinite'
+                                            }}></span>
+                                            Sending Code...
+                                        </span>
+                                    ) : (
+                                        '📱 Send Login Code'
+                                    )}
+                                </button>
+
+                                {/* Forgot Password Link */}
+                                <div style={{ textAlign: 'center' }}>
+                                    <Link 
+                                        to="/request-password-reset" 
+                                        style={{ 
+                                            color: '#667eea',
+                                            textDecoration: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
                                             transition: 'all 0.2s ease'
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.target.style.color = '#333';
-                                            e.target.style.background = '#f0f0f0';
+                                            e.target.style.color = '#764ba2';
+                                            e.target.style.textDecoration = 'underline';
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.target.style.color = '#666';
-                                            e.target.style.background = 'none';
+                                            e.target.style.color = '#667eea';
+                                            e.target.style.textDecoration = 'none';
                                         }}
                                     >
-                                        {showPassword ? '🙈' : '👁️'}
-                                    </button>
+                                        🤔 Forgot Password?
+                                    </Link>
                                 </div>
-                            </div>
-
-                            {/* Login Button */}
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                style={{
-                                    width: '100%',
-                                    background: isLoading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    padding: '14px 20px',
-                                    fontSize: '16px',
-                                    fontWeight: 'bold',
-                                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    marginBottom: '20px',
-                                    transform: 'translateY(0)',
-                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!isLoading) {
-                                        e.target.style.transform = 'translateY(-2px)';
-                                        e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!isLoading) {
-                                        e.target.style.transform = 'translateY(0)';
-                                        e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
-                                    }
-                                }}
-                            >
-                                {isLoading ? (
-                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <span style={{
-                                            width: '16px',
-                                            height: '16px',
-                                            border: '2px solid #fff',
-                                            borderTop: '2px solid transparent',
-                                            borderRadius: '50%',
-                                            animation: 'spin 1s linear infinite'
-                                        }}></span>
-                                        Signing in...
-                                    </span>
-                                ) : (
-                                    '🚀 Sign In'
-                                )}
-                            </button>
-
-                            {/* Forgot Password Link */}
-                            <div style={{ textAlign: 'center' }}>
-                                <Link 
-                                    to="/request-password-reset" 
-                                    style={{ 
-                                        color: '#667eea',
-                                        textDecoration: 'none',
-                                        fontSize: '14px',
+                            </form>
+                        ) : (
+                            <form onSubmit={handleOTPVerification}>
+                                {/* OTP Input */}
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label htmlFor="otp" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
                                         fontWeight: '500',
-                                        transition: 'all 0.2s ease'
+                                        fontSize: '14px'
+                                    }}>
+                                        🔢 Verification Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="otp"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        placeholder="Enter 6-digit code"
+                                        maxLength="6"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '20px',
+                                            textAlign: 'center',
+                                            letterSpacing: '5px',
+                                            fontWeight: 'bold',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Verify Button */}
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    style={{
+                                        width: '100%',
+                                        background: isLoading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        padding: '14px 20px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        marginBottom: '20px',
+                                        transform: 'translateY(0)',
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.color = '#764ba2';
-                                        e.target.style.textDecoration = 'underline';
+                                        if (!isLoading) {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.color = '#667eea';
-                                        e.target.style.textDecoration = 'none';
+                                        if (!isLoading) {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                        }
                                     }}
                                 >
-                                    🤔 Forgot Password?
-                                </Link>
-                            </div>
-                        </form>
+                                    {isLoading ? (
+                                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <span style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                border: '2px solid #fff',
+                                                borderTop: '2px solid transparent',
+                                                borderRadius: '50%',
+                                                animation: 'spin 1s linear infinite'
+                                            }}></span>
+                                            Verifying...
+                                        </span>
+                                    ) : (
+                                        '✅ Verify & Sign In'
+                                    )}
+                                </button>
+
+                                {/* Resend & Back buttons */}
+                                <div style={{ textAlign: 'center', gap: '20px', display: 'flex', justifyContent: 'space-between' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(1)}
+                                        style={{ 
+                                            color: '#667eea',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.color = '#764ba2';
+                                            e.target.style.textDecoration = 'underline';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.color = '#667eea';
+                                            e.target.style.textDecoration = 'none';
+                                        }}
+                                    >
+                                        ← Back to Login
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={resendOTP}
+                                        disabled={isLoading}
+                                        style={{ 
+                                            color: '#667eea',
+                                            background: 'none',
+                                            border: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isLoading) {
+                                                e.target.style.color = '#764ba2';
+                                                e.target.style.textDecoration = 'underline';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isLoading) {
+                                                e.target.style.color = '#667eea';
+                                                e.target.style.textDecoration = 'none';
+                                            }
+                                        }}
+                                    >
+                                        📱 Resend Code
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             </div>

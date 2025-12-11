@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import TrialStatus from '../components/TrialStatus';
 
 
 const AIDashboard = () => {
-    const BASE_URL = 'https://chama-vault-1.onrender.com';
+    const BASE_URL = import.meta.env.VITE_API_URL || 'https://chama-vault-1.onrender.com';
     const [messages, setMessages] = useState([]);
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [trialInfo, setTrialInfo] = useState(null);
     const messagesEndRef = useRef(null);
     const navigate = useNavigate();
 
@@ -19,17 +21,30 @@ const AIDashboard = () => {
         scrollToBottom();
     }, [messages]);
 
-    // Check authentication status
+    // Check authentication status and trial info
     useEffect(() => {
         const token = localStorage.getItem('token');
         const loggedIn = !!token;
         setIsLoggedIn(loggedIn);
 
+        // Get trial info from localStorage if available
+        const storedTrialInfo = localStorage.getItem('aiTrialInfo');
+        if (storedTrialInfo) {
+            setTrialInfo(JSON.parse(storedTrialInfo));
+        }
+
         // Set welcome message based on login status
         if (loggedIn) {
+            const trialStatus = storedTrialInfo ? JSON.parse(storedTrialInfo) : null;
+            let welcomeMessage = "Hello! I'm your AI financial assistant. Ask me anything about savings, loans, or your Chama finances! 🤖";
+            
+            if (trialStatus?.inTrial) {
+                welcomeMessage += `\n\n🎉 You're in your AI trial period! ${trialStatus.daysLeft} days remaining. Make the most of it!`;
+            }
+            
             setMessages([
                 {
-                    text: "Hello! I'm your AI financial assistant. Ask me anything about savings, loans, or your Chama finances! 🤖",
+                    text: welcomeMessage,
                     isUser: false,
                     timestamp: new Date()
                 }
@@ -37,7 +52,7 @@ const AIDashboard = () => {
         } else {
             setMessages([
                 {
-                    text: "Welcome to Jaza Nyumba AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first to access your data. Please login or register to get started! 🔐",
+                    text: "Welcome to ChamaVault AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first to access your data. Please login or register to get started! 🔐",
                     isUser: false,
                     timestamp: new Date()
                 }
@@ -154,6 +169,9 @@ const AIDashboard = () => {
                             </span>
                         </div>
                     </div>
+
+                    {/* Trial Status - only show if logged in */}
+                    {isLoggedIn && <TrialStatus />}
 
                     {/* Chat Container */}
                     <div className="bg-white rounded-lg shadow-sm">

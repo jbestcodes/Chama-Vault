@@ -9,6 +9,27 @@ const MemberSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
   status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
   is_admin: { type: Boolean, default: false },
+  
+  // Phone verification and OTP
+  phone_verified: { type: Boolean, default: false },
+  verification_otp: { type: String },
+  otp_expires: { type: Date },
+  login_otp: { type: String },
+  login_otp_expires: { type: Date },
+  
+  // SMS Preferences
+  sms_notifications: {
+    account_updates: { type: Boolean, default: true },
+    loan_updates: { type: Boolean, default: true },
+    contribution_reminders: { type: Boolean, default: true },
+    repayment_reminders: { type: Boolean, default: true }
+  },
+  
+  // Subscription status (quick reference)
+  has_active_subscription: { type: Boolean, default: false },
+  subscription_plan: { type: String, enum: ['monthly', 'weekly', null], default: null },
+  subscription_expires: { type: Date },
+  
   createdAt: { type: Date, default: Date.now }
 });
 

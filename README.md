@@ -1,23 +1,185 @@
-# Jaza Nyumba
+# ChamaVault - Digital Chama Management System
 
 **🌟 Live Demo: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
 
-Jaza Nyumba is a secure, web-based savings and loan management platform built for table banking groups (Chamas). It enables members to track weekly savings, manage loans, view anonymous group rankings, set personal milestones, and get AI-powered financial insights.
+ChamaVault is a comprehensive digital platform for managing Chama (savings group) operations in Kenya. It features SMS notifications, AI-powered financial insights, loan management, and subscription-based services.
 
-## 🌟 Try the Live Demo
-**Visit: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
+## ✨ Key Features
 
-**Demo Credentials:**
-- **Admin Login:** Contact support for admin demo access
-- **Member Registration:** Register with your phone number to get started
-- **Test Features:** Full functionality including AI assistant and loan management
+### 📱 SMS Integration
+- **Phone verification** with OTP authentication
+- **Automated reminders** for contributions and repayments  
+- **Group notifications** and announcements
+- **SMS templates** for consistent messaging
+- **Smart scheduling** (no Sunday SMS)
 
-## Features
+### 🤖 AI Financial Assistant
+- **2-week free trial** for new members
+- **Personalized financial advice**
+- **Savings analysis** and recommendations
+- **Loan eligibility assessment**
+- **Goal tracking** and milestone management
 
-### Core Banking Features
-- **Secure Authentication** - Member registration, login, and role-based access
-- **Savings Management** - Track weekly contributions with visual progress charts
-- **Loan System** - Request loans, admin approval workflow, and repayment tracking
+### 💰 Financial Management
+- **Group savings tracking**
+- **Loan application and approval workflow**
+- **Repayment scheduling and tracking**
+- **Member rankings and leaderboards**
+- **Financial milestone setting**
+
+### 👥 Group Administration
+- **Member approval system**
+- **Role-based permissions** (Admin/Member)
+- **Group invitations** with codes
+- **Contribution schedule management**
+- **SMS preference controls**
+
+### 💳 Subscription System
+- **Member-based subscriptions** (KES 100/month, KES 30/week)
+- **Feature gating** based on subscription status
+- **Paystack integration** for payments
+- **Usage tracking** and limits
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 16+ and npm
+- MongoDB database
+- SMS Leopard account
+- Paystack account  
+- OpenAI API key
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd Chama-Vault
+```
+
+2. **Install backend dependencies**
+```bash
+cd Server
+npm install
+```
+
+3. **Install frontend dependencies**
+```bash
+cd ../frontend
+npm install
+```
+
+4. **Configure environment variables** (see Environment Setup below)
+
+5. **Start the development servers**
+```bash
+# Backend (from Server directory)
+npm run dev
+
+# Frontend (from frontend directory)
+npm run dev
+```
+
+## 🔧 Environment Setup
+
+### Backend Environment Variables
+
+Create `Server/.env` with the following:
+
+```env
+# Database
+MONGODB_URI=mongodb://localhost:27017/chamavault
+# or MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/chamavault
+
+# JWT Secret (generate a strong secret)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# SMS Leopard Configuration
+SMSLEOPARD_API_URL=https://api.smsleopard.com/v1/sms
+SMSLEOPARD_USERNAME=your_smsleopard_username
+SMSLEOPARD_PASSWORD=your_smsleopard_password
+SMSLEOPARD_SOURCE=your_sender_id
+
+# Paystack Configuration
+PAYSTACK_SECRET_KEY=sk_test_your_paystack_secret_key
+PAYSTACK_PUBLIC_KEY=pk_test_your_paystack_public_key
+PAYSTACK_WEBHOOK_SECRET=your_paystack_webhook_secret
+
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your_openai_api_key
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Frontend URL (for CORS)
+FRONTEND_URL=http://localhost:5173
+```
+
+### Frontend Environment Variables
+
+Create `frontend/.env` with:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+## 🔑 API Keys Setup Guide
+
+### 1. MongoDB Setup
+- **Local**: Install MongoDB or use MongoDB Atlas
+- **Atlas**: Create cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
+- **Connection**: Get connection string and add to `MONGODB_URI`
+
+### 2. SMS Leopard Setup  
+- **Account**: Sign up at [smsleopard.com](https://smsleopard.com)
+- **API Credentials**: Get username, password, and source ID
+- **Testing**: Use test credits for development
+
+### 3. Paystack Setup
+- **Account**: Sign up at [paystack.com](https://paystack.com)
+- **API Keys**: Get test and live keys from dashboard
+- **Webhooks**: Set up webhook endpoint for subscription events
+
+### 4. OpenAI Setup
+- **Account**: Sign up at [platform.openai.com](https://platform.openai.com)
+- **API Key**: Generate API key from dashboard
+- **Billing**: Add payment method for usage
+
+## 📱 Frontend Usage
+
+### User Authentication Flow
+1. **Register**: Phone verification with SMS OTP
+2. **Login**: 2-step process (credentials → OTP)  
+3. **Dashboard**: Access features based on subscription
+
+### AI Trial System
+- New users get 2 weeks free AI access
+- Trial countdown shown in dashboard
+- Upgrade prompts when trial expires
+
+### SMS Preferences
+- Access via profile page
+- Toggle specific notification types
+- Real-time preference updates
+
+## 🏗️ System Architecture
+
+### Backend Structure
+```
+Server/
+├── models/          # MongoDB schemas
+├── routes/          # API endpoints  
+├── services/        # Business logic
+├── middleware/      # Auth, validation
+└── utils/          # Helper functions
+```
+
+### Key Services
+- **SMS Service**: Template-based messaging with subscription checks
+- **AI Service**: OpenAI integration for financial insights
+- **Payment Service**: Paystack integration for subscriptions
+- **Reminder Service**: Cron jobs for automated notifications
 - **Withdrawal Requests** - Secure withdrawal system with admin approval
 - **Member Management** - Admin tools for adding, editing, and managing members
 

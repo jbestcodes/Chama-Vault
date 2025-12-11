@@ -299,6 +299,62 @@ router.post('/deny-member', authenticateToken, async (req, res) => {
     }
 });
 
+// Get SMS preferences
+router.get('/members/sms-preferences', authenticateToken, async (req, res) => {
+    try {
+        const member = await Member.findById(req.user.id);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        res.json({ 
+            smsPreferences: member.sms_preferences || {
+                contribution_reminders: true,
+                loan_updates: true,
+                repayment_reminders: true,
+                group_updates: true,
+                account_updates: true
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching SMS preferences:', error);
+        res.status(500).json({ error: 'Failed to fetch SMS preferences' });
+    }
+});
+
+// Update SMS preferences
+router.put('/members/sms-preferences', authenticateToken, async (req, res) => {
+    try {
+        const { smsPreferences } = req.body;
+        
+        if (!smsPreferences || typeof smsPreferences !== 'object') {
+            return res.status(400).json({ error: 'Invalid SMS preferences data' });
+        }
+        
+        const member = await Member.findById(req.user.id);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        // Update SMS preferences
+        member.sms_preferences = {
+            ...member.sms_preferences,
+            ...smsPreferences,
+            account_updates: true // Always keep account updates enabled for security
+        };
+        
+        await member.save();
+        
+        res.json({ 
+            message: 'SMS preferences updated successfully',
+            smsPreferences: member.sms_preferences
+        });
+    } catch (error) {
+        console.error('Error updating SMS preferences:', error);
+        res.status(500).json({ error: 'Failed to update SMS preferences' });
+    }
+});
+
 // Delete member
 router.delete('/delete-member/:id', authenticateToken, async (req, res) => {
     const memberId = req.params.id;

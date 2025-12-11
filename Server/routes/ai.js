@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const { requireAI, checkAITrialStatus } = require('../middleware/subscription');
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Savings = require('../models/Savings');
 const Loan = require('../models/Loan');
 const Milestone = require('../models/Milestone');
+const Subscription = require('../models/Subscription');
 const OpenAI = require('openai');
 
 // Initialize OpenAI
@@ -13,10 +15,42 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// AI Financial Nudge endpoint
-router.get('/financial-nudge', authenticateToken, async (req, res) => {
+// Check AI trial status (no subscription required)
+router.get('/trial-status', authenticateToken, async (req, res) => {
+    try {
+        const memberId = req.user.id;
+        const trialStatus = await checkAITrialStatus(memberId);
+        
+        const subscription = await Subscription.findOne({ 
+            member_id: memberId,
+            status: 'active'
+        });
+
+        res.json({
+            ...trialStatus,
+            hasActiveSubscription: !!subscription,
+            message: trialStatus.inTrial 
+                ? `You have ${trialStatus.daysLeft} days left in your AI trial period.`
+                : subscription 
+                ? 'You have full AI access with your subscription.'
+                : 'Your AI trial has expired. Subscribe to continue using AI features.'
+        });
+    } catch (error) {
+        console.error('Error checking AI trial status:', error);
+        res.status(500).json({ error: 'Failed to check trial status' });
+    }
+});
+
+// AI Financial Nudge endpoint (requires subscription or trial)
+router.get('/financial-nudge', authenticateToken, requireAI, async (req, res) => {
     try {
         const userId = req.user.id;
+        
+        // Check trial status
+        const trialStatus = await checkAITrialStatus(userId);
+        
+        // Update AI usage counter
+        await updateAIUsage(userId);
         
         // Get member's data
         const member = await Member.findById(userId); // Changed from User to Member
@@ -37,17 +71,28 @@ router.get('/financial-nudge', authenticateToken, async (req, res) => {
             nudge = `Great work ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} in ${member.group_name}. Ready to set your first milestone? 🎯`;
         }
         
-        res.json({ nudge });
+        // Add trial info if user is in trial
+        if (trialStatus.inTrial) {
+            nudge += `\n\n🎉 You're enjoying your AI trial! ${trialStatus.daysLeft} days left. Subscribe to keep your AI assistant after the trial ends.`;
+        }
+        
+        res.json({ 
+            nudge,
+            trialInfo: trialStatus
+        });
     } catch (error) {
         console.error('Financial nudge error:', error);
         res.status(500).json({ error: 'Failed to generate financial nudge' });
     }
 });
 
-// AI Loan Analysis endpoint
-router.get('/loan-analysis', authenticateToken, async (req, res) => {
+// AI Loan Analysis endpoint (requires subscription)
+router.get('/loan-analysis', authenticateToken, requireAI, async (req, res) => {
     try {
         const memberId = req.user.id;
+        
+        // Update AI usage counter
+        await updateAIUsage(memberId);
         
         // Get user's data
         const member = await Member.findById(memberId);
@@ -88,10 +133,13 @@ router.get('/loan-analysis', authenticateToken, async (req, res) => {
     }
 });
 
-// AI Savings Health endpoint
-router.get('/savings-health', authenticateToken, async (req, res) => {
+// AI Savings Health endpoint (requires subscription)
+router.get('/savings-health', authenticateToken, requireAI, async (req, res) => {
     try {
         const memberId = req.user.id;
+        
+        // Update AI usage counter
+        await updateAIUsage(memberId);
         
         // Get user's data
         const member = await Member.findById(memberId);
@@ -226,5 +274,18 @@ router.post('/chat', authenticateToken, async (req, res) => {
         res.json({ response: fallbackResponse });
     }
 });
+
+// Update AI usage counter
+async function updateAIUsage(memberId) {
+    try {
+        const subscription = await Subscription.findOne({ member_id: memberId });
+        if (subscription) {
+            subscription.usage.ai_requests_this_month += 1;
+            await subscription.save();
+        }
+    } catch (error) {
+        console.error('Error updating AI usage:', error);
+    }
+}
 
 module.exports = router;

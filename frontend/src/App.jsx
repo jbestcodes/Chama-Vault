@@ -15,6 +15,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import LoansAndRepayments from "./pages/LoansAndRepayments"; 
 import AIDashboard from './pages/AIDashboard';
 import WithdrawalRequest from './pages/WithdrawalRequest';
+import Subscribe from './pages/Subscribe';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -39,6 +40,7 @@ function App() {
         <Route path="/loans" element={<LoansAndRepayments />} /> 
         <Route path="/ai-dashboard" element={<AIDashboard />} />
         <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
+        <Route path="/subscribe" element={<Subscribe />} />
         
         {/* Add more routes as needed */}
       </Routes>

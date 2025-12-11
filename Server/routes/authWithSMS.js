@@ -1,0 +1,284 @@
+const express = require('express');
+const bcrypt = require('bcrypt');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const Member = require('../models/Member');
+const Group = require('../models/Group');
+const smsService = require('../services/smsService');
+const { authenticateToken } = require('../middleware/auth');
+
+// Helper function to format Kenyan phone numbers
+const formatPhoneNumber = (phone) => {
+    // Remove any non-digit characters
+    let cleanPhone = phone.replace(/\D/g, '');
+    
+    // Handle different formats
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '254' + cleanPhone.substring(1);
+    } else if (cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) {
+        cleanPhone = '254' + cleanPhone;
+    } else if (!cleanPhone.startsWith('254')) {
+        cleanPhone = '254' + cleanPhone;
+    }
+    
+    return cleanPhone;
+};
+
+// Step 1: Registration with phone verification
+router.post('/register', async (req, res) => {
+    const { full_name, phone, password, group_name, role } = req.body;
+    const useRole = role && role.toLowerCase() === 'admin' ? 'admin' : 'member';
+
+    if (!full_name || !phone || !password || !group_name) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    try {
+        const formattedPhone = formatPhoneNumber(phone);
+        const normalizedGroupName = group_name.trim().toLowerCase();
+
+        // Check if member already exists
+        const existingMember = await Member.findOne({ phone: formattedPhone });
+        if (existingMember) {
+            return res.status(400).json({ error: 'Phone number already registered' });
+        }
+
+        // Find or create group
+        let group = await Group.findOne({ group_name: normalizedGroupName });
+        
+        if (!group && useRole === 'admin') {
+            // Admin creates new group
+            group = new Group({ 
+                group_name: normalizedGroupName,
+                interest_rate: 5.0,
+                minimum_loan_savings: 500.00
+            });
+            await group.save();
+        } else if (!group) {
+            return res.status(400).json({ error: 'Group does not exist. Contact admin to join.' });
+        }
+
+        // Generate verification OTP
+        const verificationOTP = smsService.generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Create member (not verified yet)
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newMember = new Member({
+            full_name,
+            phone: formattedPhone,
+            password: hashedPassword,
+            group_id: group._id,
+            group_name: group.group_name,
+            role: useRole,
+            is_admin: useRole === 'admin',
+            status: useRole === 'admin' ? 'approved' : 'pending',
+            phone_verified: false,
+            verification_otp: verificationOTP,
+            otp_expires: otpExpires
+        });
+
+        await newMember.save();
+
+        // Update group admin if this is admin
+        if (useRole === 'admin') {
+            await Group.findByIdAndUpdate(group._id, { admin_id: newMember._id });
+        }
+
+        // Send verification SMS
+        await smsService.sendVerificationOTP(formattedPhone, verificationOTP, full_name);
+
+        res.status(201).json({ 
+            message: 'Registration submitted. Please verify your phone number with the OTP sent to your phone.',
+            memberId: newMember._id,
+            requiresVerification: true
+        });
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Step 2: Verify phone number
+router.post('/verify-phone', async (req, res) => {
+    const { memberId, otp } = req.body;
+
+    if (!memberId || !otp) {
+        return res.status(400).json({ error: 'Member ID and OTP are required' });
+    }
+
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Check if OTP is valid and not expired
+        if (member.verification_otp !== otp || new Date() > member.otp_expires) {
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
+        }
+
+        // Verify phone
+        member.phone_verified = true;
+        member.verification_otp = undefined;
+        member.otp_expires = undefined;
+        await member.save();
+
+        // If admin, approve immediately and send approval SMS
+        if (member.role === 'admin') {
+            await smsService.sendAccountApprovalSMS(member.phone, member.full_name, member.group_name);
+        }
+
+        res.json({ 
+            message: 'Phone number verified successfully!',
+            status: member.status 
+        });
+
+    } catch (error) {
+        console.error('Verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend verification OTP
+router.post('/resend-verification', async (req, res) => {
+    const { memberId } = req.body;
+
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (member.phone_verified) {
+            return res.status(400).json({ error: 'Phone already verified' });
+        }
+
+        // Generate new OTP
+        const verificationOTP = smsService.generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        member.verification_otp = verificationOTP;
+        member.otp_expires = otpExpires;
+        await member.save();
+
+        // Send new OTP
+        await smsService.sendVerificationOTP(member.phone, verificationOTP, member.full_name);
+
+        res.json({ message: 'New verification code sent' });
+
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Step 3: Login with OTP
+router.post('/login', async (req, res) => {
+    const { phone, password } = req.body;
+
+    if (!phone || !password) {
+        return res.status(400).json({ error: 'Phone and password are required' });
+    }
+
+    try {
+        const formattedPhone = formatPhoneNumber(phone);
+        const member = await Member.findOne({ phone: formattedPhone });
+        
+        if (!member) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        // Check member status
+        if (member.status === 'denied') {
+            return res.status(403).json({ error: 'Your membership was denied. Contact your group admin.' });
+        }
+
+        if (member.status === 'pending') {
+            return res.status(403).json({ error: 'Your membership is pending admin approval.' });
+        }
+
+        if (!member.phone_verified) {
+            return res.status(403).json({ error: 'Please verify your phone number first.' });
+        }
+
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, member.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        // Generate and send login OTP
+        const loginOTP = smsService.generateOTP();
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+        member.login_otp = loginOTP;
+        member.login_otp_expires = otpExpires;
+        await member.save();
+
+        await smsService.sendLoginOTP(member.phone, loginOTP, member.full_name);
+
+        res.json({
+            message: 'Login OTP sent to your phone',
+            memberId: member._id,
+            requiresOTP: true
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Verify login OTP and get token
+router.post('/verify-login', async (req, res) => {
+    const { memberId, otp } = req.body;
+
+    if (!memberId || !otp) {
+        return res.status(400).json({ error: 'Member ID and OTP are required' });
+    }
+
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Check if OTP is valid and not expired
+        if (member.login_otp !== otp || new Date() > member.login_otp_expires) {
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
+        }
+
+        // Clear login OTP
+        member.login_otp = undefined;
+        member.login_otp_expires = undefined;
+        await member.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: member._id, phone: member.phone, is_admin: member.is_admin },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            message: 'Login successful',
+            token,
+            member: {
+                id: member._id,
+                full_name: member.full_name,
+                phone: member.phone,
+                role: member.role,
+                is_admin: member.is_admin,
+                group_name: member.group_name
+            }
+        });
+
+    } catch (error) {
+        console.error('OTP verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+module.exports = router;

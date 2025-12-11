@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import SMSPreferences from '../components/SMSPreferences';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -450,6 +451,9 @@ function MyProfile() {
           )}
         </div>
       </div>
+
+      {/* SMS Notification Preferences */}
+      <SMSPreferences />
 
       {/* Responsive styles */}
       <style>

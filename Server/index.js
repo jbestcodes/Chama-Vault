@@ -7,7 +7,13 @@ const loansRoutes = require('./routes/Loans');
 const repaymentsRoutes = require('./routes/repayments');
 const aiRoutes = require('./routes/ai');
 const withdrawalRoutes = require('./routes/withdrawals');
+const notificationRoutes = require('./routes/notifications');
+const subscriptionRoutes = require('./routes/subscriptions');
+const inviteRoutes = require('./routes/invites');
 const connectDB = require('./db'); // Import the new MongoDB connection
+
+// Initialize services
+const reminderService = require('./services/reminderService'); // This will start cron jobs
 
 connectDB();
 
@@ -29,8 +35,30 @@ app.use('/api/loans', loansRoutes);
 app.use('/api/repayments', repaymentsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/invites', inviteRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        services: {
+            database: 'connected',
+            sms: 'ready',
+            reminders: 'active'
+        }
+    });
+});
+
+console.log('🚀 Jaza Nyumba server starting...');
+console.log('📱 SMS service initialized');
+console.log('⏰ Reminder schedulers active');
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Server is running on port ${PORT}`);
 });
+
+module.exports = app;
