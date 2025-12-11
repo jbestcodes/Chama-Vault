@@ -104,17 +104,38 @@ class SMSLeopardService {
                         }
                     });
 
-                    console.log(`✅ SMS sent successfully with format ${i + 1} to ${to}: ${message}`);
+                    console.log(`✅ SMS sent successfully with format ${i + 1} to ${to}`);
+                    console.log('📋 Full SMS Leopard API Response:', JSON.stringify(response.data, null, 2));
+                    
+                    // Log specific response fields
+                    if (response.data) {
+                        console.log('📱 Response Details:');
+                        console.log('  - Success:', response.data.success || response.data.status);
+                        console.log('  - Message ID:', response.data.message_id || response.data.id || response.data.messageId);
+                        console.log('  - Recipients:', response.data.recipients || response.data.recipient || 'N/A');
+                        console.log('  - Status Code:', response.data.status_code || response.status);
+                        console.log('  - Credits Used:', response.data.credits_used || response.data.cost || 'N/A');
+                        console.log('  - Delivery Status:', response.data.delivery_status || 'N/A');
+                    }
                     
                     // Update usage if memberId provided
                     if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
                         await this.updateSMSUsage(memberId);
                     }
 
-                    return { success: true, data: response.data, format: i + 1 };
+                    return { 
+                        success: true, 
+                        data: response.data, 
+                        format: i + 1,
+                        messageId: response.data?.message_id || response.data?.id || response.data?.messageId,
+                        recipients: response.data?.recipients || response.data?.recipient
+                    };
                 } catch (formatError) {
                     lastError = formatError;
                     console.log(`❌ Format ${i + 1} failed:`, formatError.response?.data || formatError.message);
+                    if (formatError.response?.data) {
+                        console.log('📋 Full Error Response:', JSON.stringify(formatError.response.data, null, 2));
+                    }
                     continue;
                 }
             }
@@ -122,19 +143,23 @@ class SMSLeopardService {
             // If all formats failed, throw the last error
             throw lastError;
         } catch (error) {
-            console.error('SMS sending failed:', error.response?.data || error.message);
-            console.error('SMS request URL:', this.baseURL);
-            console.error('SMS request payload:', {
-                recipient: to,
-                message: message,
-                sender_id: this.senderId
-            });
-            console.error('SMS request headers:', {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': this.generateAuthHeader() ? '[PRESENT]' : '[MISSING]'
-            });
-            return { success: false, error: error.response?.data || error.message };
+            console.error('❌ All SMS formats failed. Final error:', error.response?.data || error.message);
+            console.error('📋 Full Final Error Response:', JSON.stringify(error.response?.data || {}, null, 2));
+            console.error('🔗 SMS request URL:', this.baseURL);
+            console.error('🔑 Environment Variables Check:');
+            console.error('  - API Key:', this.apiKey ? 'Present' : 'Missing');
+            console.error('  - API Secret:', this.apiSecret ? 'Present' : 'Missing'); 
+            console.error('  - Sender ID:', this.senderId);
+            console.error('  - Base URL:', this.baseURL);
+            console.error('📞 Target Phone:', to);
+            console.error('💬 Message:', message);
+            
+            return { 
+                success: false, 
+                error: error.response?.data || error.message,
+                fullError: error.response?.data,
+                formats_tried: 4
+            };
         }
     }
 

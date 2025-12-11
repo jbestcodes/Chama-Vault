@@ -230,7 +230,13 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        // Check member status
+        // Check member status (auto-approve admins)
+        if (member.role === 'admin' && member.status === 'pending') {
+            member.status = 'approved';
+            await member.save();
+            console.log(`Auto-approved admin: ${member.phone}`);
+        }
+
         if (member.status === 'denied') {
             return res.status(403).json({ error: 'Your membership was denied. Contact your group admin.' });
         }
@@ -267,6 +273,51 @@ router.post('/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend login OTP
+router.post('/resend-login-otp', async (req, res) => {
+    const { memberId } = req.body;
+
+    if (!memberId) {
+        return res.status(400).json({ error: 'Member ID is required' });
+    }
+
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (!member.phone_verified) {
+            return res.status(403).json({ error: 'Please verify your phone number first.' });
+        }
+
+        // Generate new login OTP
+        const loginOTP = smsService.generateOTP();
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+        member.login_otp = loginOTP;
+        member.login_otp_expires = otpExpires;
+        await member.save();
+
+        console.log(`Login OTP for ${member.phone}: ${loginOTP}`);
+
+        try {
+            await smsService.sendLoginOTP(member.phone, loginOTP, member.full_name);
+            res.json({ message: 'New login OTP sent to your phone' });
+        } catch (smsError) {
+            console.error('SMS failed, but login OTP generated:', loginOTP);
+            res.json({ 
+                message: 'SMS sending failed, but login OTP generated. Check server logs.',
+                debug: process.env.NODE_ENV === 'development' ? { loginOTP } : undefined
+            });
+        }
+
+    } catch (error) {
+        console.error('Error resending login OTP:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -405,6 +456,41 @@ router.post('/manual-verify', async (req, res) => {
 
     } catch (error) {
         console.error('Error in manual verification:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Manual approval (for testing/emergency)
+router.post('/manual-approve', async (req, res) => {
+    const { phone, emergencyCode } = req.body;
+
+    // Simple emergency bypass (you can remove this in production)
+    if (emergencyCode !== 'APPROVE_EMERGENCY_2024') {
+        return res.status(403).json({ error: 'Invalid emergency code' });
+    }
+
+    try {
+        const formattedPhone = formatPhoneNumber(phone);
+        const member = await Member.findOne({ phone: formattedPhone });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'No account found with this phone number' });
+        }
+
+        // Manually approve the member
+        member.status = 'approved';
+        member.phone_verified = true; // Also ensure phone is verified
+        await member.save();
+
+        console.log(`Manual approval completed for ${formattedPhone}`);
+        
+        res.json({ 
+            message: 'Account approved manually. You can now log in.',
+            success: true
+        });
+
+    } catch (error) {
+        console.error('Error in manual approval:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
