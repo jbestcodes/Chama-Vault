@@ -7,8 +7,8 @@ class SMSLeopardService {
     constructor() {
         this.apiKey = process.env.SMS_LEOPARD_API_KEY;
         this.apiSecret = process.env.SMS_LEOPARD_API_SECRET;
-        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || 'Jaza Nyumba';
-        this.baseURL = 'https://api.smsleopard.com/v1';
+        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || 'SMS_Leopard';
+        this.baseURL = 'https://api.smsleopard.com/v1/sms/send';
     }
 
     // Generate Authorization header with base64 encoded credentials
