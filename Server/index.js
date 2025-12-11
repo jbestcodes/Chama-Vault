@@ -22,8 +22,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ['https://chama-vault-aiid.vercel.app', 'https://jazanyumba.online','http://localhost:5173'],
-  credentials: true
+  origin: ['https://chama-vault-aiid.vercel.app', 'https://jazanyumba.online', 'https://www.jazanyumba.online', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 
