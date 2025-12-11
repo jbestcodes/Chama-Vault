@@ -84,6 +84,17 @@ class SMSLeopardService {
             return { success: true, data: response.data };
         } catch (error) {
             console.error('SMS sending failed:', error.response?.data || error.message);
+            console.error('SMS request URL:', this.baseURL);
+            console.error('SMS request payload:', {
+                message: message,
+                destination: to,
+                source: this.senderId
+            });
+            console.error('SMS request headers:', {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': this.generateAuthHeader() ? '[PRESENT]' : '[MISSING]'
+            });
             return { success: false, error: error.response?.data || error.message };
         }
     }
