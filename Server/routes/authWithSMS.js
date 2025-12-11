@@ -38,11 +38,8 @@ router.post('/register', async (req, res) => {
         const normalizedGroupName = group_name.trim().toLowerCase();
 
         // Check if member already exists
-        const existingMember = await Member.findOne({ phone: formattedPhone });
-        if (existingMember) {
-            return res.status(400).json({ error: 'Phone number already registered' });
-        }
-
+        let existingMember = await Member.findOne({ phone: formattedPhone });
+        
         // Find or create group
         let group = await Group.findOne({ group_name: normalizedGroupName });
         
@@ -58,25 +55,61 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Group does not exist. Contact admin to join.' });
         }
 
+        // Check if member already belongs to this specific group
+        if (existingMember) {
+            const existingMembership = existingMember.group_memberships?.find(
+                membership => membership.group_id.toString() === group._id.toString()
+            );
+            if (existingMembership) {
+                return res.status(400).json({ error: 'Phone number already registered in this group' });
+            }
+        }
+
         // Generate verification OTP
         const verificationOTP = smsService.generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        // Create member (not verified yet)
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newMember = new Member({
-            full_name,
-            phone: formattedPhone,
-            password: hashedPassword,
-            group_id: group._id,
-            group_name: group.group_name,
-            role: useRole,
-            is_admin: useRole === 'admin',
-            status: useRole === 'admin' ? 'approved' : 'pending',
-            phone_verified: false,
-            verification_otp: verificationOTP,
-            otp_expires: otpExpires
-        });
+        let newMember;
+        
+        if (existingMember) {
+            // Add new group membership to existing member
+            existingMember.addGroupMembership({
+                group_id: group._id,
+                group_name: group.group_name,
+                role: useRole
+            });
+            
+            // Update verification info for new group
+            existingMember.verification_otp = verificationOTP;
+            existingMember.otp_expires = otpExpires;
+            existingMember.phone_verified = false; // Re-verify for new group
+            
+            newMember = existingMember;
+        } else {
+            // Create new member with group membership
+            const hashedPassword = await bcrypt.hash(password, 10);
+            newMember = new Member({
+                full_name,
+                phone: formattedPhone,
+                password: hashedPassword,
+                group_memberships: [{
+                    group_id: group._id,
+                    group_name: group.group_name,
+                    role: useRole,
+                    status: useRole === 'admin' ? 'approved' : 'pending',
+                    is_admin: useRole === 'admin'
+                }],
+                // Backwards compatibility fields
+                group_id: group._id,
+                group_name: group.group_name,
+                role: useRole,
+                is_admin: useRole === 'admin',
+                status: useRole === 'admin' ? 'approved' : 'pending',
+                phone_verified: false,
+                verification_otp: verificationOTP,
+                otp_expires: otpExpires
+            });
+        }
 
         await newMember.save();
 

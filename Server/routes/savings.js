@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, isAdmin } = require('../middleware/auth');
+const { checkLeaderboardTrialStatus } = require('../middleware/subscription');
 const Member = require('../models/Member');
 const Savings = require('../models/Savings');
 const Milestone = require('../models/Milestone');
@@ -342,6 +343,9 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
     try {
         const memberId = req.user.id;
 
+        // Check leaderboard trial status
+        const leaderboardTrial = await checkLeaderboardTrialStatus(memberId);
+        
         // Get member info
         const user = await Member.findById(memberId);
         if (!user) {
@@ -362,21 +366,30 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
             memberSavings[saving.member_id] += Number(saving.amount || 0);
         });
 
-        // Create leaderboard
-        const leaderboardData = groupMembers.map(member => ({
-            id: member._id.toString(),
-            full_name: member.full_name,
-            total_savings: memberSavings[member._id] || 0
-        })).sort((a, b) => b.total_savings - a.total_savings);
+        // Check if leaderboard access is available (trial or subscription)
+        let leaderboard = [];
+        let rank = null;
+        let leaderboardAccess = false;
 
-        // Mask names except for the logged-in user
-        const leaderboard = leaderboardData.map(row => ({
-            name: row.id === memberId.toString() ? row.full_name : `${row.full_name.charAt(0)}****`,
-            total_savings: Number(row.total_savings || 0)
-        }));
+        if (leaderboardTrial.inTrial || user.has_active_subscription) {
+            leaderboardAccess = true;
+            
+            // Create leaderboard
+            const leaderboardData = groupMembers.map(member => ({
+                id: member._id.toString(),
+                full_name: member.full_name,
+                total_savings: memberSavings[member._id] || 0
+            })).sort((a, b) => b.total_savings - a.total_savings);
 
-        // Find user's rank in the group
-        const rank = leaderboardData.findIndex(row => row.id === memberId.toString()) + 1;
+            // Mask names except for the logged-in user
+            leaderboard = leaderboardData.map(row => ({
+                name: row.id === memberId.toString() ? row.full_name : `${row.full_name.charAt(0)}****`,
+                total_savings: Number(row.total_savings || 0)
+            }));
+
+            // Find user's rank in the group
+            rank = leaderboardData.findIndex(row => row.id === memberId.toString()) + 1;
+        }
 
         // Get user's savings history for graph
         const savingsHistory = await Savings.find({ member_id: memberId })
@@ -398,6 +411,16 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
             group_name: user.group_name,
             rank,
             leaderboard,
+            leaderboardAccess,
+            leaderboardTrial: {
+                inTrial: leaderboardTrial.inTrial,
+                daysLeft: leaderboardTrial.daysLeft,
+                message: leaderboardTrial.inTrial 
+                    ? `🎉 You have ${leaderboardTrial.daysLeft} days left in your leaderboard trial!`
+                    : leaderboardAccess 
+                        ? 'Premium leaderboard access active'
+                        : 'Subscribe to access the full leaderboard'
+            },
             savingsHistory: savingsHistory.map(s => ({
                 id: s._id,
                 amount: s.amount,

@@ -90,8 +90,14 @@ class ReminderService {
         }
 
         if (frequency === 'weekly') {
-            // For weekly contributions, send reminder 1 day before due day
-            const reminderDay = due_day === 1 ? 7 : due_day - 1; // If due on Monday, remind on Sunday->Monday
+            // For weekly contributions, use group's reminder_days_before setting
+            const reminderDaysBeforeDue = reminder_days_before || 1;
+            let reminderDay = due_day - reminderDaysBeforeDue;
+            
+            // Handle week boundaries (if reminder day is <= 0, it's previous week)
+            if (reminderDay <= 0) {
+                reminderDay = 7 + reminderDay;
+            }
             
             // If reminder day is Sunday, move to Monday
             const adjustedReminderDay = reminderDay === 0 ? 1 : reminderDay;

@@ -4,8 +4,19 @@ const MemberSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   phone: { type: String, required: true, unique: true },
   password: { type: String }, 
-  group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
-  group_name: { type: String, required: true },
+  // Multiple group memberships support
+  group_memberships: [{
+    group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+    group_name: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'member'], default: 'member' },
+    status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
+    is_admin: { type: Boolean, default: false },
+    joined_at: { type: Date, default: Date.now }
+  }],
+  
+  // Backwards compatibility fields (will be deprecated)
+  group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+  group_name: { type: String },
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
   status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
   is_admin: { type: Boolean, default: false },
@@ -35,11 +46,57 @@ const MemberSchema = new mongoose.Schema({
 
 // Auto-approve admins before saving
 MemberSchema.pre('save', function(next) {
+  // Handle backwards compatibility
   if (this.role === 'admin') {
     this.status = 'approved';
     this.is_admin = true;
   }
+  
+  // Handle group memberships
+  if (this.group_memberships && this.group_memberships.length > 0) {
+    this.group_memberships.forEach(membership => {
+      if (membership.role === 'admin') {
+        membership.status = 'approved';
+        membership.is_admin = true;
+      }
+    });
+    
+    // Update global is_admin flag if user is admin in any group
+    this.is_admin = this.group_memberships.some(membership => membership.role === 'admin');
+  }
+  
   next();
 });
+
+// Helper method to add group membership
+MemberSchema.methods.addGroupMembership = function(groupData) {
+  const existingMembership = this.group_memberships.find(
+    membership => membership.group_id.toString() === groupData.group_id.toString()
+  );
+  
+  if (!existingMembership) {
+    this.group_memberships.push({
+      group_id: groupData.group_id,
+      group_name: groupData.group_name,
+      role: groupData.role || 'member',
+      status: groupData.role === 'admin' ? 'approved' : 'pending'
+    });
+  }
+  
+  return this;
+};
+
+// Helper method to get role in specific group
+MemberSchema.methods.getRoleInGroup = function(groupId) {
+  const membership = this.group_memberships.find(
+    membership => membership.group_id.toString() === groupId.toString()
+  );
+  return membership ? membership.role : null;
+};
+
+// Helper method to check if member is admin in any group
+MemberSchema.methods.isAdminInAnyGroup = function() {
+  return this.group_memberships.some(membership => membership.role === 'admin');
+};
 
 module.exports = mongoose.model('Member', MemberSchema);

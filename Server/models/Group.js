@@ -11,16 +11,16 @@ const groupSchema = new mongoose.Schema({
     admin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
     interest_rate: { type: Number, default: 5.0 },
     minimum_loan_savings: { type: Number, default: 500.00 },
-    group_code: { type: String, unique: true },
+    group_code: { type: String, unique: true, sparse: true }, // sparse allows multiple null values
     
     // Contribution Schedule Settings
     contribution_settings: {
         amount: { type: Number, default: 1000 }, // Monthly contribution amount
         frequency: { type: String, enum: ['weekly', 'monthly'], default: 'monthly' },
         due_day: { type: Number, default: 1 }, // Day of month (1-31) for monthly, day of week (1-7) for weekly
-        reminder_days_before: { type: Number, default: 3 }, // Days before due date to send reminder
-        penalty_amount: { type: Number, default: 50 }, // Late payment penalty
-        grace_period_days: { type: Number, default: 5 }, // Grace period before penalty
+        reminder_days_before: { type: Number, default: 1 }, // Days before due date to send reminder
+        penalty_amount: { type: Number }, // Late payment penalty (set by admin)
+        grace_period_days: { type: Number }, // Grace period before penalty (set by admin)
         auto_reminders: { type: Boolean, default: true }
     },
     

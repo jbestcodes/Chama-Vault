@@ -146,12 +146,81 @@ const checkAITrialStatus = async (memberId) => {
     }
 };
 
+// Check leaderboard access (includes 2-week trial for new members)
+const requireLeaderboard = async (req, res, next) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const member = await Member.findById(userId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Check if member is still in 2-week trial period
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        
+        const isInTrialPeriod = new Date(member.created_at) > twoWeeksAgo;
+        
+        if (isInTrialPeriod) {
+            return next();
+        }
+        
+        // Check for active subscription
+        const hasActiveSubscription = await checkSubscriptionStatus(userId);
+        
+        if (hasActiveSubscription) {
+            return next();
+        } else {
+            return res.status(403).json({ 
+                error: 'Subscription required', 
+                code: 'LEADERBOARD_SUBSCRIPTION_REQUIRED',
+                message: 'Your 2-week leaderboard trial has expired. Please subscribe to continue accessing the leaderboard.',
+                feature: 'leaderboard'
+            });
+        }
+
+    } catch (error) {
+        console.error('Leaderboard access check error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Check if member is still in leaderboard trial period
+const checkLeaderboardTrialStatus = async (memberId) => {
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) return { inTrial: false, daysLeft: 0 };
+
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        
+        const isInTrialPeriod = new Date(member.created_at) > twoWeeksAgo;
+        
+        if (isInTrialPeriod) {
+            const daysSinceSignup = Math.floor((new Date() - new Date(member.created_at)) / (1000 * 60 * 60 * 24));
+            const daysLeft = 14 - daysSinceSignup;
+            return { inTrial: true, daysLeft: Math.max(0, daysLeft) };
+        }
+        
+        return { inTrial: false, daysLeft: 0 };
+    } catch (error) {
+        console.error('Error checking leaderboard trial status:', error);
+        return { inTrial: false, daysLeft: 0 };
+    }
+};
+
 module.exports = {
     requireSubscription,
     requireFeature,
     requireAI,
     requireSMS,
     requireGroupInvite,
+    requireLeaderboard,
     allowBasicFeatures,
-    checkAITrialStatus
+    checkAITrialStatus,
+    checkLeaderboardTrialStatus
 };

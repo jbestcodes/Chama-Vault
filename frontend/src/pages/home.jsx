@@ -43,48 +43,109 @@ const Home = () => {
     const currentSlideData = slides[currentSlide];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
+        <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
             <div className="flex-1">
                 {/* Hero Section */}
-                <div 
-                    className="flex items-center justify-center p-8 relative"
-                    style={{
-                        height: '70vh', // 70% of viewport height
-                        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(147, 51, 234, 0.8) 100%), url(${heroImage})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
-                    }}
-                >
-                    <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 max-w-4xl w-full text-center relative z-10">
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '40px 20px',
+                    minHeight: '80vh'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '20px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                        padding: '40px',
+                        maxWidth: '800px',
+                        width: '100%',
+                        textAlign: 'center',
+                        transform: 'translateY(0)',
+                        transition: 'all 0.3s ease'
+                    }}>
                         {/* Current Slide Content */}
-                        <div className="mb-8">
-                            <div className="text-6xl mb-6">🏦</div>
-                            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                        <div style={{ marginBottom: '30px' }}>
+                            <div style={{
+                                fontSize: '64px',
+                                marginBottom: '20px'
+                            }}>🏦</div>
+                            <h1 style={{
+                                margin: '0 0 16px 0',
+                                color: '#333',
+                                fontSize: '36px',
+                                fontWeight: 'bold'
+                            }}>
                                 {currentSlideData.title}
                             </h1>
-                            <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                            <p style={{
+                                margin: '0 0 32px 0',
+                                color: '#666',
+                                fontSize: '18px',
+                                lineHeight: '1.6'
+                            }}>
                                 {currentSlideData.description}
                             </p>
                             
                             <Link to={currentSlideData.link}>
-                                <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <button style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '14px 32px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    transform: 'translateY(0)',
+                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.transform = 'translateY(-2px)';
+                                    e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.transform = 'translateY(0)';
+                                    e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                }}>
                                     {currentSlideData.linkText} →
                                 </button>
                             </Link>
                         </div>
 
                         {/* Slide Indicators */}
-                        <div className="flex justify-center gap-3 mb-8">
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '30px' }}>
                             {slides.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={() => setCurrentSlide(index)}
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                        index === currentSlide 
-                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600' 
-                                            : 'bg-gray-300 hover:bg-gray-400'
-                                    }`}
+                                    style={{
+                                        width: '12px',
+                                        height: '12px',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        background: index === currentSlide 
+                                            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                            : '#e1e5e9'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (index !== currentSlide) {
+                                            e.target.style.background = '#ccc';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (index !== currentSlide) {
+                                            e.target.style.background = '#e1e5e9';
+                                        }
+                                    }}
                                 />
                             ))}
                         </div>
@@ -92,9 +153,15 @@ const Home = () => {
                 </div>
 
                 {/* Features Section */}
-                <div className="py-20 px-6 bg-white">
-                    <div className="max-w-6xl mx-auto text-center">
-                        <h2 className="text-4xl font-bold text-gray-800 mb-12">
+                <div style={{ padding: '60px 20px', backgroundColor: 'transparent' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+                        <h2 style={{
+                            margin: '0 0 48px 0',
+                            color: 'white',
+                            fontSize: '36px',
+                            fontWeight: 'bold',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
                             ✨ Amazing Features ✨
                         </h2>
 
@@ -124,16 +191,56 @@ const Home = () => {
                         </div>
 
                         {/* Call to Action Buttons */}
-                        <div className="flex justify-center gap-6 flex-wrap">
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
                             {!isLoggedIn && (
                                 <>
                                     <Link to="/register">
-                                        <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                        <button style={{
+                                            background: 'white',
+                                            color: '#667eea',
+                                            border: '2px solid white',
+                                            borderRadius: '12px',
+                                            padding: '14px 32px',
+                                            fontSize: '16px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            transform: 'translateY(0)',
+                                            boxShadow: '0 4px 15px rgba(255, 255, 255, 0.3)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.3)';
+                                        }}>
                                             🎉 Join Now - It's Free! ✨
                                         </button>
                                     </Link>
                                     <Link to="/login">
-                                        <button className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                        <button style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            padding: '14px 32px',
+                                            fontSize: '16px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            transform: 'translateY(0)',
+                                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                                        }}>
                                             🔑 Login Now 🚀
                                         </button>
                                     </Link>
