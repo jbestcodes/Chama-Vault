@@ -172,6 +172,34 @@ function MyProfile() {
           </Link>
 
           <Link 
+            to="/performance" 
+            style={{ 
+              textDecoration: "none",
+              background: "rgba(255,255,255,0.2)",
+              padding: "16px 20px",
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.3s ease",
+              border: "1px solid rgba(255,255,255,0.3)",
+              color: "white",
+              fontWeight: "500"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "rgba(255,255,255,0.3)";
+              e.target.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "rgba(255,255,255,0.2)";
+              e.target.style.transform = "translateY(0)";
+            }}
+          >
+            <span style={{ marginRight: "8px", fontSize: "18px" }}>📈</span>
+            My Performance
+          </Link>
+
+          <Link 
             to="/dashboard" 
             style={{ 
               textDecoration: "none",

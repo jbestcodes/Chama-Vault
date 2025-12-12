@@ -2,13 +2,13 @@ services:
   - type: web
     name: chama-vault-server
     env: node
+    rootDir: ./Server
     buildCommand: |
-      cd Server
       rm -rf node_modules package-lock.json
       npm cache clean --force
-      npm install --verbose
-      npm ls express
-    startCommand: cd Server && node server.js
+      npm ci --omit=dev
+      npm ls express || npm install express@^4.19.2
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
