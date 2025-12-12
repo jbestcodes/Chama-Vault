@@ -10,9 +10,30 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const role = localStorage.getItem('role');
+  const token = localStorage.getItem('token');
 
   // Get user's name from localStorage if available
   const userName = localStorage.getItem('full_name');
+
+  // Check if user is logged in
+  if (!token) {
+    return (
+      <div style={{ maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
+        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>Authentication Required</h2>
+        <p style={{ marginBottom: '20px' }}>You must log in to view the dashboard.</p>
+        <a href="/login" style={{
+          background: '#800000',
+          color: 'white',
+          padding: '10px 20px',
+          textDecoration: 'none',
+          borderRadius: '5px',
+          display: 'inline-block'
+        }}>
+          Go to Login
+        </a>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {

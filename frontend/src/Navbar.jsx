@@ -5,8 +5,28 @@ import logoImage from './media/logo.png';
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const navigate = useNavigate();
-    const token = localStorage.getItem('token');
+
+    // Update token state when localStorage changes
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setToken(localStorage.getItem('token'));
+        };
+        
+        // Listen for storage changes
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Also check periodically in case of same-tab changes
+        const interval = setInterval(() => {
+            setToken(localStorage.getItem('token'));
+        }, 1000);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(interval);
+        };
+    }, []);
 
     // Responsive handler
     useEffect(() => {
@@ -18,6 +38,7 @@ function Navbar() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        setToken(null); // Update state immediately
         window.location.href = '/login';
     };
 
