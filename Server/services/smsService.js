@@ -31,8 +31,8 @@ class SMSLeopardService {
     // Check if member can receive SMS (has subscription or it's login OTP)
     async canReceiveSMS(memberId, smsType = 'general') {
         try {
-            // Login OTP is always allowed
-            if (smsType === 'login_otp' || smsType === 'verification_otp') {
+            // Free SMS types that don't require subscription
+            if (smsType === 'login_otp' || smsType === 'verification_otp' || smsType === 'account_update') {
                 return true;
             }
 

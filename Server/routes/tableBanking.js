@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 const Group = require('../models/Group');
 const Member = require('../models/Member');
 const TableBankingCycle = require('../models/TableBankingCycle');
 const Contribution = require('../models/Contribution');
 
 // Get admin dashboard data
-router.get('/admin-dashboard', auth, async (req, res) => {
+router.get('/admin-dashboard', authenticateToken, async (req, res) => {
     try {
         const member = await Member.findById(req.user.memberId);
         if (!member) {
@@ -67,7 +67,7 @@ router.get('/admin-dashboard', auth, async (req, res) => {
 });
 
 // Start new cycle
-router.post('/start-cycle', auth, async (req, res) => {
+router.post('/start-cycle', authenticateToken, async (req, res) => {
     try {
         const { contributionAmount, frequency, startDate } = req.body;
         
@@ -159,7 +159,7 @@ router.post('/start-cycle', auth, async (req, res) => {
 });
 
 // Record contribution
-router.post('/record-contribution', auth, async (req, res) => {
+router.post('/record-contribution', authenticateToken, async (req, res) => {
     try {
         const { memberId, amount, status, cycleId, notes } = req.body;
         
@@ -200,7 +200,7 @@ router.post('/record-contribution', auth, async (req, res) => {
 });
 
 // Get member dashboard (for regular members)
-router.get('/member-dashboard', auth, async (req, res) => {
+router.get('/member-dashboard', authenticateToken, async (req, res) => {
     try {
         const member = await Member.findById(req.user.memberId);
         if (!member) {
@@ -270,7 +270,7 @@ router.get('/member-dashboard', auth, async (req, res) => {
 });
 
 // Progress to next recipient
-router.post('/progress-cycle', auth, async (req, res) => {
+router.post('/progress-cycle', authenticateToken, async (req, res) => {
     try {
         const admin = await Member.findById(req.user.memberId);
         if (!admin || !admin.is_admin) {
