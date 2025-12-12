@@ -65,51 +65,27 @@ class SMSLeopardService {
 
             // Try multiple SMS Leopard API formats
             const formats = [
-                // Format 1: Minimal format (most likely to work)
+                // Format 1: Official SMS Leopard format (from their documentation)
+                {
+                    source: this.senderId,
+                    message: message,
+                    destination: [{ number: to }]
+                },
+                // Format 2: Minimal format with destination
                 {
                     message: message,
                     destination: to,
                     source: this.senderId
                 },
-                // Format 2: Standard format with sender
+                // Format 3: Standard format with sender
                 {
                     to: to,
                     message: message,
                     source: this.senderId
                 },
-                // Format 3: Recipients array with sender
+                // Format 4: Recipients array with sender
                 {
                     recipients: [to],
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 4: Simple message + number with sender
-                {
-                    number: to,
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 5: Recipients array with phone field
-                {
-                    recipients: [{ phone: to }],
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 6: Recipients array with destination field
-                {
-                    recipients: [{ destination: to }],
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 7: Recipients array with number field
-                {
-                    recipients: [{ number: to }],
-                    message: message,
-                    source: this.senderId
-                },
-                // Format 8: Direct recipients field as string
-                {
-                    recipients: to,
                     message: message,
                     source: this.senderId
                 }
