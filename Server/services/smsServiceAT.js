@@ -1,57 +1,27 @@
-const AfricasTalking = require('africastalking');
+const axios = require('axios');
 const Member = require('../models/Member');
 const Subscription = require('../models/Subscription');
 const smsTemplates = require('./smsTemplates');
 
 class AfricasTalkingSMSService {
     constructor() {
-        this.username = process.env.AT_USERNAME;
-        this.apiKey = process.env.AT_API_KEY;
-        this.senderId = process.env.AFRICASTALKING_SENDER_ID; // No default - uses AT's default if not set
-        
+        this.username = process.env.AFRICASTALKING_USERNAME || 'sandbox';
+        this.apiKey = process.env.AFRICASTALKING_API_KEY;
+        this.senderId = process.env.AFRICASTALKING_SENDER_ID || 'SMSLEOPARD';
+        this.baseURL = 'https://api.africastalking.com/version1/messaging';
+    }
+
+    // Generate Authorization header
+    generateAuthHeader() {
         if (!this.apiKey) {
-            console.error('❌ Africa\'s Talking API key not configured');
-            return;
+            throw new Error('Africa\'s Talking API key not configured');
         }
-
-        // Initialize Africa's Talking
-        const africastalking = AfricasTalking({
-            apiKey: this.apiKey,
-            username: this.username
-        });
-
-        this.smsClient = africastalking.SMS;
-        console.log('🌍 Africa\'s Talking SMS service initialized');
-        console.log('  - Username:', this.username);
-        console.log('  - Sender ID:', this.senderId);
+        return `apiKey ${this.apiKey}`;
     }
 
     // Generate 6-digit OTP
     generateOTP() {
         return Math.floor(100000 + Math.random() * 900000).toString();
-    }
-
-    // Format phone number to international format for Kenya
-    formatKenyanPhoneNumber(phone) {
-        // Remove any non-digit characters
-        let cleanPhone = phone.replace(/\D/g, '');
-        
-        // Handle different Kenyan formats
-        if (cleanPhone.startsWith('0')) {
-            // Convert 0712345678 to +254712345678
-            cleanPhone = '+254' + cleanPhone.substring(1);
-        } else if (cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) {
-            // Convert 712345678 to +254712345678
-            cleanPhone = '+254' + cleanPhone;
-        } else if (cleanPhone.startsWith('254')) {
-            // Convert 254712345678 to +254712345678
-            cleanPhone = '+' + cleanPhone;
-        } else if (!cleanPhone.startsWith('+254')) {
-            // Fallback: assume it's a local number
-            cleanPhone = '+254' + cleanPhone;
-        }
-        
-        return cleanPhone;
     }
 
     // Check if member can receive SMS (has subscription or it's login OTP)
@@ -76,11 +46,6 @@ class AfricasTalkingSMSService {
     // Core SMS sending function with subscription check
     async sendSMS(to, message, memberId = null, smsType = 'general') {
         try {
-            if (!this.smsClient) {
-                console.error('❌ SMS client not initialized');
-                return { success: false, error: 'SMS service not configured' };
-            }
-
             // Check permissions if memberId is provided
             if (memberId) {
                 const canSend = await this.canReceiveSMS(memberId, smsType);
@@ -94,29 +59,30 @@ class AfricasTalkingSMSService {
                 }
             }
 
-            // Format phone number to international format
+            // Format phone number for Kenya
             const formattedPhone = this.formatKenyanPhoneNumber(to);
-            
-            // Build SMS payload - only include 'from' if sender ID is configured
-            const smsPayload = {
-                to: formattedPhone,
-                message: message
-            };
-            
-            if (this.senderId) {
-                smsPayload.from = this.senderId;
-            }
             
             console.log(`📱 Sending SMS via Africa's Talking:`, {
                 to: formattedPhone,
-                from: this.senderId || 'AT Default',
+                from: this.senderId,
                 message: message.substring(0, 50) + '...'
             });
 
-            const response = await this.smsClient.send(smsPayload);
+            const response = await axios.post(this.baseURL, {
+                username: this.username,
+                to: formattedPhone,
+                message: message,
+                from: this.senderId
+            }, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
+                    'apiKey': this.apiKey
+                }
+            });
 
             console.log(`✅ SMS sent successfully to ${formattedPhone}`);
-            console.log('📋 Africa\'s Talking Response:', JSON.stringify(response, null, 2));
+            console.log('📋 Africa\'s Talking API Response:', JSON.stringify(response.data, null, 2));
             
             // Update usage if memberId provided
             if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
@@ -124,37 +90,57 @@ class AfricasTalkingSMSService {
             }
 
             // Parse Africa's Talking response
-            if (response && response.SMSMessageData && response.SMSMessageData.Recipients && response.SMSMessageData.Recipients.length > 0) {
-                const recipient = response.SMSMessageData.Recipients[0];
+            const smsResponse = response.data.SMSMessageData;
+            if (smsResponse && smsResponse.Recipients && smsResponse.Recipients.length > 0) {
+                const recipient = smsResponse.Recipients[0];
                 
                 return { 
                     success: recipient.status === 'Success',
-                    data: response,
+                    data: response.data,
                     messageId: recipient.messageId,
                     cost: recipient.cost,
-                    status: recipient.status,
-                    statusCode: recipient.statusCode
+                    status: recipient.status
                 };
             } else {
                 throw new Error('Invalid response format from Africa\'s Talking');
             }
 
         } catch (error) {
-            console.error('❌ Africa\'s Talking SMS failed:', error.message);
-            console.error('📋 Full Error:', error);
+            console.error('❌ Africa\'s Talking SMS failed:', error.response?.data || error.message);
+            console.error('📋 Full Error Response:', JSON.stringify(error.response?.data || {}, null, 2));
+            console.error('🔗 SMS request URL:', this.baseURL);
             console.error('🔑 Environment Variables Check:');
             console.error('  - Username:', this.username);
             console.error('  - API Key:', this.apiKey ? 'Present' : 'Missing');
             console.error('  - Sender ID:', this.senderId);
             console.error('📞 Target Phone:', to);
-            console.error('💬 Message Length:', message.length);
+            console.error('💬 Message:', message);
             
             return { 
                 success: false, 
-                error: error.message,
-                fullError: error
+                error: error.response?.data || error.message,
+                fullError: error.response?.data
             };
         }
+    }
+
+    // Format Kenyan phone numbers for Africa's Talking
+    formatKenyanPhoneNumber(phone) {
+        // Remove any non-digit characters
+        let cleanPhone = phone.replace(/\D/g, '');
+        
+        // Handle different formats
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = '+254' + cleanPhone.substring(1);
+        } else if (cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) {
+            cleanPhone = '+254' + cleanPhone;
+        } else if (cleanPhone.startsWith('254')) {
+            cleanPhone = '+' + cleanPhone;
+        } else if (!cleanPhone.startsWith('+254')) {
+            cleanPhone = '+254' + cleanPhone;
+        }
+        
+        return cleanPhone;
     }
 
     // Update SMS usage counter
@@ -255,4 +241,15 @@ class AfricasTalkingSMSService {
     }
 }
 
-module.exports = new AfricasTalkingSMSService();
+// Export based on environment variable
+const SMS_PROVIDER = process.env.SMS_PROVIDER || 'sms_leopard'; // 'sms_leopard' or 'africastalking'
+
+if (SMS_PROVIDER === 'africastalking') {
+    console.log('🌍 Using Africa\'s Talking SMS service');
+    module.exports = new AfricasTalkingSMSService();
+} else {
+    console.log('🐆 Using SMS Leopard service');
+    // Import the existing SMS Leopard service
+    const SMSLeopardService = require('./smsLeopardService');
+    module.exports = new SMSLeopardService();
+}

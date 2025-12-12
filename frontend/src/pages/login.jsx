@@ -338,6 +338,7 @@ const Login = () => {
                                                 border: '2px solid #e1e5e9',
                                                 borderRadius: '10px',
                                                 fontSize: '16px',
+                                                color: '#333',
                                                 transition: 'all 0.3s ease',
                                                 outline: 'none',
                                                 background: '#fafafa',

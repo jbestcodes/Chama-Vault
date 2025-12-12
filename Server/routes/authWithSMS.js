@@ -119,6 +119,10 @@ router.post('/register', async (req, res) => {
             await Group.findByIdAndUpdate(group._id, { admin_id: newMember._id });
         }
 
+        console.log('📱 Generated verification OTP:', verificationOTP);
+        console.log('📱 OTP expires at:', otpExpires);
+        console.log('📱 Member ID:', newMember._id);
+
         // Send verification SMS
         try {
             await smsService.sendVerificationOTP(formattedPhone, verificationOTP, full_name);
@@ -147,7 +151,13 @@ router.post('/register', async (req, res) => {
 router.post('/verify-phone', async (req, res) => {
     const { memberId, otp, phone } = req.body;
 
+    console.log('📞 Phone verification request received:');
+    console.log('  - Member ID:', memberId);
+    console.log('  - Phone:', phone);
+    console.log('  - OTP provided:', otp);
+
     if ((!memberId && !phone) || !otp) {
+        console.log('❌ Missing required fields');
         return res.status(400).json({ error: 'Phone/Member ID and OTP are required' });
     }
 
@@ -155,19 +165,32 @@ router.post('/verify-phone', async (req, res) => {
         let member;
         if (phone) {
             const formattedPhone = formatPhoneNumber(phone);
+            console.log('  - Formatted phone:', formattedPhone);
             member = await Member.findOne({ phone: formattedPhone });
         } else {
             member = await Member.findById(memberId);
         }
         
         if (!member) {
+            console.log('❌ Member not found');
             return res.status(404).json({ error: 'Member not found' });
         }
 
+        console.log('✅ Member found:');
+        console.log('  - Name:', member.full_name);
+        console.log('  - Stored OTP:', member.verification_otp);
+        console.log('  - OTP expires:', member.otp_expires);
+        console.log('  - Current time:', new Date());
+        console.log('  - OTP matches:', member.verification_otp === otp);
+        console.log('  - OTP expired:', new Date() > member.otp_expires);
+
         // Check if OTP is valid and not expired
         if (member.verification_otp !== otp || new Date() > member.otp_expires) {
+            console.log('❌ Invalid or expired OTP');
             return res.status(400).json({ error: 'Invalid or expired OTP' });
         }
+
+        console.log('✅ OTP validation successful');
 
         // Verify phone
         member.phone_verified = true;
@@ -175,8 +198,11 @@ router.post('/verify-phone', async (req, res) => {
         member.otp_expires = undefined;
         await member.save();
 
+        console.log('✅ Member phone verified and saved');
+
         // If admin, approve immediately and send approval SMS
         if (member.role === 'admin') {
+            console.log('📱 Sending admin approval SMS...');
             await smsService.sendAccountApprovalSMS(member.phone, member.full_name, member.group_name);
         }
 
@@ -186,7 +212,7 @@ router.post('/verify-phone', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Verification error:', error);
+        console.error('❌ Verification error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

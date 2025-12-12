@@ -1,57 +1,31 @@
-const AfricasTalking = require('africastalking');
+const axios = require('axios');
 const Member = require('../models/Member');
 const Subscription = require('../models/Subscription');
 const smsTemplates = require('./smsTemplates');
 
-class AfricasTalkingSMSService {
+class SMSLeopardService {
     constructor() {
-        this.username = process.env.AT_USERNAME;
-        this.apiKey = process.env.AT_API_KEY;
-        this.senderId = process.env.AFRICASTALKING_SENDER_ID; // No default - uses AT's default if not set
-        
-        if (!this.apiKey) {
-            console.error('❌ Africa\'s Talking API key not configured');
-            return;
+        this.apiKey = process.env.SMS_LEOPARD_API_KEY;
+        this.apiSecret = process.env.SMS_LEOPARD_API_SECRET;
+        // Prefer explicit env var, fall back to older key or default to 'SMSLEOPARD'
+        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || process.env.SMSLEOPARD_SOURCE || 'SMSLEOPARD';
+        this.baseURL = 'https://api.smsleopard.com/v1/sms/send';
+    }
+
+    // Generate Authorization header with base64 encoded credentials
+    generateAuthHeader() {
+        if (!this.apiKey || !this.apiSecret) {
+            throw new Error('SMS Leopard API credentials not configured');
         }
-
-        // Initialize Africa's Talking
-        const africastalking = AfricasTalking({
-            apiKey: this.apiKey,
-            username: this.username
-        });
-
-        this.smsClient = africastalking.SMS;
-        console.log('🌍 Africa\'s Talking SMS service initialized');
-        console.log('  - Username:', this.username);
-        console.log('  - Sender ID:', this.senderId);
+        
+        const credentials = `${this.apiKey}:${this.apiSecret}`;
+        const base64Credentials = Buffer.from(credentials).toString('base64');
+        return `Basic ${base64Credentials}`;
     }
 
     // Generate 6-digit OTP
     generateOTP() {
         return Math.floor(100000 + Math.random() * 900000).toString();
-    }
-
-    // Format phone number to international format for Kenya
-    formatKenyanPhoneNumber(phone) {
-        // Remove any non-digit characters
-        let cleanPhone = phone.replace(/\D/g, '');
-        
-        // Handle different Kenyan formats
-        if (cleanPhone.startsWith('0')) {
-            // Convert 0712345678 to +254712345678
-            cleanPhone = '+254' + cleanPhone.substring(1);
-        } else if (cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) {
-            // Convert 712345678 to +254712345678
-            cleanPhone = '+254' + cleanPhone;
-        } else if (cleanPhone.startsWith('254')) {
-            // Convert 254712345678 to +254712345678
-            cleanPhone = '+' + cleanPhone;
-        } else if (!cleanPhone.startsWith('+254')) {
-            // Fallback: assume it's a local number
-            cleanPhone = '+254' + cleanPhone;
-        }
-        
-        return cleanPhone;
     }
 
     // Check if member can receive SMS (has subscription or it's login OTP)
@@ -76,11 +50,6 @@ class AfricasTalkingSMSService {
     // Core SMS sending function with subscription check
     async sendSMS(to, message, memberId = null, smsType = 'general') {
         try {
-            if (!this.smsClient) {
-                console.error('❌ SMS client not initialized');
-                return { success: false, error: 'SMS service not configured' };
-            }
-
             // Check permissions if memberId is provided
             if (memberId) {
                 const canSend = await this.canReceiveSMS(memberId, smsType);
@@ -94,65 +63,103 @@ class AfricasTalkingSMSService {
                 }
             }
 
-            // Format phone number to international format
-            const formattedPhone = this.formatKenyanPhoneNumber(to);
+            // Try multiple SMS Leopard API formats
+            const formats = [
+                // Format 1: Official SMS Leopard format (from their documentation)
+                {
+                    source: this.senderId,
+                    message: message,
+                    destination: [{ number: to }]
+                },
+                // Format 2: Minimal format with destination
+                {
+                    message: message,
+                    destination: to,
+                    source: this.senderId
+                },
+                // Format 3: Standard format with sender
+                {
+                    to: to,
+                    message: message,
+                    source: this.senderId
+                },
+                // Format 4: Recipients array with sender
+                {
+                    recipients: [to],
+                    message: message,
+                    source: this.senderId
+                }
+            ];
+
+            let lastError;
             
-            // Build SMS payload - only include 'from' if sender ID is configured
-            const smsPayload = {
-                to: formattedPhone,
-                message: message
-            };
-            
-            if (this.senderId) {
-                smsPayload.from = this.senderId;
+            for (let i = 0; i < formats.length; i++) {
+                try {
+                    console.log(`Trying SMS format ${i + 1}:`, formats[i]);
+                    
+                    const response = await axios.post(this.baseURL, formats[i], {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': this.generateAuthHeader()
+                        }
+                    });
+
+                    console.log(`✅ SMS sent successfully with format ${i + 1} to ${to}`);
+                    console.log('📋 Full SMS Leopard API Response:', JSON.stringify(response.data, null, 2));
+                    
+                    // Log specific response fields
+                    if (response.data) {
+                        console.log('📱 Response Details:');
+                        console.log('  - Success:', response.data.success || response.data.status);
+                        console.log('  - Message ID:', response.data.message_id || response.data.id || response.data.messageId);
+                        console.log('  - Recipients:', response.data.recipients || response.data.recipient || 'N/A');
+                        console.log('  - Status Code:', response.data.status_code || response.status);
+                        console.log('  - Credits Used:', response.data.credits_used || response.data.cost || 'N/A');
+                        console.log('  - Delivery Status:', response.data.delivery_status || 'N/A');
+                    }
+                    
+                    // Update usage if memberId provided
+                    if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
+                        await this.updateSMSUsage(memberId);
+                    }
+
+                    return { 
+                        success: true, 
+                        data: response.data, 
+                        format: i + 1,
+                        messageId: response.data?.message_id || response.data?.id || response.data?.messageId,
+                        recipients: response.data?.recipients || response.data?.recipient
+                    };
+                } catch (formatError) {
+                    lastError = formatError;
+                    console.log(`❌ Format ${i + 1} failed:`, formatError.response?.data || formatError.message);
+                    if (formatError.response?.data) {
+                        console.log('📋 Full Error Response:', JSON.stringify(formatError.response.data, null, 2));
+                    }
+                    continue;
+                }
             }
-            
-            console.log(`📱 Sending SMS via Africa's Talking:`, {
-                to: formattedPhone,
-                from: this.senderId || 'AT Default',
-                message: message.substring(0, 50) + '...'
-            });
 
-            const response = await this.smsClient.send(smsPayload);
-
-            console.log(`✅ SMS sent successfully to ${formattedPhone}`);
-            console.log('📋 Africa\'s Talking Response:', JSON.stringify(response, null, 2));
-            
-            // Update usage if memberId provided
-            if (memberId && smsType !== 'login_otp' && smsType !== 'verification_otp') {
-                await this.updateSMSUsage(memberId);
-            }
-
-            // Parse Africa's Talking response
-            if (response && response.SMSMessageData && response.SMSMessageData.Recipients && response.SMSMessageData.Recipients.length > 0) {
-                const recipient = response.SMSMessageData.Recipients[0];
-                
-                return { 
-                    success: recipient.status === 'Success',
-                    data: response,
-                    messageId: recipient.messageId,
-                    cost: recipient.cost,
-                    status: recipient.status,
-                    statusCode: recipient.statusCode
-                };
-            } else {
-                throw new Error('Invalid response format from Africa\'s Talking');
-            }
-
+            // If all formats failed, throw the last error
+            throw lastError;
         } catch (error) {
-            console.error('❌ Africa\'s Talking SMS failed:', error.message);
-            console.error('📋 Full Error:', error);
+            console.error('❌ All SMS formats failed. Final error:', error.response?.data || error.message);
+            console.error('📋 Full Final Error Response:', JSON.stringify(error.response?.data || {}, null, 2));
+            console.error('🔗 SMS request URL:', this.baseURL);
             console.error('🔑 Environment Variables Check:');
-            console.error('  - Username:', this.username);
             console.error('  - API Key:', this.apiKey ? 'Present' : 'Missing');
+            console.error('  - API Secret:', this.apiSecret ? 'Present' : 'Missing'); 
             console.error('  - Sender ID:', this.senderId);
+            console.error('  - Base URL:', this.baseURL);
             console.error('📞 Target Phone:', to);
-            console.error('💬 Message Length:', message.length);
+            console.error('💬 Message:', message);
             
             return { 
                 success: false, 
-                error: error.message,
-                fullError: error
+                error: error.response?.data || error.message,
+                fullError: error.response?.data,
+                formats_tried: 4
             };
         }
     }
@@ -255,4 +262,4 @@ class AfricasTalkingSMSService {
     }
 }
 
-module.exports = new AfricasTalkingSMSService();
+module.exports = SMSLeopardService;
