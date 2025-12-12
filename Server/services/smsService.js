@@ -70,24 +70,33 @@ class SMSLeopardService {
                     message: message,
                     destination: to
                 },
-                // Format 2: Standard format without sender
+                // Format 2: Standard format with sender
                 {
                     to: to,
-                    message: message
+                    message: message,
+                    source: this.senderId
                 },
-                // Format 3: Recipients array
+                // Format 3: Recipients array with sender
                 {
                     recipients: [to],
-                    message: message
+                    message: message,
+                    source: this.senderId
                 },
-                // Format 4: Simple message + number
+                // Format 4: Simple message + number with sender
                 {
                     number: to,
-                    message: message
+                    message: message,
+                    source: this.senderId
                 },
                 // Format 5: With configured source/sender id
                 {
                     to: to,
+                    message: message,
+                    source: this.senderId
+                },
+                // Format 6: Recipients array with destination field
+                {
+                    recipients: [{ destination: to }],
                     message: message,
                     source: this.senderId
                 }
