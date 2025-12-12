@@ -23,6 +23,17 @@ function LoansAndRepayments() {
   const [repayAmount, setRepayAmount] = useState("");
   const [repayMsg, setRepayMsg] = useState("");
   const [refreshFlag, setRefreshFlag] = useState(false); // for reload after admin action
+  
+  // Loan repayment timing rating states
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedRepayment, setSelectedRepayment] = useState(null);
+  const [ratingData, setRatingData] = useState({ 
+    timing_rating: '', 
+    rating_notes: '', 
+    expected_due_date: '' 
+  });
+  const [loanAnalytics, setLoanAnalytics] = useState(null);
+  const [repayments, setRepayments] = useState([]);
 
   useEffect(() => {
     const fetchLoans = async () => {
@@ -44,6 +55,12 @@ function LoansAndRepayments() {
           },
         });
         setLoans(response.data);
+        
+        // If admin, also fetch repayments and analytics
+        if (userRole === "admin") {
+          await fetchRepayments(token);
+          await fetchLoanAnalytics(token);
+        }
       } catch (err) {
         setError("Failed to fetch loans.");
       } finally {
@@ -81,6 +98,70 @@ function LoansAndRepayments() {
     } catch (err) {
       setRequestMsg("Failed to send request.");
     }
+  };
+
+  // Fetch repayments for admin view
+  const fetchRepayments = async (token) => {
+    try {
+      const response = await axios.get(`${apiUrl}/api/repayments/group`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRepayments(response.data);
+    } catch (error) {
+      console.error('Failed to fetch repayments:', error);
+    }
+  };
+
+  // Fetch loan timing analytics
+  const fetchLoanAnalytics = async (token) => {
+    try {
+      const memberData = JSON.parse(localStorage.getItem('member'));
+      const groupId = memberData?.group_id;
+      
+      if (groupId) {
+        const response = await axios.get(`${apiUrl}/api/repayments/timing-analytics/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setLoanAnalytics(response.data.analytics);
+      }
+    } catch (error) {
+      console.error('Failed to fetch loan analytics:', error);
+    }
+  };
+
+  // Rate loan repayment timing
+  const rateLoanRepayment = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${apiUrl}/api/repayments/rate-timing/${selectedRepayment._id}`, 
+        ratingData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setShowRatingModal(false);
+      setSelectedRepayment(null);
+      setRatingData({ timing_rating: '', rating_notes: '', expected_due_date: '' });
+      
+      // Refresh data
+      await fetchRepayments(token);
+      await fetchLoanAnalytics(token);
+    } catch (error) {
+      console.error('Failed to rate loan repayment:', error);
+      alert('Failed to rate loan repayment');
+    }
+  };
+
+  // Open rating modal
+  const openRepaymentRatingModal = (repayment) => {
+    setSelectedRepayment(repayment);
+    setRatingData({ 
+      timing_rating: repayment.timing_rating || '', 
+      rating_notes: repayment.rating_notes || '',
+      expected_due_date: repayment.expected_due_date ? 
+        new Date(repayment.expected_due_date).toISOString().split('T')[0] : ''
+    });
+    setShowRatingModal(true);
   };
 
   // Member accepts or rejects an offered loan
@@ -623,6 +704,275 @@ function LoansAndRepayments() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Loan Repayment Analytics (Admin Only) */}
+      {role === "admin" && loanAnalytics && (
+        <div style={{ 
+          marginTop: '30px',
+          background: 'white',
+          border: '1px solid #e1e5e9',
+          borderRadius: '15px',
+          padding: '25px',
+          marginBottom: '30px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, color: '#333' }}>💰 Loan Repayment Timing Analytics</h3>
+            <span style={{ fontSize: '14px', color: '#666' }}>
+              {loanAnalytics.total_rated} of {loanAnalytics.total_repayments} repayments rated
+            </span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ textAlign: 'center', padding: '15px', background: '#e8f5e8', borderRadius: '10px', border: '1px solid #4caf50' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4caf50' }}>
+                {loanAnalytics.ratings.early.count}
+              </div>
+              <div style={{ color: '#4caf50', fontSize: '12px', fontWeight: '500' }}>
+                Early ({loanAnalytics.ratings.early.percentage.toFixed(1)}%)
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '15px', background: '#fff3cd', borderRadius: '10px', border: '1px solid #ffc107' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc107' }}>
+                {loanAnalytics.ratings.on_time.count}
+              </div>
+              <div style={{ color: '#ffc107', fontSize: '12px', fontWeight: '500' }}>
+                On Time ({loanAnalytics.ratings.on_time.percentage.toFixed(1)}%)
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '15px', background: '#f8d7da', borderRadius: '10px', border: '1px solid #dc3545' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc3545' }}>
+                {loanAnalytics.ratings.late.count}
+              </div>
+              <div style={{ color: '#dc3545', fontSize: '12px', fontWeight: '500' }}>
+                Late ({loanAnalytics.ratings.late.percentage.toFixed(1)}%)
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '15px', background: '#e9ecef', borderRadius: '10px', border: '1px solid #6c757d' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#6c757d' }}>
+                {loanAnalytics.average_days_late.toFixed(1)}
+              </div>
+              <div style={{ color: '#6c757d', fontSize: '12px', fontWeight: '500' }}>
+                Avg Days Late
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Loan Repayments (Admin Only) */}
+      {role === "admin" && repayments.length > 0 && (
+        <div style={{ 
+          marginTop: '20px',
+          background: 'white',
+          border: '1px solid #e1e5e9',
+          borderRadius: '15px',
+          padding: '25px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+        }}>
+          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>📊 Recent Loan Repayments</h3>
+          
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {repayments.slice(0, 10).map((repayment, index) => {
+              const getRatingColor = (rating) => {
+                switch(rating) {
+                  case 'early': return '#4caf50';
+                  case 'on_time': return '#ffc107';
+                  case 'late': return '#dc3545';
+                  default: return '#6c757d';
+                }
+              };
+              
+              return (
+                <div key={index} style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  padding: '15px',
+                  marginBottom: '10px',
+                  background: '#f8f9fa',
+                  borderRadius: '10px',
+                  border: '1px solid #e1e5e9'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: '500', color: '#333', marginBottom: '4px' }}>
+                      KSh {repayment.amount?.toLocaleString()} Repayment
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      Paid: {new Date(repayment.paid_date).toLocaleDateString()}
+                      {repayment.expected_due_date && ` • Due: ${new Date(repayment.expected_due_date).toLocaleDateString()}`}
+                      {repayment.days_late > 0 && ` • ${repayment.days_late} days late`}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {repayment.timing_rating && repayment.timing_rating !== 'not_rated' ? (
+                      <span style={{
+                        background: getRatingColor(repayment.timing_rating),
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        textTransform: 'capitalize'
+                      }}>
+                        {repayment.timing_rating.replace('_', ' ')}
+                      </span>
+                    ) : (
+                      <span style={{
+                        background: '#e9ecef',
+                        color: '#6c757d',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px'
+                      }}>
+                        Not Rated
+                      </span>
+                    )}
+                    
+                    <button
+                      onClick={() => openRepaymentRatingModal(repayment)}
+                      style={{
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      {repayment.timing_rating && repayment.timing_rating !== 'not_rated' ? 'Edit Rating' : 'Rate'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Rating Modal for Loan Repayments */}
+      {showRatingModal && selectedRepayment && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '15px',
+            padding: '30px',
+            maxWidth: '400px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 20px 0' }}>Rate Loan Repayment Timing</h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontWeight: '500', marginBottom: '5px' }}>
+                Repayment: KSh {selectedRepayment.amount?.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+                Paid: {new Date(selectedRepayment.paid_date).toLocaleDateString()}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                Expected Due Date
+              </label>
+              <input
+                type="date"
+                value={ratingData.expected_due_date}
+                onChange={(e) => setRatingData({...ratingData, expected_due_date: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #e1e5e9',
+                  borderRadius: '8px'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                Timing Rating
+              </label>
+              <select
+                value={ratingData.timing_rating}
+                onChange={(e) => setRatingData({...ratingData, timing_rating: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #e1e5e9',
+                  borderRadius: '8px'
+                }}
+              >
+                <option value="">Select Rating</option>
+                <option value="early">Early</option>
+                <option value="on_time">On Time</option>
+                <option value="late">Late</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                Notes (Optional)
+              </label>
+              <textarea
+                value={ratingData.rating_notes}
+                onChange={(e) => setRatingData({...ratingData, rating_notes: e.target.value})}
+                placeholder="Add any notes about this repayment..."
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #e1e5e9',
+                  borderRadius: '8px',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowRatingModal(false)}
+                style={{
+                  padding: '12px 24px',
+                  border: '1px solid #e1e5e9',
+                  background: 'white',
+                  color: '#333',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={rateLoanRepayment}
+                disabled={!ratingData.timing_rating}
+                style={{
+                  padding: '12px 24px',
+                  border: 'none',
+                  background: ratingData.timing_rating ? '#667eea' : '#ccc',
+                  color: 'white',
+                  borderRadius: '8px',
+                  cursor: ratingData.timing_rating ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Save Rating
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

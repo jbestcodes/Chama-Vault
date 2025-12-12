@@ -8,6 +8,7 @@ const Savings = require('../models/Savings');
 const Loan = require('../models/Loan');
 const Milestone = require('../models/Milestone');
 const Subscription = require('../models/Subscription');
+const openaiService = require('../services/openaiServices');
 const OpenAI = require('openai');
 
 // Initialize OpenAI
@@ -226,34 +227,17 @@ router.post('/chat', authenticateToken, async (req, res) => {
         Chama Rules:
         - Minimum savings for loan eligibility: KSh ${groupMinSavings}
         - Maximum loan amount: 3x total savings
+        - Interest rate: ${groupInterestRate}%
         - Currency: Kenyan Shillings (KSh)
         - Group-based savings and loans
         `;
 
-        const systemPrompt = `You are a helpful financial advisor for a Kenyan Chama (table banking group). 
-        You help members with savings, loans, and financial planning questions. 
-        Always use KSh (Kenyan Shillings) for currency. 
-        Be encouraging, practical, and give specific actionable advice.
-        Answer in a friendly, supportive tone as if speaking to a friend.
-        The current group has these settings:
-        - Minimum savings for loan eligibility: KSh ${groupMinSavings}
-        - Interest rate: ${groupInterestRate}%
-        Always use these group-specific values when giving advice about loans.`;
-
-        const userPrompt = `${userContext}\n\nUser Question: ${question}\n\nPlease provide a helpful, personalized response.`;
-
-        // Call OpenAI API
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini", //  Cheapest option!
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt }
-            ],
-            max_tokens: 200, //  Reduced tokens = lower cost
-            temperature: 0.7
-        });
-
-        const aiResponse = completion.choices[0].message.content;
+        // Use enhanced OpenAI service with group rules
+        const aiResponse = await openaiService.chatbotResponse(
+            question, 
+            member.group_id, // Pass group ID for custom rules
+            userContext
+        );
 
         res.json({ response: aiResponse });
 

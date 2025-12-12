@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const GroupRule = require('../models/GroupRule');
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -104,24 +105,61 @@ class OpenAIService {
     }
 
     // Chatbot for Savings Rules and Loan Terms
-    async chatbotResponse(userQuestion, context = '') {
+    async chatbotResponse(userQuestion, groupId = null, context = '') {
         try {
+            // Get custom group rules if group ID provided
+            let customRules = '';
+            if (groupId) {
+                try {
+                    const questionKeywords = userQuestion.toLowerCase().split(/\s+/)
+                        .filter(word => word.length > 3)
+                        .slice(0, 5); // Limit keywords for performance
+                    
+                    const rules = await GroupRule.getAIRules(groupId, questionKeywords);
+                    if (rules && rules.length > 0) {
+                        customRules = '\n\nCustom Group Rules:\n' + 
+                            rules.slice(0, 5).map(rule => `- ${rule.getAISummary ? rule.getAISummary() : `${rule.title}: ${rule.description}`}`).join('\n');
+                        
+                        // Mark rules as referenced
+                        await Promise.all(
+                            rules.slice(0, 3).map(async rule => {
+                                if (rule._id) {
+                                    try {
+                                        const ruleDoc = await GroupRule.findById(rule._id);
+                                        if (ruleDoc && ruleDoc.markReferenced) {
+                                            await ruleDoc.markReferenced();
+                                        }
+                                    } catch (err) {
+                                        console.warn('Could not mark rule as referenced:', err.message);
+                                    }
+                                }
+                            })
+                        );
+                    }
+                } catch (err) {
+                    console.warn('Could not fetch custom rules:', err.message);
+                }
+            }
+            
             const systemPrompt = `
             You are a helpful Jaza Nyumba financial assistant. You specialize in:
             1. Chama savings rules and regulations
             2. Loan terms and conditions
             3. Group savings best practices
             4. Financial literacy for group savings
+            5. Table banking (merry-go-round) operations
             
-            Key Jaza Nyumba Rules:
+            Default Jaza Nyumba Rules:
             - Weekly savings contributions required
             - Members can borrow up to 3x their savings
-            - Loan interest rate: 2% per month
+            - Loan interest rate: 2% per month (unless specified otherwise)
             - Loan repayment period: up to 12 months
             - Late payment fee: 5% of due amount
             - Membership requires consistent savings for 3 months before loan eligibility
+            - Table banking cycles rotate monthly with equal contributions
+            ${customRules}
             
-            Answer questions clearly, be helpful, and stay focused on Chama/group savings topics.
+            Answer questions clearly and helpfully. If custom group rules apply, prioritize them over default rules. Stay focused on Chama/group savings topics.
             `;
 
             const response = await openai.chat.completions.create({
@@ -130,7 +168,7 @@ class OpenAIService {
                     { role: "system", content: systemPrompt },
                     { role: "user", content: `${context}\n\nQuestion: ${userQuestion}` }
                 ],
-                max_tokens: 200,
+                max_tokens: 250,
                 temperature: 0.8
             });
 

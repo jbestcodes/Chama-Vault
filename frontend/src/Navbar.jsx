@@ -148,6 +148,12 @@ function Navbar() {
                     <Link to="/ai-dashboard" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         AI Assistant
                     </Link>
+                    <Link to="/user-guide" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                        User Guide
+                    </Link>
+                    <Link to="/performance" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
+                        Performance
+                    </Link>
                     {token && (
                         <button
                             onClick={handleLogout}

@@ -5,6 +5,7 @@ const Group = require('../models/Group');
 const Member = require('../models/Member');
 const TableBankingCycle = require('../models/TableBankingCycle');
 const Contribution = require('../models/Contribution');
+const GroupRule = require('../models/GroupRule');
 
 // Get admin dashboard data
 router.get('/admin-dashboard', authenticateToken, async (req, res) => {
@@ -313,6 +314,127 @@ router.post('/progress-cycle', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Progress cycle error:', error);
         res.status(500).json({ error: 'Failed to progress cycle' });
+    }
+});
+
+// Rate contribution timing (Admin only)
+router.post('/contributions/:contributionId/rate-timing', authenticateToken, async (req, res) => {
+    try {
+        const { contributionId } = req.params;
+        const { timing_rating, rating_notes } = req.body;
+        
+        // Validate rating
+        if (!['early', 'on_time', 'late'].includes(timing_rating)) {
+            return res.status(400).json({ error: 'Invalid timing rating. Must be: early, on_time, or late' });
+        }
+        
+        const member = await Member.findById(req.user.memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        // Find the contribution
+        const contribution = await Contribution.findById(contributionId).populate('group_id');
+        if (!contribution) {
+            return res.status(404).json({ error: 'Contribution not found' });
+        }
+        
+        // Check if user is admin of the group
+        if (contribution.group_id._id.toString() !== member.group_id.toString() || (!member.is_admin && member.role !== 'admin')) {
+            return res.status(403).json({ error: 'Admin access required for this group' });
+        }
+        
+        // Update the contribution with timing rating
+        contribution.timing_rating = timing_rating;
+        contribution.rating_notes = rating_notes;
+        contribution.rating_date = new Date();
+        contribution.rated_by = member._id;
+        
+        await contribution.save();
+        
+        res.json({
+            message: 'Contribution timing rated successfully',
+            contribution: {
+                _id: contribution._id,
+                timing_rating: contribution.timing_rating,
+                rating_notes: contribution.rating_notes,
+                rating_date: contribution.rating_date
+            }
+        });
+        
+    } catch (error) {
+        console.error('Rate contribution timing error:', error);
+        res.status(500).json({ error: 'Failed to rate contribution timing' });
+    }
+});
+
+// Get timing analytics for a group/cycle
+router.get('/timing-analytics/:groupId', authenticateToken, async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { cycle_id } = req.query;
+        
+        const member = await Member.findById(req.user.memberId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        // Check if user belongs to this group and is admin
+        if (member.group_id.toString() !== groupId || (!member.is_admin && member.role !== 'admin')) {
+            return res.status(403).json({ error: 'Admin access required for this group' });
+        }
+        
+        // Get timing analytics
+        const analytics = await Contribution.getTimingAnalytics(groupId, cycle_id);
+        
+        res.json({
+            success: true,
+            analytics
+        });
+        
+    } catch (error) {
+        console.error('Get timing analytics error:', error);
+        res.status(500).json({ error: 'Failed to get timing analytics' });
+    }
+});
+
+// Get member timing performance
+router.get('/member-timing-performance/:memberId', authenticateToken, async (req, res) => {
+    try {
+        const { memberId } = req.params;
+        
+        const requestingMember = await Member.findById(req.user.memberId);
+        if (!requestingMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
+        const targetMember = await Member.findById(memberId);
+        if (!targetMember) {
+            return res.status(404).json({ error: 'Target member not found' });
+        }
+        
+        // Check if requesting member is admin of the same group or requesting their own data
+        if (requestingMember._id.toString() !== memberId && 
+            (requestingMember.group_id.toString() !== targetMember.group_id.toString() || 
+             (!requestingMember.is_admin && requestingMember.role !== 'admin'))) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        // Get member timing performance
+        const performance = await Contribution.getMemberTimingPerformance(memberId, targetMember.group_id);
+        
+        res.json({
+            success: true,
+            member: {
+                _id: targetMember._id,
+                name: `${targetMember.first_name} ${targetMember.last_name}`
+            },
+            performance
+        });
+        
+    } catch (error) {
+        console.error('Get member timing performance error:', error);
+        res.status(500).json({ error: 'Failed to get member timing performance' });
     }
 });
 

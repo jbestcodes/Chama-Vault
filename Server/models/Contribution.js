@@ -22,6 +22,16 @@ const contributionSchema = new mongoose.Schema({
     days_late: { type: Number, default: 0 }, // How many days late the payment was
     penalty_applied: { type: Number, default: 0 }, // Penalty amount if any
     
+    // Admin timing rating (new feature)
+    timing_rating: { 
+        type: String, 
+        enum: ['early', 'on_time', 'late', 'not_rated'], 
+        default: 'not_rated' 
+    },
+    rating_date: { type: Date }, // When admin rated the contribution
+    rating_notes: { type: String }, // Admin notes about the rating
+    rated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' }, // Admin who rated
+    
     // Admin notes
     notes: { type: String }, // Admin can add notes about the contribution
     recorded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' }, // Admin who recorded the payment
@@ -93,6 +103,92 @@ contributionSchema.statics.getMemberPerformance = async function(memberId, group
         onTimePayments,
         latePayments,
         total
+    };
+};
+
+// Method to get timing rating analytics for a group
+contributionSchema.statics.getTimingAnalytics = async function(groupId, cycleId = null) {
+    const query = { group_id: groupId };
+    if (cycleId) query.cycle_id = cycleId;
+    
+    const contributions = await this.find(query).populate('member_id', 'first_name last_name');
+    
+    // Overall timing statistics
+    const totalRated = contributions.filter(c => c.timing_rating !== 'not_rated').length;
+    const early = contributions.filter(c => c.timing_rating === 'early').length;
+    const onTime = contributions.filter(c => c.timing_rating === 'on_time').length;
+    const late = contributions.filter(c => c.timing_rating === 'late').length;
+    
+    const analytics = {
+        total_contributions: contributions.length,
+        total_rated: totalRated,
+        ratings: {
+            early: { count: early, percentage: totalRated > 0 ? (early / totalRated) * 100 : 0 },
+            on_time: { count: onTime, percentage: totalRated > 0 ? (onTime / totalRated) * 100 : 0 },
+            late: { count: late, percentage: totalRated > 0 ? (late / totalRated) * 100 : 0 },
+            not_rated: { count: contributions.length - totalRated }
+        },
+        // Member-wise breakdown
+        member_breakdown: {}
+    };
+    
+    // Calculate per-member analytics
+    const memberStats = {};
+    contributions.forEach(contribution => {
+        const memberId = contribution.member_id._id.toString();
+        if (!memberStats[memberId]) {
+            memberStats[memberId] = {
+                name: `${contribution.member_id.first_name} ${contribution.member_id.last_name}`,
+                early: 0,
+                on_time: 0,
+                late: 0,
+                not_rated: 0,
+                total: 0
+            };
+        }
+        memberStats[memberId][contribution.timing_rating]++;
+        memberStats[memberId].total++;
+    });
+    
+    analytics.member_breakdown = memberStats;
+    return analytics;
+};
+
+// Method to get member timing performance
+contributionSchema.statics.getMemberTimingPerformance = async function(memberId, groupId) {
+    const contributions = await this.find({ 
+        member_id: memberId, 
+        group_id: groupId,
+        timing_rating: { $ne: 'not_rated' }
+    });
+    
+    if (contributions.length === 0) {
+        return { 
+            average_rating: 'no_data', 
+            total_rated: 0,
+            breakdown: { early: 0, on_time: 0, late: 0 }
+        };
+    }
+    
+    const early = contributions.filter(c => c.timing_rating === 'early').length;
+    const onTime = contributions.filter(c => c.timing_rating === 'on_time').length;
+    const late = contributions.filter(c => c.timing_rating === 'late').length;
+    
+    // Calculate weighted average (early=3, on_time=2, late=1)
+    const totalWeight = (early * 3) + (onTime * 2) + (late * 1);
+    const averageScore = totalWeight / contributions.length;
+    
+    let average_rating;
+    if (averageScore >= 2.5) average_rating = 'excellent';
+    else if (averageScore >= 2.0) average_rating = 'good';
+    else if (averageScore >= 1.5) average_rating = 'fair';
+    else average_rating = 'poor';
+    
+    return {
+        average_rating,
+        total_rated: contributions.length,
+        breakdown: { early, on_time: onTime, late },
+        score: averageScore
     };
 };
 
