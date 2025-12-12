@@ -68,7 +68,8 @@ class SMSLeopardService {
                 // Format 1: Minimal format (most likely to work)
                 {
                     message: message,
-                    destination: to
+                    destination: to,
+                    source: this.senderId
                 },
                 // Format 2: Standard format with sender
                 {
@@ -88,15 +89,27 @@ class SMSLeopardService {
                     message: message,
                     source: this.senderId
                 },
-                // Format 5: With configured source/sender id
+                // Format 5: Recipients array with phone field
                 {
-                    to: to,
+                    recipients: [{ phone: to }],
                     message: message,
                     source: this.senderId
                 },
                 // Format 6: Recipients array with destination field
                 {
                     recipients: [{ destination: to }],
+                    message: message,
+                    source: this.senderId
+                },
+                // Format 7: Recipients array with number field
+                {
+                    recipients: [{ number: to }],
+                    message: message,
+                    source: this.senderId
+                },
+                // Format 8: Direct recipients field as string
+                {
+                    recipients: to,
                     message: message,
                     source: this.senderId
                 }
