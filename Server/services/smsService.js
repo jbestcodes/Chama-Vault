@@ -64,39 +64,31 @@ class SMSLeopardService {
 
             // Try multiple SMS Leopard API formats
             const formats = [
-                // Format 1: Without sender ID (use SMS Leopard default)
+                // Format 1: Minimal format (most likely to work)
+                {
+                    message: message,
+                    destination: to
+                },
+                // Format 2: Standard format without sender
                 {
                     to: to,
                     message: message
                 },
-                // Format 2: With sender if provided
-                ...(this.senderId ? [{
-                    to: to,
-                    message: message,
-                    source: this.senderId
-                }] : []),
-                // Format 3: Recipients array without sender
+                // Format 3: Recipients array
                 {
                     recipients: [to],
                     message: message
                 },
-                // Format 4: Recipients with sender if provided
-                ...(this.senderId ? [{
-                    recipients: [to],
-                    message: message,
-                    source: this.senderId
-                }] : []),
-                // Format 5: Standard format with common sender names
+                // Format 4: Simple message + number
                 {
-                    to: to,
-                    message: message,
-                    source: 'CHAMA'
+                    number: to,
+                    message: message
                 },
-                // Format 6: Another common format
+                // Format 5: With default source if needed
                 {
                     to: to,
                     message: message,
-                    source: 'INFO'
+                    source: 'default'
                 }
             ];
 
