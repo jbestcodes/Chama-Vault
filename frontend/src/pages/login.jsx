@@ -289,12 +289,13 @@ const Login = () => {
                                         style={{
                                             width: '100%',
                                             padding: '12px 16px',
-                                            border: '2px solid #e1e5e9',
+                                            border: '2px solid #333',
                                             borderRadius: '10px',
                                             fontSize: '16px',
+                                            color: '#333',
+                                            backgroundColor: '#fff',
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
-                                            background: '#fafafa',
                                             boxSizing: 'border-box'
                                         }}
                                         onFocus={(e) => {
@@ -483,15 +484,16 @@ const Login = () => {
                                         style={{
                                             width: '100%',
                                             padding: '12px 16px',
-                                            border: '2px solid #e1e5e9',
+                                            border: '2px solid #333',
                                             borderRadius: '10px',
                                             fontSize: '20px',
                                             textAlign: 'center',
                                             letterSpacing: '5px',
                                             fontWeight: 'bold',
+                                            color: '#333',
+                                            backgroundColor: '#fff',
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
-                                            background: '#fafafa',
                                             boxSizing: 'border-box'
                                         }}
                                         onFocus={(e) => {
@@ -772,12 +774,14 @@ const Login = () => {
                                 style={{
                                     width: '100%',
                                     padding: '12px 16px',
-                                    border: '2px solid #e1e5e9',
+                                    border: '2px solid #333',
                                     borderRadius: '10px',
                                     fontSize: '20px',
                                     textAlign: 'center',
                                     letterSpacing: '5px',
                                     fontWeight: 'bold',
+                                    color: '#333',
+                                    backgroundColor: '#fff',
                                     outline: 'none',
                                     boxSizing: 'border-box'
                                 }}

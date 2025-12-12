@@ -119,13 +119,22 @@ router.post('/register', async (req, res) => {
         }
 
         // Send verification SMS
-        await smsService.sendVerificationOTP(formattedPhone, verificationOTP, full_name);
-
-        res.status(201).json({ 
-            message: 'Registration submitted. Please verify your phone number with the OTP sent to your phone.',
-            memberId: newMember._id,
-            requiresVerification: true
-        });
+        try {
+            await smsService.sendVerificationOTP(formattedPhone, verificationOTP, full_name);
+            res.status(201).json({ 
+                message: 'Registration submitted. Please verify your phone number with the OTP sent to your phone.',
+                memberId: newMember._id,
+                requiresVerification: true
+            });
+        } catch (smsError) {
+            console.error('SMS failed, but verification code generated:', verificationOTP);
+            res.status(201).json({ 
+                message: 'Registration submitted. SMS delivery failed. Please contact support.',
+                memberId: newMember._id,
+                requiresVerification: true,
+                smsError: true
+            });
+        }
 
     } catch (error) {
         console.error('Registration error:', error);
@@ -311,8 +320,8 @@ router.post('/resend-login-otp', async (req, res) => {
         } catch (smsError) {
             console.error('SMS failed, but login OTP generated:', loginOTP);
             res.json({ 
-                message: 'SMS sending failed, but login OTP generated. Check server logs.',
-                debug: process.env.NODE_ENV === 'development' ? { loginOTP } : undefined
+                message: 'SMS sending failed. Please contact support.',
+                smsError: true
             });
         }
 
@@ -412,9 +421,9 @@ router.post('/resend-verification-phone', async (req, res) => {
         } catch (smsError) {
             console.error('SMS failed, but verification code generated:', verificationOTP);
             res.json({ 
-                message: 'SMS sending failed, but verification code generated. Check server logs.',
+                message: 'SMS sending failed. Please contact support.',
                 memberId: member._id,
-                debug: process.env.NODE_ENV === 'development' ? { verificationCode: verificationOTP } : undefined
+                smsError: true
             });
         }
 

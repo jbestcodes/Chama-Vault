@@ -7,7 +7,8 @@ class SMSLeopardService {
     constructor() {
         this.apiKey = process.env.SMS_LEOPARD_API_KEY;
         this.apiSecret = process.env.SMS_LEOPARD_API_SECRET;
-        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || null; // Allow null for default sender
+        // Prefer explicit env var, fall back to older key or default to 'SMSLEOPARD'
+        this.senderId = process.env.SMS_LEOPARD_SENDER_ID || process.env.SMSLEOPARD_SOURCE || 'SMSLEOPARD';
         this.baseURL = 'https://api.smsleopard.com/v1/sms/send';
     }
 
@@ -84,11 +85,11 @@ class SMSLeopardService {
                     number: to,
                     message: message
                 },
-                // Format 5: With default source if needed
+                // Format 5: With configured source/sender id
                 {
                     to: to,
                     message: message,
-                    source: 'default'
+                    source: this.senderId
                 }
             ];
 
