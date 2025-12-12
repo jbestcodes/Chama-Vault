@@ -1,0 +1,13 @@
+version: 2
+build:
+  - name: server
+    buildCommand: |
+      cd Server
+      rm -rf node_modules
+      rm -f package-lock.json
+      npm cache clean --force
+      npm install --production
+      npm ls express
+    startCommand: |
+      cd Server
+      node index.js
