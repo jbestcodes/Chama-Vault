@@ -9,6 +9,11 @@ const groupSchema = new mongoose.Schema({
         lowercase: true // Automatically converts to lowercase
     },
     admin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+    group_type: { 
+        type: String, 
+        enum: ['savings_and_loans', 'table_banking'], 
+        default: 'savings_and_loans' 
+    },
     interest_rate: { type: Number, default: 5.0 },
     minimum_loan_savings: { type: Number, default: 500.00 },
     group_code: { type: String, unique: true, sparse: true }, // sparse allows multiple null values

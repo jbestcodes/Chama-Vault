@@ -26,7 +26,7 @@ const formatPhoneNumber = (phone) => {
 
 // Step 1: Registration with phone verification
 router.post('/register', async (req, res) => {
-    const { full_name, phone, password, group_name, role } = req.body;
+    const { full_name, phone, password, group_name, group_type = 'savings_and_loans', role } = req.body;
     const useRole = role && role.toLowerCase() === 'admin' ? 'admin' : 'member';
 
     if (!full_name || !phone || !password || !group_name) {
@@ -47,6 +47,7 @@ router.post('/register', async (req, res) => {
             // Admin creates new group
             group = new Group({ 
                 group_name: normalizedGroupName,
+                group_type: group_type,
                 interest_rate: 5.0,
                 minimum_loan_savings: 500.00
             });

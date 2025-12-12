@@ -11,6 +11,7 @@ const withdrawalRoutes = require('./routes/withdrawals');
 const notificationRoutes = require('./routes/notifications');
 const subscriptionRoutes = require('./routes/subscriptions');
 const inviteRoutes = require('./routes/invites');
+const tableBankingRoutes = require('./routes/tableBanking');
 const connectDB = require('./db'); // Import the new MongoDB connection
 
 // Initialize services
@@ -44,6 +45,7 @@ app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/invites', inviteRoutes);
+app.use('/api/table-banking', tableBankingRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

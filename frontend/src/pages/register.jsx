@@ -10,6 +10,7 @@ const Register = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [group_name, setGroupName] = useState('');
+    const [group_type, setGroupType] = useState('savings_and_loans');
     const [role, setRole] = useState('');
     const [otp, setOtp] = useState('');
     const [agreed, setAgreed] = useState(false);
@@ -29,6 +30,7 @@ const Register = () => {
                 phone,
                 password,
                 group_name,
+                group_type,
                 role
             });
 
@@ -388,6 +390,93 @@ const Register = () => {
                                         </label>
                                     </div>
                                 </div>
+                                
+                                {/* Group Type Selection - Only show for admins */}
+                                {role === 'admin' && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{
+                                            display: 'block',
+                                            marginBottom: '12px',
+                                            color: '#333',
+                                            fontWeight: '500',
+                                            fontSize: '14px'
+                                        }}>
+                                            🏦 Group Type
+                                        </label>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <label style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                padding: '16px',
+                                                border: group_type === 'savings_and_loans' ? '2px solid #667eea' : '2px solid #e1e5e9',
+                                                borderRadius: '10px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                background: group_type === 'savings_and_loans' ? '#f0f4ff' : '#fafafa'
+                                            }}>
+                                                <input
+                                                    type="radio"
+                                                    name="group_type"
+                                                    value="savings_and_loans"
+                                                    checked={group_type === "savings_and_loans"}
+                                                    onChange={() => setGroupType("savings_and_loans")}
+                                                    style={{ marginRight: '12px', marginTop: '2px' }}
+                                                />
+                                                <div>
+                                                    <div style={{
+                                                        color: group_type === 'savings_and_loans' ? '#667eea' : '#333',
+                                                        fontWeight: group_type === 'savings_and_loans' ? '600' : '500',
+                                                        marginBottom: '4px'
+                                                    }}>
+                                                        💰 Savings & Loans
+                                                    </div>
+                                                    <div style={{
+                                                        color: '#666',
+                                                        fontSize: '12px',
+                                                        lineHeight: '1.4'
+                                                    }}>
+                                                        Traditional chama for savings, loans, and investments
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            <label style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                padding: '16px',
+                                                border: group_type === 'table_banking' ? '2px solid #667eea' : '2px solid #e1e5e9',
+                                                borderRadius: '10px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                background: group_type === 'table_banking' ? '#f0f4ff' : '#fafafa'
+                                            }}>
+                                                <input
+                                                    type="radio"
+                                                    name="group_type"
+                                                    value="table_banking"
+                                                    checked={group_type === "table_banking"}
+                                                    onChange={() => setGroupType("table_banking")}
+                                                    style={{ marginRight: '12px', marginTop: '2px' }}
+                                                />
+                                                <div>
+                                                    <div style={{
+                                                        color: group_type === 'table_banking' ? '#667eea' : '#333',
+                                                        fontWeight: group_type === 'table_banking' ? '600' : '500',
+                                                        marginBottom: '4px'
+                                                    }}>
+                                                        🔄 Table Banking (Merry-go-round)
+                                                    </div>
+                                                    <div style={{
+                                                        color: '#666',
+                                                        fontSize: '12px',
+                                                        lineHeight: '1.4'
+                                                    }}>
+                                                        Rotating credit system where members take turns receiving pooled contributions
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
                                 
                                 {/* Terms & Conditions */}
                                 <div style={{ marginBottom: '25px' }}>

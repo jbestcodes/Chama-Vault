@@ -87,9 +87,33 @@ const Dashboard = () => {
 
       {/* Show admin panel link only for admins */}
       {role && role.toLowerCase() === 'admin' && (
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <Link to="/admin-panel">
             <button type="button">View Admin Panel</button>
+          </Link>
+          {/* Table Banking Admin Link */}
+          {data.groupType === 'table_banking' && (
+            <Link to="/table-banking-admin">
+              <button type="button" style={{ background: '#667eea' }}>Table Banking Admin</button>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Table Banking Member Link - for all members in table banking groups */}
+      {data.groupType === 'table_banking' && (
+        <div style={{ marginBottom: '20px' }}>
+          <Link to="/table-banking-member">
+            <button type="button" style={{ 
+              background: '#764ba2', 
+              color: 'white', 
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}>
+              🔄 View Table Banking
+            </button>
           </Link>
         </div>
       )}
