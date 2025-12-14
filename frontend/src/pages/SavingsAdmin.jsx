@@ -74,7 +74,7 @@ function SavingsAdmin() {
   // Helper to get week total
   const getWeekTotal = (week) => {
     return members.reduce((sum, member) => {
-      return sum + Number(savingsMatrix[week]?.[member.id] || 0);
+      return sum + Number(savingsMatrix[week]?.[member._id || member.id] || 0);
     }, 0);
   };
 
@@ -325,7 +325,7 @@ function SavingsAdmin() {
               <td style={{ border: "1px solid #ccc", padding: 8 }}>{week}</td>
               {members.filter(m => m.id != null).map((member) => {
                 const cellKey = `${week}_${member.id}`;
-                const value = savingsMatrix[Number(week)]?.[Number(member.id)] || 0;
+                const value = savingsMatrix[week]?.[member._id || member.id] || 0;
                 return (
                   <td key={member.id} style={{ border: "1px solid #ccc", padding: 8 }}>
                     {editing[cellKey] ? (
@@ -381,7 +381,7 @@ function SavingsAdmin() {
             data={weeks.map(week => {
               const row = { week: `Week ${week}` };
               members.forEach(member => {
-                row[member.full_name] = Number(savingsMatrix[week]?.[member.id] || 0);
+                row[member.full_name] = Number(savingsMatrix[week]?.[member._id || member.id] || 0);
               });
               return row;
             })}

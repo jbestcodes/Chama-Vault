@@ -137,12 +137,12 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
         // Get all savings for this group
         const savings = await Savings.find({ member_id: { $in: memberIds } });
 
-        // Build matrix
+        // Build matrix (convert member_id to string for frontend lookup)
         const matrix = {};
         weeks.forEach(week => { matrix[week] = {}; });
         savings.forEach(saving => {
             if (!matrix[saving.week_number]) matrix[saving.week_number] = {};
-            matrix[saving.week_number][saving.member_id] = saving.amount;
+            matrix[saving.week_number][saving.member_id.toString()] = saving.amount;
         });
 
         // Calculate group total

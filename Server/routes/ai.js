@@ -67,7 +67,24 @@ router.get('/financial-nudge', authenticateToken, requireAI, async (req, res) =>
         } else if (milestone) {
             const progress = (totalSavings / milestone.target_amount) * 100;
             const remaining = milestone.target_amount - totalSavings;
-            nudge = `Hongera ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} towards your "${milestone.milestone_name}" goal. You're ${progress.toFixed(1)}% there! Only KSh ${remaining.toLocaleString()} to go! 💪`;
+            
+            // Check if milestone has a deadline and if it's approaching
+            let deadlineWarning = '';
+            if (milestone.target_date) {
+                const deadline = new Date(milestone.target_date);
+                const today = new Date();
+                const daysRemaining = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysRemaining > 0 && daysRemaining <= 30 && progress < 100) {
+                    deadlineWarning = `\n\n⏰ Urgent: Only ${daysRemaining} days left to reach your "${milestone.milestone_name}" goal! You need to save KSh ${Math.ceil(remaining / daysRemaining).toLocaleString()} per day to make it. You can do this! 💪`;
+                } else if (daysRemaining <= 0 && progress < 100) {
+                    deadlineWarning = `\n\n⚠️ Your "${milestone.milestone_name}" deadline has passed. Don't give up! Adjust your deadline or push harder to complete it. Every step counts! 🎯`;
+                } else if (progress >= 100) {
+                    deadlineWarning = `\n\n🎉 Congratulations! You've reached your "${milestone.milestone_name}" goal! Time to celebrate and set a new challenge! 🌟`;
+                }
+            }
+            
+            nudge = `Hongera ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} towards your "${milestone.milestone_name}" goal. You're ${progress.toFixed(1)}% there! Only KSh ${remaining.toLocaleString()} to go! 💪${deadlineWarning}`;
         } else {
             nudge = `Great work ${member.full_name}! You've saved KSh ${totalSavings.toLocaleString()} in ${member.group_name}. Ready to set your first milestone? 🎯`;
         }

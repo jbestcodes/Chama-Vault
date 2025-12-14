@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
 import TrialStatus from '../components/TrialStatus';
+import GroupLeaderboard from '../components/GroupLeaderboard';
 
 const apiUrl = import.meta.env.VITE_API_URL; 
 
@@ -238,6 +239,10 @@ const Dashboard = () => {
           <p><strong>Group:</strong> {data.group_name}</p>
         )}
       </div>
+      
+      {/* Group Leaderboard */}
+      <GroupLeaderboard />
+      
       <Milestones />
     </div>
   );

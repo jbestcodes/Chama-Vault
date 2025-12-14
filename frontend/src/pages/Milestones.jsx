@@ -76,11 +76,13 @@ function Milestones() {
   const [totalSavings, setTotalSavings] = useState(0);
   const [milestoneName, setMilestoneName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
+  const [targetDate, setTargetDate] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [editId, setEditId] = useState(null);
   const [editMilestoneName, setEditMilestoneName] = useState("");
   const [editTargetAmount, setEditTargetAmount] = useState("");
+  const [editTargetDate, setEditTargetDate] = useState("");
 
   const fetchMilestones = async () => {
     try {
@@ -122,6 +124,7 @@ function Milestones() {
         {
           milestone_name: milestoneName,
           target_amount: targetAmount,
+          target_date: targetDate || null,
         },
         {
           headers: {
@@ -228,6 +231,14 @@ function Milestones() {
           onChange={(e) => setTargetAmount(e.target.value)}
           required
           style={{ marginRight: 10 }}
+        />
+        <input
+          type="date"
+          placeholder="Target Date (Optional)"
+          value={targetDate}
+          onChange={(e) => setTargetDate(e.target.value)}
+          style={{ marginRight: 10 }}
+          title="Optional deadline for this milestone"
         />
         <button type="submit">Add Milestone</button>
       </form>

@@ -30,16 +30,11 @@ const MemberPerformance = () => {
             setMemberData(storedMember);
             setIsAdmin(storedMember?.is_admin || storedMember?.role === 'admin');
             
-            // If admin, fetch all group members
-            if (storedMember?.is_admin || storedMember?.role === 'admin') {
-                const response = await axios.get(`${apiUrl}/api/groups/${storedMember.group_id}/members`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setGroupMembers(response.data.members);
-                setSelectedMemberId(storedMember._id); // Default to current member
-            } else {
-                setSelectedMemberId(storedMember._id);
-            }
+            // Set current member as selected
+            setIsAdmin(storedMember?.is_admin || storedMember?.role === 'admin');
+            setSelectedMemberId(storedMember._id || storedMember.id);
+            
+            // Note: Group member selection removed - will be added when endpoint is available
         } catch (error) {
             console.error('Error fetching member data:', error);
             setError('Failed to load member data');

@@ -80,11 +80,13 @@ function Subscribe() {
         } catch (error) {
             console.error('Error loading user profile:', error);
             // Don't redirect on error, just use localStorage data
+            const phone = localStorage.getItem('phone') || '254700000000';
             setUser({
                 id: localStorage.getItem('memberId'),
                 full_name: localStorage.getItem('full_name') || 'User',
-                phone: localStorage.getItem('phone') || '254700000000',
-                email: 'user@chama.app'
+                phone: phone,
+                phoneNumber: phone,
+                email: phone + '@chama.app'
             });
             setLoading(false);
         }
