@@ -31,7 +31,21 @@ const Login = () => {
                 password
             });
             
-            if (response.data.requiresOTP) {
+            // Check if login is direct (SMS disabled) or requires OTP
+            if (response.data.skipOTP || response.data.token) {
+                // Direct login - SMS is disabled
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('role', response.data.member.role.toLowerCase());
+                localStorage.setItem('full_name', response.data.member.full_name);
+                localStorage.setItem('memberId', response.data.member.id);
+                localStorage.setItem('member', JSON.stringify(response.data.member));
+                
+                setSuccess('Login successful!');
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 500);
+            } else if (response.data.requiresOTP) {
+                // OTP required - SMS is enabled
                 setMemberId(response.data.memberId);
                 setSuccess(response.data.message);
                 setStep(2); // Move to OTP verification step
