@@ -25,30 +25,32 @@ function WhyUs() {
 
         <h3 style={{ color: "#1976d2", marginTop: 24 }}>Our Mission</h3>
         <p>
-          To make group savings simple, transparent, and accessible for everyone, empowering communities to achieve their financial goals together.
+          To make group savings simple, transparent, and accessible for everyone, empowering communities to achieve their financial goals together through innovative technology.
         </p>
 
         <h3 style={{ color: "#1976d2", marginTop: 24 }}>Our Vision</h3>
         <p>
-          To be the leading digital platform for group savings and financial collaboration across Africa, fostering trust and prosperity for all.
+          To be the leading AI-powered digital platform for group savings and financial collaboration across Africa, fostering trust, transparency, and prosperity for all.
         </p>
 
-        <h3 style={{ color: "#1976d2", marginTop: 24 }}>Our Advantages</h3>
+        <h3 style={{ color: "#1976d2", marginTop: 24 }}>Unique Features That Set Us Apart</h3>
         <ul style={{
           fontSize: "1.08em",
           marginLeft: 0,
           paddingLeft: 24,
           listStylePosition: "inside"
         }}>
-          <li style={{ marginBottom: 8 }}>Group-specific dashboards and analytics for clear financial tracking</li>
-          <li style={{ marginBottom: 8 }}>Automated reminders for contributions and meetings</li>
-          <li style={{ marginBottom: 8 }}>Masked leaderboards to protect member privacy</li>
-          <li style={{ marginBottom: 8 }}>Personal milestones and progress tracking for every member</li>
-          <li style={{ marginBottom: 8 }}>Admin panel for easy group management and savings oversight</li>
-          <li style={{ marginBottom: 8 }}>Visual charts for group performance and trends</li>
-          <li style={{ marginBottom: 8 }}>Secure authentication and data protection</li>
-          <li style={{ marginBottom: 8 }}>Easy onboarding and intuitive user experience</li>
-          <li style={{ marginBottom: 8 }}>Transparent contribution history and weekly tracking</li>
+          <li style={{ marginBottom: 8 }}><strong>🤖 AI Financial Insights:</strong> Get personalized financial advice and deadline nudges powered by advanced AI</li>
+          <li style={{ marginBottom: 8 }}><strong>⚡ Smart Performance Ratings:</strong> Track timing quality for contributions and loan repayments (excellent/good/fair/poor)</li>
+          <li style={{ marginBottom: 8 }}><strong>🏆 Privacy-First Leaderboards:</strong> Masked member names with color-coded performance ratings protect privacy while fostering healthy competition</li>
+          <li style={{ marginBottom: 8 }}><strong>📱 Automated SMS Reminders:</strong> Never miss a payment with intelligent SMS notifications via Africa's Talking</li>
+          <li style={{ marginBottom: 8 }}><strong>🎯 Milestone Deadline Tracking:</strong> Set savings goals with target dates and get AI alerts when deadlines approach</li>
+          <li style={{ marginBottom: 8 }}><strong>💬 Live AI Support Chat:</strong> Get instant help 24/7 with context-aware support powered by AI</li>
+          <li style={{ marginBottom: 8 }}><strong>📊 Table Banking Management:</strong> Complete table banking with contribution timing ratings and detailed analytics</li>
+          <li style={{ marginBottom: 8 }}><strong>🎨 Custom Group Rules:</strong> Admins can set personalized rules that AI uses for tailored advice</li>
+          <li style={{ marginBottom: 8 }}><strong>🔒 Auto-Logout Security:</strong> Sessions expire after 30 minutes of inactivity for enhanced security</li>
+          <li style={{ marginBottom: 8 }}><strong>📈 Advanced Analytics:</strong> Visual charts showing group performance trends and savings matrix</li>
+          <li style={{ marginBottom: 8 }}><strong>� Flexible Subscription Plans:</strong> Affordable weekly (KES 30) or monthly (KES 100) plans to access premium features</li>
         </ul>
         <div style={{ textAlign: "center", marginTop: 32 }}>
           <Link to="/register">

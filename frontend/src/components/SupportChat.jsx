@@ -7,7 +7,7 @@ function SupportChat({ isOpen, onClose }) {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: '👋 Hi! I\'m your Chama-Vault support assistant. How can I help you today?',
+            content: '👋 Hi! I\'m your Jaza Nyumba support assistant. How can I help you today?',
             timestamp: new Date()
         }
     ]);
@@ -181,7 +181,7 @@ function SupportChat({ isOpen, onClose }) {
             }}>
                 <div>
                     <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-                        💬 Support Chat
+                        💬 Jaza Nyumba Support
                     </h3>
                     <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.9 }}>
                         We typically reply instantly

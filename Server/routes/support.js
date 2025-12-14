@@ -18,7 +18,7 @@ router.post('/chat', authenticateToken, async (req, res) => {
         const member = await Member.findById(userId).select('full_name phone group_name role');
 
         // Build context for support agent
-        const systemPrompt = `You are a helpful and friendly customer support agent for Chama-Vault, a table banking and group savings management application.
+        const systemPrompt = `You are a helpful and friendly customer support agent for Jaza Nyumba, a table banking and group savings management application.
 
 **Your Role:**
 - Help users with account issues, features, troubleshooting, and general questions
@@ -26,7 +26,7 @@ router.post('/chat', authenticateToken, async (req, res) => {
 - Provide clear, step-by-step solutions
 - Escalate complex technical issues to the development team
 
-**Chama-Vault Features:**
+**Jaza Nyumba Features:**
 - Savings Management: Track weekly savings, view member contributions, savings matrix
 - Table Banking: Manage contributions with timing ratings (excellent/good/fair/poor)
 - Loans & Repayments: Request loans, track repayments with performance ratings
