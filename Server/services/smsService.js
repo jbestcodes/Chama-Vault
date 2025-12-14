@@ -3,11 +3,20 @@ const Member = require('../models/Member');
 const Subscription = require('../models/Subscription');
 const smsTemplates = require('./smsTemplates');
 
+// ⚠️ SMS SERVICE TEMPORARILY DISABLED FOR TESTING
+const SMS_ENABLED = false;
+
 class AfricasTalkingSMSService {
     constructor() {
         this.username = process.env.AT_USERNAME;
         this.apiKey = process.env.AT_API_KEY;
         this.senderId = process.env.AFRICASTALKING_SENDER_ID; // No default - uses AT's default if not set
+        
+        if (!SMS_ENABLED) {
+            console.log('⚠️  SMS service is DISABLED for testing');
+            this.smsClient = null;
+            return;
+        }
         
         if (!this.apiKey) {
             console.error('❌ Africa\'s Talking API key not configured');
@@ -76,6 +85,16 @@ class AfricasTalkingSMSService {
     // Core SMS sending function with subscription check
     async sendSMS(to, message, memberId = null, smsType = 'general') {
         try {
+            // If SMS is disabled, return success without sending
+            if (!SMS_ENABLED) {
+                console.log(`📱 SMS DISABLED - Would have sent to ${to}: ${message.substring(0, 50)}...`);
+                return { 
+                    success: true, 
+                    message: 'SMS service disabled for testing',
+                    simulated: true 
+                };
+            }
+            
             if (!this.smsClient) {
                 console.error('❌ SMS client not initialized');
                 return { success: false, error: 'SMS service not configured' };
