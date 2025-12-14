@@ -137,13 +137,40 @@ const TrialStatus = () => {
             <div className="flex gap-2">
                 <button
                     onClick={() => navigate('/subscribe')}
-                    className="flex-1 px-3 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition-colors"
+                    style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        backgroundColor: '#d97706',
+                        color: 'white',
+                        fontSize: '14px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: '500'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#b45309'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#d97706'}
                 >
                     View Plans
                 </button>
                 <button
                     onClick={() => navigate('/ai-dashboard')}
-                    className="px-3 py-2 border border-yellow-300 text-yellow-700 text-sm rounded hover:bg-yellow-100 transition-colors"
+                    style={{
+                        padding: '8px 12px',
+                        border: '1px solid #fcd34d',
+                        backgroundColor: 'transparent',
+                        color: '#92400e',
+                        fontSize: '14px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: '500'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#fef3c7';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                    }}
                 >
                     Try AI Free
                 </button>

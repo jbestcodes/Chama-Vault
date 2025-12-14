@@ -7,6 +7,7 @@ function Navbar() {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const navigate = useNavigate();
+    const location = window.location.pathname;
 
     // Update token state when localStorage changes
     useEffect(() => {
@@ -151,7 +152,7 @@ function Navbar() {
                     <Link to="/user-guide" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         User Guide
                     </Link>
-                    {token && (
+                    {token && location !== '/login' && location !== '/register' && (
                         <button
                             onClick={handleLogout}
                             style={{

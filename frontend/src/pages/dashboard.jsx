@@ -202,10 +202,25 @@ const Dashboard = () => {
             borderRadius: "8px",
             fontWeight: 600,
             textDecoration: "none",
-            margin: "16px 0"
+            margin: "16px 10px 16px 0"
           }}
         >
           Loans & Repayments
+        </Link>
+        <Link
+          to="/performance"
+          style={{
+            display: "inline-block",
+            background: "#f57c00",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textDecoration: "none",
+            margin: "16px 0"
+          }}
+        >
+          📊 My Performance
         </Link>
 
         {data.lastContribution ? (

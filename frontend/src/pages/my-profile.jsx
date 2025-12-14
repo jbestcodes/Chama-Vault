@@ -480,8 +480,27 @@ function MyProfile() {
         </div>
       </div>
 
-      {/* SMS Notification Preferences */}
-      <SMSPreferences />
+      {/* SMS Notification Preferences - Collapsible */}
+      <details style={{ 
+        background: "#f5f5f5", 
+        borderRadius: 8, 
+        padding: "16px", 
+        marginTop: "24px",
+        cursor: "pointer"
+      }}>
+        <summary style={{ 
+          fontWeight: "bold", 
+          fontSize: "16px", 
+          color: "#333",
+          cursor: "pointer",
+          userSelect: "none"
+        }}>
+          📱 SMS Notification Settings (Optional)
+        </summary>
+        <div style={{ marginTop: "16px" }}>
+          <SMSPreferences />
+        </div>
+      </details>
 
       {/* Responsive styles */}
       <style>

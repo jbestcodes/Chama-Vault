@@ -62,19 +62,21 @@ function Subscribe() {
                     id: member._id || member.id,
                     full_name: member.full_name,
                     phone: member.phone,
-                    email: member.phone + '@chama.app' // Fallback email
+                    phoneNumber: member.phone,
+                    email: member.email || member.phone + '@chama.app'
                 });
-                setLoading(false);
             } else {
                 // Fallback: use basic info from localStorage
+                const phone = localStorage.getItem('phone') || '254700000000';
                 setUser({
                     id: localStorage.getItem('memberId'),
-                    full_name: localStorage.getItem('full_name'),
-                    phone: localStorage.getItem('phone') || '254700000000',
-                    email: localStorage.getItem('phone') + '@chama.app'
+                    full_name: localStorage.getItem('full_name') || 'User',
+                    phone: phone,
+                    phoneNumber: phone,
+                    email: phone + '@chama.app'
                 });
-                setLoading(false);
             }
+            setLoading(false);
         } catch (error) {
             console.error('Error loading user profile:', error);
             // Don't redirect on error, just use localStorage data
