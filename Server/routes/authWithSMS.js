@@ -66,6 +66,9 @@ router.post('/register', async (req, res) => {
             }
         }
 
+        // Check if SMS is disabled (testing mode)
+        const SMS_ENABLED = false; // Set to true to enable SMS
+        
         // Generate verification OTP
         const verificationOTP = smsService.generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -122,6 +125,21 @@ router.post('/register', async (req, res) => {
         console.log('📱 Generated verification OTP:', verificationOTP);
         console.log('📱 OTP expires at:', otpExpires);
         console.log('📱 Member ID:', newMember._id);
+
+        // If SMS is disabled, auto-verify and return success
+        if (!SMS_ENABLED) {
+            newMember.phone_verified = true;
+            newMember.verification_otp = undefined;
+            newMember.otp_expires = undefined;
+            await newMember.save();
+            
+            return res.status(201).json({ 
+                message: 'Registration successful (SMS disabled - auto-verified)',
+                memberId: newMember._id,
+                requiresVerification: false,
+                autoVerified: true
+            });
+        }
 
         // Send verification SMS
         try {
@@ -291,6 +309,32 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
+        // Check if SMS is disabled (testing mode)
+        const SMS_ENABLED = false; // Set to true to enable SMS
+        
+        if (!SMS_ENABLED) {
+            // Skip OTP and login directly when SMS is disabled
+            const token = jwt.sign(
+                { id: member._id, phone: member.phone, is_admin: member.is_admin },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            return res.json({
+                message: 'Login successful (SMS disabled)',
+                token,
+                member: {
+                    id: member._id,
+                    full_name: member.full_name,
+                    phone: member.phone,
+                    role: member.role,
+                    is_admin: member.is_admin,
+                    group_name: member.group_name
+                },
+                skipOTP: true
+            });
+        }
+        
         // Generate and send login OTP
         const loginOTP = smsService.generateOTP();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
