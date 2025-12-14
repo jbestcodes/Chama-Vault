@@ -20,9 +20,11 @@ function Subscribe() {
             price: 10000, // KES 100 in kobo
             description: 'Full access to AI features and premium support',
             features: [
-                'AI Financial Insights',
-                'SMS Notifications',
-                'Advanced Analytics',
+                'AI Financial Insights & Deadline Nudges',
+                'SMS Notifications & Reminders',
+                'Group Leaderboard with Performance Ratings',
+                'Advanced Analytics & Reports',
+                'Member Performance Tracking',
                 'Priority Support',
                 'Unlimited Groups'
             ]
@@ -34,7 +36,9 @@ function Subscribe() {
             features: [
                 'AI Financial Insights',
                 'SMS Notifications',
+                'Group Leaderboard View',
                 'Basic Analytics',
+                'Performance Tracking',
                 'Standard Support',
                 'Up to 3 Groups'
             ]
@@ -48,9 +52,18 @@ function Subscribe() {
     const fetchUserProfile = async () => {
         try {
             const token = localStorage.getItem('token');
+            
+            // Allow viewing plans without being logged in
             if (!token) {
-                console.log('No token found, redirecting to login');
-                navigate('/login');
+                console.log('No token found, allowing guest access to view plans');
+                setUser({
+                    id: 'guest',
+                    full_name: 'Guest',
+                    phone: '254700000000',
+                    phoneNumber: '254700000000',
+                    email: 'guest@chama.app'
+                });
+                setLoading(false);
                 return;
             }
 
@@ -239,10 +252,19 @@ function Subscribe() {
 
                     <div className="flex gap-4">
                         {!processing ? (
-                            <PaystackButton
-                                {...componentProps}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                            />
+                            user?.id === 'guest' ? (
+                                <button
+                                    onClick={() => navigate('/login', { state: { from: '/subscribe' } })}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                >
+                                    Login to Subscribe
+                                </button>
+                            ) : (
+                                <PaystackButton
+                                    {...componentProps}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                />
+                            )
                         ) : (
                             <button
                                 disabled
@@ -253,10 +275,10 @@ function Subscribe() {
                         )}
                         
                         <button
-                            onClick={() => navigate('/dashboard')}
+                            onClick={() => navigate(user?.id === 'guest' ? '/' : '/dashboard')}
                             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                            Cancel
+                            {user?.id === 'guest' ? 'Back to Home' : 'Cancel'}
                         </button>
                     </div>
 
