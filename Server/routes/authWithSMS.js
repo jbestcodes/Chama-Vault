@@ -347,12 +347,39 @@ router.post('/login', async (req, res) => {
             });
         }
         
+        // Check OTP rate limiting (max 3 requests per hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        if (!member.otp_requests) {
+            member.otp_requests = [];
+        }
+        
+        // Remove requests older than 1 hour
+        member.otp_requests = member.otp_requests.filter(req => req.timestamp > oneHourAgo);
+        
+        // Check if limit exceeded
+        const recentLoginRequests = member.otp_requests.filter(req => req.type === 'login');
+        if (recentLoginRequests.length >= 3) {
+            const oldestRequest = recentLoginRequests[0].timestamp;
+            const minutesUntilReset = Math.ceil((oldestRequest.getTime() + 60 * 60 * 1000 - Date.now()) / 60000);
+            return res.status(429).json({ 
+                error: `Too many OTP requests. Please try again in ${minutesUntilReset} minute(s).`,
+                retryAfter: minutesUntilReset
+            });
+        }
+        
         // Generate and send login OTP
         const loginOTP = smsService.generateOTP();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
         member.login_otp = loginOTP;
         member.login_otp_expires = otpExpires;
+        
+        // Add to OTP request log
+        member.otp_requests.push({
+            timestamp: new Date(),
+            type: 'login'
+        });
+        
         await member.save();
 
         await smsService.sendLoginOTP(member.phone, loginOTP, member.full_name);
@@ -360,7 +387,8 @@ router.post('/login', async (req, res) => {
         res.json({
             message: 'Login OTP sent to your phone',
             memberId: member._id,
-            requiresOTP: true
+            requiresOTP: true,
+            remainingAttempts: 3 - recentLoginRequests.length - 1
         });
 
     } catch (error) {
@@ -387,19 +415,49 @@ router.post('/resend-login-otp', async (req, res) => {
             return res.status(403).json({ error: 'Please verify your phone number first.' });
         }
 
+        // Check OTP rate limiting (max 3 requests per hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        if (!member.otp_requests) {
+            member.otp_requests = [];
+        }
+        
+        // Remove requests older than 1 hour
+        member.otp_requests = member.otp_requests.filter(req => req.timestamp > oneHourAgo);
+        
+        // Check if limit exceeded
+        const recentLoginRequests = member.otp_requests.filter(req => req.type === 'login');
+        if (recentLoginRequests.length >= 3) {
+            const oldestRequest = recentLoginRequests[0].timestamp;
+            const minutesUntilReset = Math.ceil((oldestRequest.getTime() + 60 * 60 * 1000 - Date.now()) / 60000);
+            return res.status(429).json({ 
+                error: `Too many OTP requests. Please try again in ${minutesUntilReset} minute(s).`,
+                retryAfter: minutesUntilReset
+            });
+        }
+
         // Generate new login OTP
         const loginOTP = smsService.generateOTP();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
         member.login_otp = loginOTP;
         member.login_otp_expires = otpExpires;
+        
+        // Add to OTP request log
+        member.otp_requests.push({
+            timestamp: new Date(),
+            type: 'login'
+        });
+        
         await member.save();
 
         console.log(`Login OTP for ${member.phone}: ${loginOTP}`);
 
         try {
             await smsService.sendLoginOTP(member.phone, loginOTP, member.full_name);
-            res.json({ message: 'New login OTP sent to your phone' });
+            res.json({ 
+                message: 'New login OTP sent to your phone',
+                remainingAttempts: 3 - recentLoginRequests.length - 1
+            });
         } catch (smsError) {
             console.error('SMS failed, but login OTP generated:', loginOTP);
             res.json({ 

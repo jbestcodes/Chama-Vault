@@ -18,20 +18,25 @@ import WithdrawalRequest from './pages/WithdrawalRequest';
 import Subscribe from './pages/Subscribe';
 import MemberPerformance from './components/MemberPerformance';
 import UserGuide from './pages/UserGuide';
+import useAutoLogout from './hooks/useAutoLogout';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 function App() {
+  // Auto-logout after 30 minutes of inactivity (increased from 10 to prevent premature logouts)
+  useAutoLogout(30);
+
   return (
     <>
       <style>{`
-        /* Fix button active states */
-        button:active,
+        /* Fix button focus states - only remove outline, don't change colors */
         button:focus,
+        button:active,
+        input[type="button"]:focus,
+        input[type="submit"]:focus,
         input[type="button"]:active,
         input[type="submit"]:active {
-          background: inherit !important;
           outline: none !important;
         }
         

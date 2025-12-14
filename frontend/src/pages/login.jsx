@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 
 const apiUrl = import.meta.env.VITE_API_URL; 
@@ -18,6 +18,16 @@ const Login = () => {
     const [step, setStep] = useState(1); // 1: credentials, 2: OTP verification
     const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Show auto-logout message if redirected from auto-logout
+    useEffect(() => {
+        if (location.state?.message) {
+            setError(location.state.message);
+            // Clear the message after showing it
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -131,15 +141,24 @@ const Login = () => {
 
     const resendOTP = async () => {
         setError('');
+        setSuccess('');
         setIsLoading(true);
         
         try {
-            await axios.post(`${apiUrl}/api/sms-auth/resend-login-otp`, {
+            const response = await axios.post(`${apiUrl}/api/sms-auth/resend-login-otp`, {
                 memberId
             });
-            setSuccess('New OTP sent to your phone');
+            
+            let message = response.data.message || 'New OTP sent to your phone';
+            if (response.data.remainingAttempts !== undefined) {
+                message += ` (${response.data.remainingAttempts} attempts remaining)`;
+            }
+            setSuccess(message);
         } catch (error) {
-            setError('Failed to resend OTP. Please try again.');
+            setError(
+                error.response?.data?.error ||
+                'Failed to resend OTP. Please try again.'
+            );
         } finally {
             setIsLoading(false);
         }

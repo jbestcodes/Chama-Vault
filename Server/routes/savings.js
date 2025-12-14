@@ -177,14 +177,17 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
         const userSavings = await Savings.find({ member_id: userId });
         const totalSavings = userSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
 
-        // Total members in group (only count active members)
+        // Total members in group (count approved and active members - 'active' is legacy)
         const memberCount = await Member.countDocuments({ 
             group_id: groupId, 
-            status: 'active' 
+            status: { $in: ['approved', 'active'] }
         });
 
         // Total savings for all members in group
-        const allMembers = await Member.find({ group_id: groupId, status: 'active' });
+        const allMembers = await Member.find({ 
+            group_id: groupId, 
+            status: { $in: ['approved', 'active'] }
+        });
         const allMemberIds = allMembers.map(m => m._id);
         const allSavings = await Savings.find({ member_id: { $in: allMemberIds } });
         const totalSavingsAll = allSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);

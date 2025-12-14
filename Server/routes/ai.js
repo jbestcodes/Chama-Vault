@@ -194,8 +194,19 @@ router.post('/chat', authenticateToken, async (req, res) => {
         const { question } = req.body;
         const userId = req.user.id;
         
+        console.log('💬 AI Chat request from user:', userId);
+        console.log('Question:', question);
+        
+        if (!question) {
+            return res.status(400).json({ error: 'Question is required' });
+        }
+        
         // Get member and their group settings
-        const member = await Member.findById(userId).populate('group_id'); // Changed from User to Member
+        const member = await Member.findById(userId);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+        
         const group = await Group.findById(member.group_id);
         
         // Get member's total savings
@@ -204,58 +215,104 @@ router.post('/chat', authenticateToken, async (req, res) => {
         
         const groupMinSavings = group?.minimum_loan_savings || 500;
         const groupInterestRate = group?.interest_rate || 5.0;
-        
-        if (!question) {
-            return res.status(400).json({ error: 'Question is required' });
-        }
+        const lowerQuestion = question.toLowerCase();
 
         // Get user context for personalized responses
-        const savings = await Savings.find({ member_id: userId });
         const activeLoan = await Loan.findOne({ member_id: userId, status: 'active' });
         const milestone = await Milestone.findOne({ member_id: userId }).sort({ createdAt: -1 });
 
-        // Create rich context for OpenAI
-        const userContext = `
-        User Profile:
-        - Name: ${member.full_name}
-        - Group: ${member.group_name}
-        - Total Savings: KSh ${totalSavings.toLocaleString()}
-        - Active Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
-        - Current Milestone: ${milestone ? `${milestone.milestone_name} (Target: KSh ${milestone.target_amount.toLocaleString()})` : 'None set'}
-        - Recent Savings Entries: ${savings.length}
-        
-        Chama Rules:
-        - Minimum savings for loan eligibility: KSh ${groupMinSavings}
-        - Maximum loan amount: 3x total savings
-        - Interest rate: ${groupInterestRate}%
-        - Currency: Kenyan Shillings (KSh)
-        - Group-based savings and loans
-        `;
+        // Helper function to generate smart fallback responses
+        const generateFallbackResponse = () => {
+            let fallbackResponse = `Hi ${member.full_name}! I'm your financial assistant. `;
+            
+            if (lowerQuestion.includes('save') || lowerQuestion.includes('saving')) {
+                fallbackResponse += `You currently have KSh ${totalSavings.toLocaleString()} saved in ${member.group_name}. `;
+                if (lowerQuestion.includes('week') || lowerQuestion.includes('monthly')) {
+                    fallbackResponse += `To save KSh 10,000 in a year, you need about KSh 192 per week or KSh 833 per month. Keep up the great work! 📊`;
+                } else {
+                    fallbackResponse += `Great progress! Keep saving consistently to reach your goals. 💪`;
+                }
+            } else if (lowerQuestion.includes('loan')) {
+                const canBorrow = totalSavings * 3;
+                if (totalSavings >= groupMinSavings) {
+                    fallbackResponse += `Great news! You can borrow up to KSh ${canBorrow.toLocaleString()} (3x your savings) at ${groupInterestRate}% interest rate. 💰`;
+                } else {
+                    const needed = groupMinSavings - totalSavings;
+                    fallbackResponse += `You need KSh ${needed.toLocaleString()} more savings to qualify for loans. Keep saving! 💪`;
+                }
+            } else if (lowerQuestion.includes('milestone') || lowerQuestion.includes('goal')) {
+                if (milestone) {
+                    const progress = (totalSavings / milestone.target_amount) * 100;
+                    fallbackResponse += `Your goal "${milestone.milestone_name}" is ${progress.toFixed(1)}% complete! Target: KSh ${milestone.target_amount.toLocaleString()}. 🎯`;
+                } else {
+                    fallbackResponse += `You haven't set any savings goals yet. Set a milestone in your dashboard to track your progress! 🎯`;
+                }
+            } else if (lowerQuestion.includes('group') || lowerQuestion.includes('chama')) {
+                fallbackResponse += `Your group "${member.group_name}" requires minimum KSh ${groupMinSavings.toLocaleString()} savings for loans, with ${groupInterestRate}% interest rate. 👥`;
+            } else if (lowerQuestion.includes('how much') || lowerQuestion.includes('eligible')) {
+                fallbackResponse += `Based on your savings of KSh ${totalSavings.toLocaleString()}, you can borrow up to KSh ${(totalSavings * 3).toLocaleString()}. ${totalSavings >= groupMinSavings ? 'You qualify for a loan! 🎉' : 'Save a bit more to unlock loan eligibility.'}`;
+            } else {
+                fallbackResponse += `I can help you with questions about:
+• Your savings progress (You have KSh ${totalSavings.toLocaleString()})
+• Loan eligibility and amounts
+• Savings goals and milestones
+• Your group's rules
 
-        // Use enhanced OpenAI service with group rules
-        const aiResponse = await openaiService.chatbotResponse(
-            question, 
-            member.group_id, // Pass group ID for custom rules
-            userContext
-        );
+What would you like to know? 😊`;
+            }
+            
+            return fallbackResponse;
+        };
 
-        res.json({ response: aiResponse });
+        // Check if OpenAI is available
+        if (!process.env.OPENAI_API_KEY) {
+            console.warn('⚠️ OpenAI API key not configured, using fallback responses');
+            return res.json({ response: generateFallbackResponse() });
+        }
+
+        // Try OpenAI, but fall back if it fails (quota, network, etc.)
+        try {
+            // Create rich context for OpenAI
+            const userContext = `
+            User Profile:
+            - Name: ${member.full_name}
+            - Group: ${member.group_name}
+            - Total Savings: KSh ${totalSavings.toLocaleString()}
+            - Active Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
+            - Current Milestone: ${milestone ? `${milestone.milestone_name} (Target: KSh ${milestone.target_amount.toLocaleString()})` : 'None set'}
+            - Recent Savings Entries: ${userSavings.length}
+            
+            Chama Rules:
+            - Minimum savings for loan eligibility: KSh ${groupMinSavings.toLocaleString()}
+            - Maximum loan amount: 3x total savings
+            - Interest rate: ${groupInterestRate}%
+            - Currency: Kenyan Shillings (KSh)
+            - Group-based savings and loans
+            `;
+
+            // Use enhanced OpenAI service with group rules
+            const aiResponse = await openaiService.chatbotResponse(
+                question, 
+                member.group_id, // Pass group ID for custom rules
+                userContext
+            );
+
+            console.log('✅ AI response generated successfully');
+            res.json({ response: aiResponse });
+
+        } catch (openaiError) {
+            // OpenAI failed (quota exceeded, network error, etc.) - use fallback
+            console.warn('⚠️ OpenAI API failed, using smart fallback:', openaiError.message);
+            res.json({ response: generateFallbackResponse() });
+        }
 
     } catch (error) {
-        console.error('OpenAI API error:', error);
+        console.error('❌ AI Chat error:', error);
         
-        // Smart fallback responses
-        let fallbackResponse = `Hi ${member?.full_name || 'there'}! I'm Akiba, your financial assistant. `;
-        
-        if (lowerQuestion.includes('save') && (lowerQuestion.includes('week') || lowerQuestion.includes('10'))) {
-            fallbackResponse += `To save KSh 10,000 in a year, you need about KSh 192 per week. You currently have KSh ${totalSavings.toLocaleString()} saved! Hongera! 📊`;
-        } else if (lowerQuestion.includes('loan')) {
-            fallbackResponse += `You need at least KSh ${minSavings.toLocaleString()} to qualify for loans in your group. You can borrow up to 3x your savings amount! 💰`;
-        } else {
-            fallbackResponse += `I'm temporarily offline for upgrades. Try asking about weekly savings goals or loan eligibility! 🔧`;
-        }
-        
-        res.json({ response: fallbackResponse });
+        // Return user-friendly error with fallback
+        res.json({ 
+            response: "I'm sorry, I'm having trouble responding right now. But I can tell you that I can help with questions about your savings, loans, goals, and group rules. Please try asking a specific question! 😊" 
+        });
     }
 });
 

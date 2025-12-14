@@ -28,6 +28,12 @@ const MemberSchema = new mongoose.Schema({
   login_otp: { type: String },
   login_otp_expires: { type: Date },
   
+  // OTP rate limiting (max 3 requests per hour)
+  otp_requests: [{
+    timestamp: { type: Date },
+    type: { type: String, enum: ['login', 'verification', 'password_reset'] }
+  }],
+  
   // SMS Preferences
   sms_notifications: {
     account_updates: { type: Boolean, default: true },

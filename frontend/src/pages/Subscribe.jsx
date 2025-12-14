@@ -49,26 +49,41 @@ function Subscribe() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
+                console.log('No token found, redirecting to login');
                 navigate('/login');
                 return;
             }
 
-            const response = await fetch(`${apiUrl}/api/auth/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
+            // Get user info from localStorage instead of API call
+            const memberData = localStorage.getItem('member');
+            if (memberData) {
+                const member = JSON.parse(memberData);
+                setUser({
+                    id: member._id || member.id,
+                    full_name: member.full_name,
+                    phone: member.phone,
+                    email: member.phone + '@chama.app' // Fallback email
+                });
+                setLoading(false);
             } else {
-                navigate('/login');
+                // Fallback: use basic info from localStorage
+                setUser({
+                    id: localStorage.getItem('memberId'),
+                    full_name: localStorage.getItem('full_name'),
+                    phone: localStorage.getItem('phone') || '254700000000',
+                    email: localStorage.getItem('phone') + '@chama.app'
+                });
+                setLoading(false);
             }
         } catch (error) {
-            console.error('Error fetching user profile:', error);
-            navigate('/login');
-        } finally {
+            console.error('Error loading user profile:', error);
+            // Don't redirect on error, just use localStorage data
+            setUser({
+                id: localStorage.getItem('memberId'),
+                full_name: localStorage.getItem('full_name') || 'User',
+                phone: localStorage.getItem('phone') || '254700000000',
+                email: 'user@chama.app'
+            });
             setLoading(false);
         }
     };
