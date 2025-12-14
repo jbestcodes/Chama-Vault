@@ -315,7 +315,14 @@ router.post('/login', async (req, res) => {
         if (!SMS_ENABLED) {
             // Skip OTP and login directly when SMS is disabled
             const token = jwt.sign(
-                { id: member._id, phone: member.phone, is_admin: member.is_admin },
+                { 
+                    id: member._id, 
+                    memberId: member._id,
+                    phone: member.phone, 
+                    role: member.role,
+                    is_admin: member.is_admin,
+                    group_id: member.group_id
+                },
                 process.env.JWT_SECRET,
                 { expiresIn: '24h' }
             );
@@ -324,12 +331,17 @@ router.post('/login', async (req, res) => {
                 message: 'Login successful (SMS disabled)',
                 token,
                 member: {
+                    _id: member._id,
                     id: member._id,
                     full_name: member.full_name,
+                    first_name: member.full_name.split(' ')[0],
+                    last_name: member.full_name.split(' ').slice(1).join(' ') || '',
                     phone: member.phone,
                     role: member.role,
                     is_admin: member.is_admin,
-                    group_name: member.group_name
+                    group_id: member.group_id,
+                    group_name: member.group_name,
+                    status: member.status
                 },
                 skipOTP: true
             });
@@ -428,7 +440,14 @@ router.post('/verify-login', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { id: member._id, phone: member.phone, is_admin: member.is_admin },
+            { 
+                id: member._id, 
+                memberId: member._id,
+                phone: member.phone, 
+                role: member.role,
+                is_admin: member.is_admin,
+                group_id: member.group_id
+            },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -437,12 +456,17 @@ router.post('/verify-login', async (req, res) => {
             message: 'Login successful',
             token,
             member: {
+                _id: member._id,
                 id: member._id,
                 full_name: member.full_name,
+                first_name: member.full_name.split(' ')[0],
+                last_name: member.full_name.split(' ').slice(1).join(' ') || '',
                 phone: member.phone,
                 role: member.role,
                 is_admin: member.is_admin,
-                group_name: member.group_name
+                group_id: member.group_id,
+                group_name: member.group_name,
+                status: member.status
             }
         });
 

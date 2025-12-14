@@ -34,11 +34,27 @@ const Login = () => {
             // Check if login is direct (SMS disabled) or requires OTP
             if (response.data.skipOTP || response.data.token) {
                 // Direct login - SMS is disabled
+                const memberData = response.data.member;
+                
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.member.role.toLowerCase());
-                localStorage.setItem('full_name', response.data.member.full_name);
-                localStorage.setItem('memberId', response.data.member.id);
-                localStorage.setItem('member', JSON.stringify(response.data.member));
+                localStorage.setItem('role', memberData.role.toLowerCase());
+                localStorage.setItem('full_name', memberData.full_name);
+                localStorage.setItem('memberId', memberData._id || memberData.id);
+                localStorage.setItem('member', JSON.stringify(memberData));
+                
+                // Store group information
+                if (memberData.group_id) {
+                    localStorage.setItem('group_id', memberData.group_id);
+                }
+                if (memberData.group_name) {
+                    localStorage.setItem('group_name', memberData.group_name);
+                }
+                
+                console.log('✅ Login successful, stored data:', {
+                    memberId: memberData._id || memberData.id,
+                    group_id: memberData.group_id,
+                    role: memberData.role
+                });
                 
                 setSuccess('Login successful!');
                 setTimeout(() => {
@@ -73,15 +89,32 @@ const Login = () => {
             });
             
             if (response.data.token) {
+                const memberData = response.data.member;
+                
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role.toLowerCase());
-                localStorage.setItem('full_name', response.data.full_name);
-                localStorage.setItem('memberId', response.data.memberId);
+                localStorage.setItem('role', memberData.role.toLowerCase());
+                localStorage.setItem('full_name', memberData.full_name);
+                localStorage.setItem('memberId', memberData._id || memberData.id);
+                localStorage.setItem('member', JSON.stringify(memberData));
+                
+                // Store group information
+                if (memberData.group_id) {
+                    localStorage.setItem('group_id', memberData.group_id);
+                }
+                if (memberData.group_name) {
+                    localStorage.setItem('group_name', memberData.group_name);
+                }
 
                 // Check AI trial status if available
                 if (response.data.trialInfo) {
                     localStorage.setItem('aiTrialInfo', JSON.stringify(response.data.trialInfo));
                 }
+                
+                console.log('✅ OTP verified, stored data:', {
+                    memberId: memberData._id || memberData.id,
+                    group_id: memberData.group_id,
+                    role: memberData.role
+                });
 
                 navigate('/dashboard');
             }

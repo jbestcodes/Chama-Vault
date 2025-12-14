@@ -10,38 +10,37 @@ const GroupSettings = () => {
     const [groupId, setGroupId] = useState(null);
 
     useEffect(() => {
-        fetchUserGroup();
-    }, []);
-
-    const fetchUserGroup = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            // Get user's group ID first
-            const userResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (userResponse.ok) {
-                const userData = await userResponse.json();
-                const userGroupId = userData.group_id;
-                setGroupId(userGroupId);
-                
-                // Then fetch group settings
-                if (userGroupId) {
-                    fetchGroupSettings(userGroupId);
+        // Get group_id from localStorage or member object
+        let userGroupId = localStorage.getItem('group_id');
+        
+        // Fallback: try to get from member object
+        if (!userGroupId) {
+            const memberData = localStorage.getItem('member');
+            if (memberData) {
+                try {
+                    const member = JSON.parse(memberData);
+                    userGroupId = member.group_id;
+                } catch (e) {
+                    console.error('Error parsing member data:', e);
                 }
             }
-        } catch (error) {
-            console.error('Error fetching user group:', error);
         }
-    };
+        
+        console.log('GroupSettings - Using group_id:', userGroupId);
+        
+        if (userGroupId) {
+            setGroupId(userGroupId);
+            fetchGroupSettings(userGroupId);
+        } else {
+            setMessage('Error: Could not find group ID. Please log in again.');
+        }
+    }, []);
 
     const fetchGroupSettings = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/settings/${id}`, {
+            // Backend doesn't need group ID in URL - it gets it from the JWT token
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/settings`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -50,26 +49,27 @@ const GroupSettings = () => {
             if (response.ok) {
                 const data = await response.json();
                 setSettings(data);
+            } else {
+                const errorData = await response.json();
+                console.error('Error fetching settings:', errorData);
+                setMessage(`Error: ${errorData.error || 'Failed to fetch settings'}`);
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
+            setMessage('Error loading settings');
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!groupId) {
-            setMessage('Error: Group ID not found');
-            return;
-        }
-        
         setLoading(true);
         setMessage('');
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/settings/${groupId}`, {
+            // Backend doesn't need group ID in URL - it gets it from the JWT token
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/settings`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,13 +79,22 @@ const GroupSettings = () => {
             });
 
             if (response.ok) {
+                const data = await response.json();
                 setMessage('Settings updated successfully! ✅');
+                // Update local settings with confirmed values
+                if (data.interest_rate !== undefined) {
+                    setSettings(prev => ({ ...prev, interest_rate: data.interest_rate }));
+                }
+                if (data.minimum_loan_savings !== undefined) {
+                    setSettings(prev => ({ ...prev, minimum_loan_savings: data.minimum_loan_savings }));
+                }
                 setTimeout(() => setMessage(''), 3000);
             } else {
                 const error = await response.json();
                 setMessage(error.error || 'Failed to update settings');
             }
         } catch (error) {
+            console.error('Error updating settings:', error);
             setMessage('Error updating settings');
         } finally {
             setLoading(false);

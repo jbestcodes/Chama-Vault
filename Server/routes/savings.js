@@ -14,15 +14,26 @@ router.get('/group', authenticateToken, isAdmin, async (req, res) => {
         const adminId = req.user.id;
         const admin = await Member.findById(adminId);
         const groupId = admin?.group_id;
-        if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+        if (!groupId) {
+            console.log('No group_id found for admin:', adminId);
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
 
-        const members = await Member.find(
-            { group_id: groupId },
-            { id: '$_id', full_name: 1, phone: 1, status: 1 }
-        );
-        res.json({ members });
+        console.log('Fetching members for group:', groupId);
+        const members = await Member.find({ group_id: groupId })
+            .select('_id full_name phone status created_at')
+            .lean();
+        
+        // Add id field for frontend compatibility
+        const membersWithId = members.map(m => ({
+            ...m,
+            id: m._id.toString()
+        }));
+        
+        console.log('Found members:', membersWithId.length, '(pending:', membersWithId.filter(m => m.status === 'pending').length + ')');
+        res.json({ members: membersWithId });
     } catch (error) {
-        console.error(error);
+        console.error('Get group members error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -158,15 +169,22 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
         const groupId = user?.group_id;
         const groupName = user?.group_name;
 
+        // Get group info to determine group type
+        const group = await Group.findById(groupId);
+        const groupType = group?.group_type || 'savings_and_loans';
+
         // Total savings for this user
         const userSavings = await Savings.find({ member_id: userId });
         const totalSavings = userSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
 
-        // Total members in group
-        const memberCount = await Member.countDocuments({ group_id: groupId });
+        // Total members in group (only count active members)
+        const memberCount = await Member.countDocuments({ 
+            group_id: groupId, 
+            status: 'active' 
+        });
 
         // Total savings for all members in group
-        const allMembers = await Member.find({ group_id: groupId });
+        const allMembers = await Member.find({ group_id: groupId, status: 'active' });
         const allMemberIds = allMembers.map(m => m._id);
         const allSavings = await Savings.find({ member_id: { $in: allMemberIds } });
         const totalSavingsAll = allSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
@@ -208,10 +226,11 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
                 date: lastContribution.createdAt 
             } : null,
             group_name: groupName,
-            group_total_savings
+            group_total_savings,
+            groupType: groupType
         });
     } catch (error) {
-        console.error(error);
+        console.error('Dashboard error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
