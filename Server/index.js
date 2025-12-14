@@ -14,6 +14,7 @@ const inviteRoutes = require('./routes/invites');
 const tableBankingRoutes = require('./routes/tableBanking');
 const groupRulesRoutes = require('./routes/groupRules');
 const leaderboardRoutes = require('./routes/leaderboard');
+const supportRoutes = require('./routes/support');
 const connectDB = require('./db'); // Import the new MongoDB connection
 
 // Initialize services
@@ -50,6 +51,7 @@ app.use('/api/invites', inviteRoutes);
 app.use('/api/table-banking', tableBankingRoutes);
 app.use('/api/group-rules', groupRulesRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/support', supportRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

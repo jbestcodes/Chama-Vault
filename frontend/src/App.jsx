@@ -18,7 +18,10 @@ import WithdrawalRequest from './pages/WithdrawalRequest';
 import Subscribe from './pages/Subscribe';
 import MemberPerformance from './components/MemberPerformance';
 import UserGuide from './pages/UserGuide';
+import SupportChat from './components/SupportChat';
 import useAutoLogout from './hooks/useAutoLogout';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -26,6 +29,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
   // Auto-logout after 30 minutes of inactivity (increased from 10 to prevent premature logouts)
   useAutoLogout(30);
+  
+  const [isSupportChatOpen, setIsSupportChatOpen] = useState(false);
+  const location = useLocation();
+  
+  // Don't show support chat on login/register pages
+  const showSupportButton = !['/login', '/register'].includes(location.pathname);
 
   return (
     <>
@@ -75,6 +84,50 @@ function App() {
         
         {/* Add more routes as needed */}
       </Routes>
+      
+      {/* Floating Support Chat Button */}
+      {showSupportButton && (
+        <>
+          <button
+            onClick={() => setIsSupportChatOpen(!isSupportChatOpen)}
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#1565c0';
+              e.target.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#1976d2';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            {isSupportChatOpen ? '×' : '💬'}
+          </button>
+          
+          <SupportChat 
+            isOpen={isSupportChatOpen} 
+            onClose={() => setIsSupportChatOpen(false)} 
+          />
+        </>
+      )}
+      
       <footer style ={{ background: "black", marginTop: 40, padding: "16px 0"}}>
         <div className="max-w-7xl mx-auto">
           {/*responsive flex container
