@@ -173,10 +173,38 @@ const AIDashboard = () => {
                     {/* Trial Status - only show if logged in */}
                     {isLoggedIn && <TrialStatus />}
 
-                    {/* Chat Container */}
-                    <div className="bg-white rounded-lg shadow-sm">
-                        {/* Messages Area */}
-                        <div className="h-96 overflow-y-auto p-6 space-y-4">
+                    {/* Not Logged In Message */}
+                    {!isLoggedIn && (
+                        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                            <div className="max-w-md mx-auto">
+                                <div className="text-6xl mb-6">🔐</div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                    Authentication Required
+                                </h2>
+                                <p className="text-gray-600 mb-8">
+                                    To interact with your financial assistant, you must be logged in
+                                </p>
+                                <div className="flex gap-4 justify-center">
+                                    <Link to="/login">
+                                        <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold">
+                                            Login
+                                        </button>
+                                    </Link>
+                                    <Link to="/register">
+                                        <button className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-semibold">
+                                            Register
+                                        </button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Chat Container - Only show when logged in */}
+                    {isLoggedIn && (
+                        <div className="bg-white rounded-lg shadow-sm">
+                            {/* Messages Area */}
+                            <div className="h-96 overflow-y-auto p-6 space-y-4">
                             {messages.map((message, index) => (
                                 <div key={index}>
                                     <div className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
@@ -300,9 +328,9 @@ const AIDashboard = () => {
                             )}
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
-            
         </div>
     );
 };
