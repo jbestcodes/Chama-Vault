@@ -179,7 +179,7 @@ const Login = () => {
         
         try {
             const response = await axios.post(`${apiUrl}/api/sms-auth/resend-verification-phone`, {
-                phone
+                phone: emailOrPhone
             });
             setSuccess(response.data.message);
             if (response.data.debug?.verificationCode) {
@@ -209,7 +209,7 @@ const Login = () => {
             const response = await axios.post(`${apiUrl}/api/sms-auth/verify-phone`, {
                 memberId: 'temp', // We'll find by phone
                 otp: verificationCode,
-                phone: phone
+                phone: emailOrPhone
             });
             
             setSuccess('Phone verified successfully! You can now log in.');

@@ -152,7 +152,7 @@ function Navbar() {
                     <Link to="/user-guide" onClick={() => setIsMenuOpen(false)} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
                         User Guide
                     </Link>
-                    {token && location !== '/login' && location !== '/register' && (
+                    {token && (location === '/dashboard' || location === '/my-profile' || location === '/ai-dashboard' || location.includes('/admin')) ? (
                         <button
                             onClick={handleLogout}
                             style={{
@@ -169,6 +169,24 @@ function Navbar() {
                         >
                             Logout
                         </button>
+                    ) : !token && location !== '/login' && location !== '/register' && (
+                        <Link 
+                            to="/login" 
+                            onClick={() => setIsMenuOpen(false)} 
+                            style={{
+                                background: "#4CAF50",
+                                color: "#fff",
+                                textDecoration: "none",
+                                borderRadius: "4px",
+                                padding: "5px 14px",
+                                fontWeight: "bold",
+                                marginLeft: isMobile ? 0 : "10px",
+                                marginTop: isMobile ? "10px" : 0,
+                                display: "inline-block"
+                            }}
+                        >
+                            Login
+                        </Link>
                     )}
                 </div>
             </div>
