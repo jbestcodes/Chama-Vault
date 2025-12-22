@@ -721,27 +721,27 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={resendPhoneVerification}
-                                disabled={isLoading || !phone}
+                                disabled={isLoading || !emailOrPhone}
                                 style={{
-                                    background: phone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#ccc',
+                                    background: emailOrPhone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#ccc',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '8px',
                                     padding: '10px 20px',
                                     fontSize: '13px',
                                     fontWeight: '500',
-                                    cursor: (isLoading || !phone) ? 'not-allowed' : 'pointer',
+                                    cursor: (isLoading || !emailOrPhone) ? 'not-allowed' : 'pointer',
                                     transition: 'all 0.3s ease',
-                                    opacity: (isLoading || !phone) ? 0.6 : 1
+                                    opacity: (isLoading || !emailOrPhone) ? 0.6 : 1
                                 }}
                                 onMouseEnter={(e) => {
-                                    if (!isLoading && phone) {
+                                    if (!isLoading && emailOrPhone) {
                                         e.target.style.transform = 'translateY(-1px)';
                                         e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
-                                    if (!isLoading && phone) {
+                                    if (!isLoading && emailOrPhone) {
                                         e.target.style.transform = 'translateY(0)';
                                         e.target.style.boxShadow = 'none';
                                     }
