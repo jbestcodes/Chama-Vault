@@ -3,7 +3,7 @@ import { useState } from 'react';
 const apiUrl = import.meta.env.VITE_API_URL;
 
 function RequestPasswordReset() {
-    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
 
@@ -18,12 +18,12 @@ function RequestPasswordReset() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ phone }),
+                body: JSON.stringify({ email }),
             });
             const data = await response.json();
 
             if (response.ok) {
-                setMessage(data.message || 'Password reset link has been sent to your phone');
+                setMessage(data.message || 'Password reset link has been sent to your email');
             } else {
                 setError(data.error || data.message || 'Failed to send password reset link');
             }
@@ -38,10 +38,10 @@ function RequestPasswordReset() {
             <h2>Request Password Reset</h2>
             <form onSubmit={handleSubmit}>
                 <input
-                    type='text'
-                    placeholder='Enter your phone number'
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    type='email'
+                    placeholder='Enter your email address'
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                 />
                 <button type='submit'>Request Password Reset</button>

@@ -3,7 +3,7 @@ const router = express.Router();
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Loan = require('../models/Loan');
-const smsService = require('../services/smsService');
+const brevoEmailService = require('../services/brevoEmailService');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 // Admin approve member
@@ -24,16 +24,17 @@ router.post('/approve-member/:memberId', authenticateToken, isAdmin, async (req,
         member.status = 'approved';
         await member.save();
 
-        // Send approval SMS
-        if (member.sms_notifications.account_updates) {
-            await smsService.sendAccountApprovalSMS(
-                member.phone, 
+        // Send approval email
+        if (member.email && member.email_verified) {
+            const group = await Group.findById(member.group_id);
+            await brevoEmailService.sendAccountApprovalEmail(
+                member.email,
                 member.full_name, 
-                member.group_name
+                group ? group.group_name : 'your group'
             );
         }
 
-        res.json({ message: 'Member approved and notified via SMS' });
+        res.json({ message: 'Member approved and notified via email' });
 
     } catch (error) {
         console.error('Approval error:', error);
@@ -60,17 +61,23 @@ router.post('/approve-loan/:loanId', authenticateToken, isAdmin, async (req, res
         loan.approved_date = new Date();
         await loan.save();
 
-        // Send approval SMS
-        if (loan.member_id.sms_notifications.loan_updates) {
-            await smsService.sendLoanApprovalSMS(
-                loan.member_id.phone,
-                loan.member_id.full_name,
-                loan.amount,
-                loan.interest_rate
-            );
+        // Send approval email
+        if (loan.member_id.email && loan.member_id.email_verified) {
+            const group = await Group.findById(loan.member_id.group_id);
+            try {
+                await brevoEmailService.sendLoanApprovalEmail(
+                    loan.member_id.email,
+                    loan.member_id.full_name,
+                    loan.amount,
+                    loan.interest_rate,
+                    group ? group.group_name : 'your group'
+                );
+            } catch (emailError) {
+                console.error('Error sending loan approval email:', emailError);
+            }
         }
 
-        res.json({ message: 'Loan approved and member notified via SMS' });
+        res.json({ message: 'Loan approved and member notified via email' });
 
     } catch (error) {
         console.error('Loan approval error:', error);
@@ -99,16 +106,22 @@ router.post('/deny-loan/:loanId', authenticateToken, isAdmin, async (req, res) =
         loan.denial_reason = reason;
         await loan.save();
 
-        // Send denial SMS
-        if (loan.member_id.sms_notifications.loan_updates) {
-            await smsService.sendLoanDenialSMS(
-                loan.member_id.phone,
-                loan.member_id.full_name,
-                reason || 'Contact admin for details'
-            );
+        // Send denial email
+        if (loan.member_id.email && loan.member_id.email_verified) {
+            const group = await Group.findById(loan.member_id.group_id);
+            try {
+                await brevoEmailService.sendLoanDenialEmail(
+                    loan.member_id.email,
+                    loan.member_id.full_name,
+                    reason || 'Contact admin for details',
+                    group ? group.group_name : 'your group'
+                );
+            } catch (emailError) {
+                console.error('Error sending loan denial email:', emailError);
+            }
         }
 
-        res.json({ message: 'Loan denied and member notified via SMS' });
+        res.json({ message: 'Loan denied and member notified via email' });
 
     } catch (error) {
         console.error('Loan denial error:', error);
@@ -159,17 +172,23 @@ router.post('/send-group-message/:groupId', authenticateToken, isAdmin, async (r
         const members = await Member.find({ 
             group_id: groupId, 
             status: 'approved',
-            phone_verified: true 
+            email_verified: true 
         });
 
-        const phoneNumbers = members.map(member => member.phone);
+        const group = await Group.findById(groupId);
+        const emails = members.filter(m => m.email).map(member => member.email);
         
-        // Send bulk SMS
-        const results = await smsService.sendBulkSMS(phoneNumbers, message);
+        // Send bulk emails
+        const results = await brevoEmailService.sendBulkGroupMessage(
+            emails,
+            message,
+            group ? group.group_name : 'your group',
+            members.map(m => m.full_name)
+        );
 
         res.json({ 
-            message: 'Bulk SMS sent',
-            sent_to: phoneNumbers.length,
+            message: 'Bulk email sent',
+            sent_to: emails.length,
             results 
         });
 

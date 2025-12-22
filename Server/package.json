@@ -19,6 +19,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "africastalking": "^0.7.8",
     "axios": "^1.6.0",
     "bcryptjs": "^2.4.3",

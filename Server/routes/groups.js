@@ -3,7 +3,8 @@ const router = express.Router();
 const { authenticateToken, isAdmin } = require('../middleware/auth'); // ✅
 
 const Group = require('../models/Group');
-const Member = require('../models/Member'); // Moved Member import here
+const Member = require('../models/Member'); 
+const brevoEmailService = require('../services/brevoEmailService');
 
 // Update group settings endpoint
 router.put('/settings', authenticateToken, async (req, res) => {
@@ -125,6 +126,20 @@ router.put('/approve-member/:memberId', authenticateToken, async (req, res) => {
 
         targetMember.status = 'approved';
         await targetMember.save();
+
+        // Send approval email
+        if (targetMember.email && targetMember.email_verified) {
+            const group = await Group.findById(targetMember.group_id);
+            try {
+                await brevoEmailService.sendAccountApprovalEmail(
+                    targetMember.email,
+                    targetMember.full_name,
+                    group ? group.group_name : 'your group'
+                );
+            } catch (emailError) {
+                console.error('Error sending approval email:', emailError);
+            }
+        }
 
         res.json({ 
             message: 'Member approved successfully',

@@ -5,13 +5,18 @@
 Jaza Nyumba is a comprehensive Chama (investment group) management system built with modern web technologies. It features OTP authentication, AI-powered financial insights, subscription management, and SMS notifications.
 
 ### Key Features
-- **OTP-based Authentication** with SMS verification
+- **Email Authentication** with verification codes and password reset (primary system)
+- **Email-based Group Invitations** with multi-level approval workflow
 - **AI Financial Assistant** with 14-day trial period
 - **Subscription Management** (Monthly/Weekly plans)
 - **Group Savings Management** with milestones
 - **Loan & Withdrawal System**
-- **SMS Notifications** for all activities
+- **Email Notifications** for all activities (contributions, loans, approvals, reminders)
 - **Payment Processing** via Paystack
+
+### Legacy Systems (Inactive)
+- **SMS Authentication** (`/api/sms-auth/*` routes - deprecated, use `/api/auth/*` instead)
+- **SMS Notifications** (replaced by email system via Brevo)
 
 ## 🔧 Technology Stack
 
@@ -34,10 +39,14 @@ Jaza Nyumba is a comprehensive Chama (investment group) management system built 
 - **Scheduling**: Node-cron for automated tasks
 
 ### External Services
-- **SMS Leopard**: OTP and notification delivery
+- **Brevo (formerly Sendinblue)**: Email verification, password reset, invitations, and all notifications
 - **Paystack**: Payment processing and subscriptions
 - **OpenAI**: AI financial advice and insights
 - **MongoDB Atlas**: Cloud database (recommended)
+
+### Inactive/Legacy Services
+- **SMS Leopard**: SMS notifications (configured but replaced by email)
+- **Africa's Talking**: SMS service (configured but inactive)
 
 ## 🏛️ System Architecture
 
@@ -51,7 +60,9 @@ Jaza Nyumba is a comprehensive Chama (investment group) management system built 
          │              ┌─────────────────┐              
          │              │ External APIs   │              
          │              │                 │              
-         └──────────────┤ • SMS Leopard   │              
+         └──────────────┤ • Brevo (Email) │              
+                        │ • SMS Leopard   │              
+                        │ • Africa's Talk │              
                         │ • Paystack      │              
                         │ • OpenAI        │              
                         └─────────────────┘              
@@ -96,10 +107,12 @@ Chama-Vault/
 │   │   ├── Savings.js          # Savings records
 │   │   └── ...
 │   ├── services/               # Business logic services
-│   │   ├── smsService.js       # SMS Leopard integration
+│   │   ├── brevoEmailService.js # Brevo email integration
+│   │   ├── smsService.js       # SMS Leopard integration (active)
+│   │   ├── smsServiceAT.js     # Africa's Talking integration (inactive)
 │   │   ├── openaiServices.js   # AI service integration
 │   │   ├── paystackService.js  # Payment processing
-│   │   ├── reminderService.js  # Automated reminders
+│   │   ├── reminderService.js  # Automated reminders (email-based)
 │   │   └── smsTemplates.js     # SMS message templates
 │   ├── middleware/             # Express middleware
 │   │   ├── auth.js             # JWT authentication
@@ -118,15 +131,41 @@ Chama-Vault/
 
 ## 🔐 Authentication Flow
 
+### Primary Authentication (Email-based)
 ```
 1. User Registration
+   ├── Enter name, phone, email, password
+   ├── Backend sends 6-digit code via email (Brevo)
+   ├── User enters verification code
+   ├── Email verified + Account created
+   ├── JWT issued
+   └── 14-day AI trial activated
+
+2. User Login
+   ├── Enter email or phone + password
+   ├── Backend validates credentials
+   ├── Check email verification status
+   ├── JWT token issued
+   └── Redirect to dashboard
+
+3. Password Reset
+   ├── Enter email address
+   ├── Receive password reset link via email
+   ├── Click link with secure token
+   ├── Set new password
+   └── Password updated
+```
+
+### Legacy Authentication (SMS-based)
+```
+1. User Registration (Legacy)
    ├── Enter phone number + password
    ├── Backend sends OTP via SMS
    ├── User enters OTP code
    ├── Account created + JWT issued
    └── 14-day AI trial activated
 
-2. User Login
+2. User Login (Legacy)
    ├── Enter phone number + password
    ├── Backend validates credentials
    ├── OTP sent via SMS
@@ -177,23 +216,46 @@ const response = await openai.chat.completions.create({
 });
 ```
 
-## 📱 SMS Integration
+## � Email Integration (Primary)
 
-### Message Types
-- **OTP Codes**: Authentication verification
-- **Payment Reminders**: Contribution due dates
-- **Notifications**: Group activities and milestones
-- **Alerts**: Subscription expiry, trial warnings
+### Email Types (via Brevo)
+- **Verification Codes**: 6-digit email verification during registration
+- **Password Reset**: Secure token-based password reset links
+- **Group Invitations**: Email invites with registration links and invite codes
+- **Contribution Reminders**: Automated reminders for upcoming payments
+- **Loan Repayment Reminders**: Payment due date notifications
+- **Welcome Emails**: New member onboarding
 
-### SMS Service Architecture
+### Email Sender Configuration
+- **security@jazanyumba.online**: Verification codes, password reset
+- **info@jazanyumba.online**: Reminders, welcome emails, group invitations, notifications
+
+### Email Service Architecture
 ```javascript
-// SMS Service Pattern
-class SMSService {
-  async sendOTP(phoneNumber, otp) { ... }
-  async sendPaymentReminder(member, amount, dueDate) { ... }
-  async sendGroupNotification(groupMembers, message) { ... }
+// Brevo Email Service Pattern
+class BrevoEmailService {
+  async sendVerificationEmail(email, name, code) { ... }
+  async sendPasswordResetEmail(email, name, resetLink) { ... }
+  async sendGroupInvitationEmail(email, recipientName, groupName, inviteCode, inviterName, inviteLink) { ... }
+  async sendContributionReminder(email, name, amount, dueDate) { ... }
+  async sendLoanRepaymentReminder(email, name, amount, dueDate) { ... }
+  async sendWelcomeEmail(email, name) { ... }
 }
 ```
+
+## 📱 SMS Integration (Future/Backup)
+
+### SMS Providers
+- **SMS Leopard**: Configured but not currently active
+- **Africa's Talking**: Configured but not currently active
+
+### Potential Use Cases (Future)
+- **OTP Codes**: Alternative authentication method
+- **Payment Reminders**: Backup notification channel
+- **Group Notifications**: Urgent group announcements
+- **Alerts**: Critical subscription or payment alerts
+
+**Note:** All current notifications are sent via email. SMS services are configured but inactive pending registration/subscription with providers.
 
 ## 🗄️ Database Schema
 
@@ -203,17 +265,21 @@ class SMSService {
 ```javascript
 {
   _id: ObjectId,
-  phoneNumber: String,    // Primary identifier
-  password: String,       // Hashed
-  firstName: String,
-  lastName: String,
+  name: String,
+  phone: String,
+  email: String,                      // Primary identifier for login
+  password: String,                   // Hashed with bcrypt
+  email_verified: Boolean,            // Email verification status (required for login)
+  email_verification_code: String,    // 6-digit code
+  email_verification_expires: Date,   // Code expiry time
+  isVerified: Boolean,                // Phone verification status (legacy)
   profilePicture: String,
-  isVerified: Boolean,    // Phone verification status
-  groups: [ObjectId],     // Reference to Group._id
+  groups: [ObjectId],                 // Reference to Group._id
+  role: String,                       // 'admin' | 'member'
   createdAt: Date,
   subscription: {
     isActive: Boolean,
-    type: String,         // 'monthly' | 'weekly'
+    type: String,                     // 'monthly' | 'weekly'
     startDate: Date,
     nextBillingDate: Date
   },
@@ -273,12 +339,21 @@ class SMSService {
 
 ### REST Endpoints Structure
 ```
-Authentication
-├── POST /api/auth/register          # Phone + password registration
-├── POST /api/auth/verify-otp        # OTP verification
-├── POST /api/auth/login             # Phone + password login
-├── POST /api/auth/login-verify      # Login OTP verification
-└── POST /api/auth/logout            # Session cleanup
+Authentication (Email-based)
+├── POST /api/auth/register              # Email + phone + password registration
+├── POST /api/auth/verify-email          # Email verification with 6-digit code
+├── POST /api/auth/resend-verification   # Resend email verification code
+├── POST /api/auth/login                 # Email/phone + password login
+├── POST /api/auth/request-password-reset # Request password reset via email
+├── POST /api/auth/reset-password/:token  # Reset password with token
+└── POST /api/auth/logout                # Session cleanup
+
+Authentication (SMS-based - Legacy)
+├── POST /api/sms-auth/register          # Phone + password registration
+├── POST /api/sms-auth/verify-phone      # SMS OTP verification
+├── POST /api/sms-auth/login             # Phone + password login
+├── POST /api/sms-auth/verify-login      # Login OTP verification
+└── POST /api/sms-auth/logout            # Session cleanup
 
 Groups Management
 ├── GET    /api/groups               # List user's groups

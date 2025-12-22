@@ -8,6 +8,8 @@ const Group = require('../models/Group');
 const Milestone = require('../models/Milestone');
 const Invitation = require('../models/Invitation');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
+const brevoEmailService = require('../services/brevoEmailService');
+const crypto = require('crypto');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -28,20 +30,34 @@ const normalizeGroupName = (name) => {
 
 // Register route
 router.post('/register', async (req, res) => {
-    const { full_name, phone, password, group_name, invite_code, role } = req.body;
+    const { full_name, phone, email, password, group_name, invite_code, role } = req.body;
     const useRole = role && role.toLowerCase() === 'admin' ? 'admin' : 'member';
 
-    if (!full_name || !phone || !password || !group_name) {
-        return res.status(400).json({ error: 'All fields are required' });
+    if (!full_name || !phone || !email || !password || !group_name) {
+        return res.status(400).json({ error: 'All fields are required (full_name, phone, email, password, group_name)' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
     }
 
     try {
         const normalizedGroupName = group_name.trim().toLowerCase();
 
-        // Check if member already exists
-        const existingMember = await Member.findOne({ phone });
+        // Check if member already exists by phone or email
+        const existingMember = await Member.findOne({ 
+            $or: [{ phone }, { email }] 
+        });
+        
         if (existingMember) {
-            return res.status(400).json({ error: 'Phone number already registered' });
+            if (existingMember.phone === phone) {
+                return res.status(400).json({ error: 'Phone number already registered' });
+            }
+            if (existingMember.email === email) {
+                return res.status(400).json({ error: 'Email already registered' });
+            }
         }
 
         // Find or create group
@@ -70,28 +86,43 @@ router.post('/register', async (req, res) => {
             // Check if valid invitation exists
             const invitation = await Invitation.findOne({ 
                 group_id: group._id, 
-                phone: phone,
+                email: email.toLowerCase(),
+                invite_code: invite_code.toUpperCase(),
                 status: 'pending',
                 expires_at: { $gt: new Date() }
-            });
+            }).populate('invited_by');
             
             if (invitation) {
-                status = 'approved'; // Invited members auto-approved
+                // Auto-approve if invited by admin, otherwise pending
+                const inviter = invitation.invited_by;
+                if (inviter && inviter.is_admin) {
+                    status = 'approved'; // Admin invitations auto-approved
+                } else {
+                    status = 'pending'; // Member invitations need admin approval
+                }
                 invitation.status = 'accepted';
                 await invitation.save();
             }
         }
+
+        // Generate email verification code (6 digits)
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+        const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
         // Create member
         const hashedPassword = await bcrypt.hash(password, 10);
         const newMember = new Member({
             full_name,
             phone,
+            email,
             password: hashedPassword,
             group_id: group._id,
             role: useRole,
             is_admin: useRole === 'admin',
-            status: status
+            status: status,
+            email_verified: false,
+            email_verification_code: verificationCode,
+            email_verification_expires: verificationExpires
         });
 
         await newMember.save();
@@ -101,9 +132,19 @@ router.post('/register', async (req, res) => {
             await Group.findByIdAndUpdate(group._id, { admin_id: newMember._id });
         }
 
+        // Send verification email
+        try {
+            await brevoEmailService.sendVerificationEmail(email, full_name, verificationCode);
+        } catch (emailError) {
+            console.error('Error sending verification email:', emailError);
+            // Don't fail registration if email fails
+        }
+
         res.status(201).json({ 
-            message: status === 'approved' ? 'Registration successful!' : 'Registration submitted. Awaiting admin approval.',
-            status: status
+            message: 'Registration successful! Please check your email to verify your account.',
+            status: status,
+            emailSent: true,
+            memberId: newMember._id
         });
 
     } catch (error) {
@@ -112,18 +153,162 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
-    const { phone, password } = req.body;
+// Verify email with code
+router.post('/verify-email', async (req, res) => {
+    const { email, verificationCode } = req.body;
 
-    if (!phone || !password) {
-        return res.status(400).json({ error: 'Phone and password are required' });
+    if (!email || !verificationCode) {
+        return res.status(400).json({ error: 'Email and verification code are required' });
     }
 
     try {
-        const member = await Member.findOne({ phone });
+        const member = await Member.findOne({ email });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (member.email_verified) {
+            return res.status(400).json({ error: 'Email already verified' });
+        }
+
+        // Check if code expired
+        if (new Date() > member.email_verification_expires) {
+            return res.status(400).json({ error: 'Verification code expired. Please request a new one.' });
+        }
+
+        // Check if code matches
+        if (member.email_verification_code !== verificationCode) {
+            return res.status(400).json({ error: 'Invalid verification code' });
+        }
+
+        // Mark as verified
+        member.email_verified = true;
+        member.email_verification_code = undefined;
+        member.email_verification_expires = undefined;
+        await member.save();
+
+        // Send appropriate email based on status
+        const group = await Group.findById(member.group_id);
+        const groupName = group ? group.group_name : 'your group';
+        
+        try {
+            if (member.status === 'approved') {
+                // Send welcome email for approved members
+                await brevoEmailService.sendWelcomeEmail(
+                    member.email, 
+                    member.full_name, 
+                    groupName
+                );
+            } else {
+                // Send pending approval email for members awaiting approval
+                await brevoEmailService.sendPendingApprovalEmail(
+                    member.email,
+                    member.full_name,
+                    groupName
+                );
+
+                // Notify admin about new pending member
+                const admin = await Member.findOne({ 
+                    group_id: member.group_id, 
+                    is_admin: true,
+                    email_verified: true 
+                });
+                
+                if (admin && admin.email) {
+                    await brevoEmailService.sendAdminApprovalNotification(
+                        admin.email,
+                        admin.full_name,
+                        member.full_name,
+                        member.email,
+                        groupName
+                    );
+                }
+            }
+        } catch (emailError) {
+            console.error('Error sending post-verification emails:', emailError);
+        }
+
+        res.json({ 
+            message: 'Email verified successfully!',
+            verified: true,
+            status: member.status,
+            requiresApproval: member.status === 'pending'
+        });
+
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend verification code
+router.post('/resend-verification', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    try {
+        const member = await Member.findOne({ email });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (member.email_verified) {
+            return res.status(400).json({ error: 'Email already verified' });
+        }
+
+        // Generate new verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+        const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        member.email_verification_code = verificationCode;
+        member.email_verification_expires = verificationExpires;
+        await member.save();
+
+        // Send verification email
+        await brevoEmailService.sendVerificationEmail(email, member.full_name, verificationCode);
+
+        res.json({ 
+            message: 'Verification code sent to your email',
+            emailSent: true
+        });
+
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ error: 'Failed to resend verification code' });
+    }
+});
+
+// Login route - accepts both phone and email
+router.post('/login', async (req, res) => {
+    const { emailOrPhone, password } = req.body;
+
+    if (!emailOrPhone || !password) {
+        return res.status(400).json({ error: 'Email/Phone and password are required' });
+    }
+
+    try {
+        // Check if input is email or phone
+        const isEmail = emailOrPhone.includes('@');
+        const member = isEmail 
+            ? await Member.findOne({ email: emailOrPhone })
+            : await Member.findOne({ phone: emailOrPhone });
+        
         if (!member) {
             return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        // Check if email is verified (only for email login)
+        if (member.email && !member.email_verified) {
+            return res.status(403).json({ 
+                error: 'Please verify your email before logging in',
+                emailVerified: false,
+                email: member.email
+            });
         }
 
         // Check member status
@@ -145,7 +330,7 @@ router.post('/login', async (req, res) => {
 
         // Generate token for approved members only
         const token = jwt.sign(
-            { id: member._id, phone: member.phone, is_admin: member.is_admin },
+            { id: member._id, phone: member.phone, email: member.email, is_admin: member.is_admin },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -157,6 +342,7 @@ router.post('/login', async (req, res) => {
                 id: member._id,
                 full_name: member.full_name,
                 phone: member.phone,
+                email: member.email,
                 role: member.role,
                 is_admin: member.is_admin
             }
@@ -204,17 +390,33 @@ router.post('/admin/login', async (req, res) => {
 
 // Request password reset
 router.post('/request-password-reset', async (req, res) => {
-    const { phone } = req.body;
+    const { email } = req.body;
+    
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
     
     try {
-        const user = await Member.findOne({ phone });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const user = await Member.findOne({ email });
+        if (!user) {
+            // Don't reveal if user exists for security
+            return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+        }
 
-        const resetToken = jwt.sign({ phone }, process.env.JWT_SECRET, { expiresIn: '15m' });
-        const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
-        res.json({ message: 'Password reset link generated', resetLink });
+        const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        
+        // Send password reset email
+        try {
+            await brevoEmailService.sendPasswordResetEmail(email, user.full_name, resetToken);
+        } catch (emailError) {
+            console.error('Error sending password reset email:', emailError);
+            return res.status(500).json({ error: 'Failed to send password reset email' });
+        }
+
+        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     } catch (error) {
-        res.status(500).json({ message: `Error generating reset link` });
+        console.error('Error in password reset request:', error);
+        res.status(500).json({ error: 'Error processing password reset request' });
     }
 });
 
@@ -232,7 +434,7 @@ router.post('/reset-password/:token', async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         
         await Member.findOneAndUpdate(
-            { phone: decoded.phone },
+            { email: decoded.email },
             { password: hashedPassword }
         );
         

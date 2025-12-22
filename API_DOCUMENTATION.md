@@ -21,7 +21,147 @@ All endpoints return errors in this format:
 
 ## 🔐 Authentication Endpoints
 
-### SMS-Based Authentication
+### Email-Based Authentication (Primary)
+
+#### POST `/api/auth/register`
+Register a new member with email verification.
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "phone": "0712345678",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "admin",
+  "group_name": "Smart Savers Chama",
+  "group_type": "savings_and_loans"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Registration successful. Please check your email for verification code.",
+  "email": "john@example.com"
+}
+```
+
+#### POST `/api/auth/verify-email`
+Verify email with 6-digit code sent via email.
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com",
+  "code": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Email verified successfully",
+  "token": "jwt_token_here",
+  "member": {
+    "_id": "member_id",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "0712345678",
+    "role": "admin",
+    "email_verified": true
+  }
+}
+```
+
+#### POST `/api/auth/resend-verification`
+Resend email verification code.
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Verification code resent to your email"
+}
+```
+
+#### POST `/api/auth/login`
+Login with email or phone and password.
+
+**Request Body:**
+```json
+{
+  "emailOrPhone": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "token": "jwt_token_here",
+  "member": {
+    "_id": "member_id",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "0712345678",
+    "role": "admin"
+  }
+}
+```
+
+**Error (400):**
+```json
+{
+  "error": "Email not verified",
+  "message": "Please verify your email before logging in"
+}
+```
+
+#### POST `/api/auth/request-password-reset`
+Request password reset via email.
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password reset link sent to your email"
+}
+```
+
+#### POST `/api/auth/reset-password/:token`
+Reset password using token from email.
+
+**URL Parameters:**
+- `token`: Password reset token from email link
+
+**Request Body:**
+```json
+{
+  "newPassword": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password reset successful"
+}
+```
+
+### SMS-Based Authentication (Legacy)
 
 #### POST `/api/sms-auth/register`
 Register a new member with phone verification.

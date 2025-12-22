@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Loan = require('../models/Loan');
-const smsService = require('./smsService');
+const brevoEmailService = require('./brevoEmailService');
 
 class ReminderService {
     constructor() {
@@ -10,7 +10,7 @@ class ReminderService {
     }
 
     initializeSchedulers() {
-        // Run daily at 9:00 AM (but skip Sunday for business SMS)
+        // Run daily at 9:00 AM (but skip Sunday for business emails)
         cron.schedule('0 9 * * 1-6', () => { // Monday to Saturday only
             this.sendContributionReminders();
             this.sendLoanRepaymentReminders();
@@ -21,7 +21,7 @@ class ReminderService {
             this.sendDelayedWeekendReminders();
         });
 
-        console.log('📅 SMS reminder schedulers initialized (Monday-Saturday only)');
+        console.log('📧 Email reminder schedulers initialized (Monday-Saturday only)');
     }
 
     // Calculate next contribution due date
@@ -59,8 +59,7 @@ class ReminderService {
     async sendContributionReminders() {
         try {
             const groups = await Group.find({ 
-                'contribution_settings.auto_reminders': true,
-                'sms_settings.contribution_reminders': true 
+                'contribution_settings.auto_reminders': true
             });
 
             for (const group of groups) {
@@ -73,7 +72,7 @@ class ReminderService {
                 }
             }
             
-            console.log('📱 Contribution reminders processed');
+            console.log('📧 Contribution reminders processed');
         } catch (error) {
             console.error('Error sending contribution reminders:', error);
         }
@@ -126,14 +125,13 @@ class ReminderService {
     // Handle reminders that would have been sent on Sunday
     async sendDelayedWeekendReminders() {
         try {
-            console.log('📱 Checking for delayed weekend reminders...');
+            console.log('� Checking for delayed weekend reminders...');
             
             // Check for weekly contributions that were due on Monday (reminder should have been Sunday)
             const groups = await Group.find({ 
                 'contribution_settings.auto_reminders': true,
                 'contribution_settings.frequency': 'weekly',
-                'contribution_settings.due_day': 1, // Monday
-                'sms_settings.contribution_reminders': true 
+                'contribution_settings.due_day': 1 // Monday
             });
 
             for (const group of groups) {
@@ -141,7 +139,7 @@ class ReminderService {
                 await this.sendGroupContributionReminder(group, nextDueDate);
             }
             
-            console.log('📱 Delayed weekend reminders processed');
+            console.log('📧 Delayed weekend reminders processed');
         } catch (error) {
             console.error('Error sending delayed weekend reminders:', error);
         }
@@ -153,26 +151,28 @@ class ReminderService {
             const members = await Member.find({
                 group_id: group._id,
                 status: 'approved',
-                phone_verified: true,
-                'sms_notifications.contribution_reminders': true
+                email_verified: true,
+                email: { $exists: true, $ne: null }
             });
 
-            const dueDateStr = dueDate.toLocaleDateString('en-GB');
-            
             for (const member of members) {
-                await smsService.sendContributionReminder(
-                    member.phone,
-                    member.full_name,
-                    group.contribution_settings.amount,
-                    dueDateStr,
-                    group.group_name
-                );
-                
-                // Add small delay to prevent rate limiting
-                await new Promise(resolve => setTimeout(resolve, 200));
+                try {
+                    await brevoEmailService.sendContributionReminder(
+                        member.email,
+                        member.full_name,
+                        group.group_name,
+                        group.contribution_settings.amount,
+                        dueDate
+                    );
+                    
+                    // Add small delay to prevent rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                } catch (emailError) {
+                    console.error(`Failed to send reminder to ${member.email}:`, emailError);
+                }
             }
             
-            console.log(`📱 Contribution reminders sent to ${members.length} members in ${group.group_name}`);
+            console.log(`📧 Contribution reminders sent to ${members.length} members in ${group.group_name}`);
         } catch (error) {
             console.error(`Error sending contribution reminder for group ${group.group_name}:`, error);
         }
@@ -198,20 +198,24 @@ class ReminderService {
             }).populate('member_id');
 
             for (const loan of loansWithRepaymentsDue) {
-                if (loan.member_id.sms_notifications.repayment_reminders) {
-                    const dueDateStr = loan.repayment_date.toLocaleDateString('en-GB');
-                    
-                    await smsService.sendRepaymentReminder(
-                        loan.member_id.phone,
-                        loan.member_id.full_name,
-                        loan.amount + (loan.amount * loan.interest_rate / 100), // Include interest
-                        dueDateStr,
-                        loan._id
-                    );
+                if (loan.member_id.email_verified && loan.member_id.email) {
+                    try {
+                        const totalDue = loan.amount + (loan.amount * loan.interest_rate / 100);
+                        
+                        await brevoEmailService.sendLoanRepaymentReminder(
+                            loan.member_id.email,
+                            loan.member_id.full_name,
+                            loan.amount,
+                            totalDue,
+                            loan.repayment_date
+                        );
+                    } catch (emailError) {
+                        console.error(`Failed to send repayment reminder to ${loan.member_id.email}:`, emailError);
+                    }
                 }
             }
             
-            console.log(`📱 Repayment reminders sent for ${loansWithRepaymentsDue.length} loans`);
+            console.log(`📧 Repayment reminders sent for ${loansWithRepaymentsDue.length} loans`);
         } catch (error) {
             console.error('Error sending repayment reminders:', error);
         }
@@ -243,14 +247,14 @@ class ReminderService {
                 throw new Error('Loan not found');
             }
             
-            const dueDateStr = loan.repayment_date.toLocaleDateString('en-GB');
+            const totalDue = loan.amount + (loan.amount * loan.interest_rate / 100);
             
-            await smsService.sendRepaymentReminder(
-                loan.member_id.phone,
+            await brevoEmailService.sendLoanRepaymentReminder(
+                loan.member_id.email,
                 loan.member_id.full_name,
-                loan.amount + (loan.amount * loan.interest_rate / 100),
-                dueDateStr,
-                loan._id
+                loan.amount,
+                totalDue,
+                loan.repayment_date
             );
             
             return { message: 'Test repayment reminder sent' };

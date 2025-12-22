@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const MemberSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   phone: { type: String, required: true, unique: true },
+  email: { type: String, unique: true, sparse: true }, // Email for authentication
   password: { type: String }, 
   // Multiple group memberships support
   group_memberships: [{
@@ -20,6 +21,11 @@ const MemberSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
   status: { type: String, enum: ['pending', 'approved'], default: 'pending' },
   is_admin: { type: Boolean, default: false },
+  
+  // Email verification
+  email_verified: { type: Boolean, default: false },
+  email_verification_code: { type: String },
+  email_verification_expires: { type: Date },
   
   // Phone verification and OTP
   phone_verified: { type: Boolean, default: false },

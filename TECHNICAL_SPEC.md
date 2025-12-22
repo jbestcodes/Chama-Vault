@@ -2,7 +2,7 @@
 
 ## 🎯 Project Scope
 
-Jaza Nyumba is a comprehensive digital platform for Chama (investment group) management in Kenya, featuring secure authentication, payment processing, AI-powered insights, and automated SMS communications.
+Jaza Nyumba is a comprehensive digital platform for Chama (investment group) management in Kenya, featuring secure authentication, payment processing, AI-powered insights, and automated SMS/Email communications.
 
 ### Target Market
 - **Primary**: Kenyan Chama groups (5-50 members)

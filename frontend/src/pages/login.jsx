@@ -6,7 +6,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 const apiUrl = import.meta.env.VITE_API_URL; 
 
 const Login = () => {
-    const [phone, setPhone] = useState('');
+    const [emailOrPhone, setEmailOrPhone] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
@@ -15,7 +15,7 @@ const Login = () => {
     const [success, setSuccess] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [step, setStep] = useState(1); // 1: credentials, 2: OTP verification
+    const [step, setStep] = useState(1); // 1: credentials, 2: OTP verification or email verification
     const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,14 +36,14 @@ const Login = () => {
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/login`, {
-                phone,
+            // Try email/phone login first
+            const response = await axios.post(`${apiUrl}/api/auth/login`, {
+                emailOrPhone,
                 password
             });
             
-            // Check if login is direct (SMS disabled) or requires OTP
-            if (response.data.skipOTP || response.data.token) {
-                // Direct login - SMS is disabled
+            // Direct login successful
+            if (response.data.token) {
                 const memberData = response.data.member;
                 
                 localStorage.setItem('token', response.data.token);
@@ -59,6 +59,9 @@ const Login = () => {
                 if (memberData.group_name) {
                     localStorage.setItem('group_name', memberData.group_name);
                 }
+                if (memberData.email) {
+                    localStorage.setItem('email', memberData.email);
+                }
                 
                 console.log('✅ Login successful, stored data:', {
                     memberId: memberData._id || memberData.id,
@@ -70,18 +73,24 @@ const Login = () => {
                 setTimeout(() => {
                     navigate('/dashboard');
                 }, 500);
-            } else if (response.data.requiresOTP) {
-                // OTP required - SMS is enabled
-                setMemberId(response.data.memberId);
-                setSuccess(response.data.message);
-                setStep(2); // Move to OTP verification step
             }
         } catch (error) {
-            setError(
-                error.response?.data?.error ||
-                error.response?.data?.message ||
-                'Login failed. Please try again.'
-            );
+            if (error.response?.data?.emailVerified === false) {
+                // Email not verified
+                setError(
+                    <div>
+                        {error.response.data.error}
+                        <br />
+                        <span style={{ fontSize: '12px' }}>Please check your email for the verification code.</span>
+                    </div>
+                );
+            } else {
+                setError(
+                    error.response?.data?.error ||
+                    error.response?.data?.message ||
+                    'Login failed. Please try again.'
+                );
+            }
         } finally {
             setIsLoading(false);
         }
@@ -334,23 +343,23 @@ const Login = () => {
 
                         {step === 1 ? (
                             <form onSubmit={handleLogin}>
-                                {/* Phone Input */}
+                                {/* Email or Phone Input */}
                                 <div style={{ marginBottom: '20px' }}>
-                                    <label htmlFor="phone" style={{
+                                    <label htmlFor="emailOrPhone" style={{
                                         display: 'block',
                                         marginBottom: '8px',
                                         color: '#333',
                                         fontWeight: '500',
                                         fontSize: '14px'
                                     }}>
-                                        📱 Phone Number
+                                        📱 Email or Phone Number
                                     </label>
                                     <input
                                         type="text"
-                                        id="phone"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        placeholder="Enter your phone number"
+                                        id="emailOrPhone"
+                                        value={emailOrPhone}
+                                        onChange={(e) => setEmailOrPhone(e.target.value)}
+                                        placeholder="your.email@example.com or 0712345678"
                                         required
                                         style={{
                                             width: '100%',
@@ -377,6 +386,14 @@ const Login = () => {
                                             e.target.style.boxShadow = 'none';
                                         }}
                                     />
+                                    <p style={{ 
+                                        fontSize: '12px', 
+                                        color: '#666', 
+                                        marginTop: '5px',
+                                        marginBottom: 0
+                                    }}>
+                                        You can login with either your email or phone number
+                                    </p>
                                 </div>
 
                                 {/* Password Input */}

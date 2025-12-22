@@ -1,6 +1,6 @@
 # Jaza Nyumba - Digital Chama Management System
 
-**🌟 Live Demo: [https://chama-vault-aiid.vercel.app/](https://chama-vault-aiid.vercel.app/)**
+**🌟 Live Demo: [https://jazanyumba.online]**
 
 Jaza Nyumba is a comprehensive digital platform for managing Chama (savings group) operations in Kenya. It features SMS notifications, AI-powered financial insights, loan management, and subscription-based services.
 
@@ -100,6 +100,11 @@ SMSLEOPARD_USERNAME=your_smsleopard_username
 SMSLEOPARD_PASSWORD=your_smsleopard_password
 SMSLEOPARD_SOURCE=your_sender_id
 
+# Brevo Email Configuration
+BREVO_API_KEY=your_brevo_api_key_here
+BREVO_SECURITY_EMAIL=security@jazanyumba.online
+BREVO_INFO_EMAIL=info@jazanyumba.online
+
 # Paystack Configuration
 PAYSTACK_SECRET_KEY=sk_test_your_paystack_secret_key
 PAYSTACK_PUBLIC_KEY=pk_test_your_paystack_public_key
@@ -136,12 +141,18 @@ VITE_API_URL=http://localhost:5000
 - **API Credentials**: Get username, password, and source ID
 - **Testing**: Use test credits for development
 
-### 3. Paystack Setup
+### 3. Brevo Email Setup
+- **Account**: Sign up at [brevo.com](https://brevo.com)
+- **Sender Emails**: Verify `security@jazanyumba.online` and `info@jazanyumba.online`
+- **API Key**: Generate API key from Settings → SMTP & API
+- **Usage**: Used for email verification, password reset, and reminders
+
+### 4. Paystack Setup
 - **Account**: Sign up at [paystack.com](https://paystack.com)
 - **API Keys**: Get test and live keys from dashboard
 - **Webhooks**: Set up webhook endpoint for subscription events
 
-### 4. OpenAI Setup
+### 5. OpenAI Setup
 - **Account**: Sign up at [platform.openai.com](https://platform.openai.com)
 - **API Key**: Generate API key from dashboard
 - **Billing**: Add payment method for usage
@@ -149,9 +160,16 @@ VITE_API_URL=http://localhost:5000
 ## 📱 Frontend Usage
 
 ### User Authentication Flow
-1. **Register**: Phone verification with SMS OTP
-2. **Login**: 2-step process (credentials → OTP)  
-3. **Dashboard**: Access features based on subscription
+1. **Register**: Enter phone, email, and password → Verify email with 6-digit code
+2. **Login**: Use email or phone with password → Access dashboard
+3. **Password Reset**: Request reset via email → Click link to reset password
+4. **Dashboard**: Access features based on subscription
+
+### Email Integration
+- **Verification**: 6-digit code sent to email during registration
+- **Login**: Accepts both email and phone number
+- **Reminders**: Contribution and loan reminders sent via email
+- **Security**: Password reset via secure email links
 
 ### AI Trial System
 - New users get 2 weeks free AI access

@@ -3,7 +3,7 @@ const router = express.Router();
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Invitation = require('../models/Invitation');
-const smsService = require('../services/smsService');
+const brevoEmailService = require('../services/brevoEmailService');
 const { authenticateToken } = require('../middleware/auth');
 const { requireGroupInvite } = require('../middleware/subscription');
 
@@ -12,13 +12,19 @@ const generateInviteCode = () => {
     return Math.random().toString(36).substr(2, 8).toUpperCase();
 };
 
-// Send group invitation (requires subscription)
-router.post('/send-invite', authenticateToken, requireGroupInvite, async (req, res) => {
+// Send group invitation via email (any member can invite)
+router.post('/send-invite', authenticateToken, async (req, res) => {
     try {
-        const { phone, recipientName } = req.body;
+        const { email, recipientName } = req.body;
         
-        if (!phone || !recipientName) {
-            return res.status(400).json({ error: 'Phone number and recipient name are required' });
+        if (!email || !recipientName) {
+            return res.status(400).json({ error: 'Email and recipient name are required' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
         }
 
         const inviter = await Member.findById(req.user.id).populate('group_id');
@@ -26,34 +32,21 @@ router.post('/send-invite', authenticateToken, requireGroupInvite, async (req, r
             return res.status(404).json({ error: 'Group not found' });
         }
 
-        // Format phone number
-        const formatPhone = (phone) => {
-            let cleanPhone = phone.replace(/\D/g, '');
-            if (cleanPhone.startsWith('0')) {
-                cleanPhone = '254' + cleanPhone.substring(1);
-            } else if (!cleanPhone.startsWith('254')) {
-                cleanPhone = '254' + cleanPhone;
-            }
-            return cleanPhone;
-        };
-
-        const formattedPhone = formatPhone(phone);
-
         // Check if user is already a member
-        const existingMember = await Member.findOne({ phone: formattedPhone });
+        const existingMember = await Member.findOne({ email: email.toLowerCase() });
         if (existingMember) {
             return res.status(400).json({ error: 'This person is already registered on Jaza Nyumba' });
         }
 
         // Check for existing pending invitation
         const existingInvite = await Invitation.findOne({
-            phone: formattedPhone,
+            email: email.toLowerCase(),
             group_id: inviter.group_id._id,
             status: 'pending'
         });
 
         if (existingInvite) {
-            return res.status(400).json({ error: 'An invitation has already been sent to this number' });
+            return res.status(400).json({ error: 'An invitation has already been sent to this email address' });
         }
 
         // Generate invite code
@@ -63,7 +56,7 @@ router.post('/send-invite', authenticateToken, requireGroupInvite, async (req, r
         const invitation = new Invitation({
             group_id: inviter.group_id._id,
             invited_by: inviter._id,
-            phone: formattedPhone,
+            email: email.toLowerCase(),
             recipient_name: recipientName,
             invite_code: inviteCode,
             status: 'pending',
@@ -72,33 +65,31 @@ router.post('/send-invite', authenticateToken, requireGroupInvite, async (req, r
 
         await invitation.save();
 
-        // Send SMS invitation
-        const smsResult = await smsService.sendGroupInvitation(
-            formattedPhone,
-            recipientName,
-            inviter.group_id.group_name,
-            inviteCode,
-            inviter.full_name,
-            inviter._id
-        );
+        // Generate invitation link
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const inviteLink = `${frontendUrl}/register?inviteCode=${inviteCode}&email=${encodeURIComponent(email)}&groupName=${encodeURIComponent(inviter.group_id.group_name)}`;
 
-        if (smsResult.success) {
+        // Send email invitation
+        try {
+            await brevoEmailService.sendGroupInvitationEmail(
+                email,
+                recipientName,
+                inviter.group_id.group_name,
+                inviteCode,
+                inviter.full_name,
+                inviteLink
+            );
+
             res.json({
-                message: 'Invitation sent successfully',
+                message: 'Invitation sent successfully via email',
                 inviteCode: inviteCode,
-                expiresAt: invitation.expires_at
+                expiresAt: invitation.expires_at,
+                inviteLink: inviteLink
             });
-        } else if (smsResult.blocked) {
-            // Delete the invitation if SMS couldn't be sent due to subscription
+        } catch (emailError) {
+            // Delete the invitation if email failed to send
             await Invitation.findByIdAndDelete(invitation._id);
-            res.status(403).json({ 
-                error: 'SMS invitation requires premium subscription',
-                subscriptionRequired: true
-            });
-        } else {
-            // Delete the invitation if SMS failed for other reasons
-            await Invitation.findByIdAndDelete(invitation._id);
-            res.status(500).json({ error: 'Failed to send invitation SMS' });
+            res.status(500).json({ error: 'Failed to send invitation email' });
         }
 
     } catch (error) {
@@ -151,18 +142,24 @@ router.delete('/cancel-invite/:inviteId', authenticateToken, async (req, res) =>
 // Verify invite code (used during registration)
 router.post('/verify-invite', async (req, res) => {
     try {
-        const { inviteCode, phone } = req.body;
+        const { inviteCode, email } = req.body;
         
-        if (!inviteCode || !phone) {
-            return res.status(400).json({ error: 'Invite code and phone number are required' });
+        if (!inviteCode) {
+            return res.status(400).json({ error: 'Invite code is required' });
         }
 
-        const invitation = await Invitation.findOne({
+        // If email is provided, match both; otherwise just match code
+        const query = {
             invite_code: inviteCode.toUpperCase(),
-            phone: phone,
             status: 'pending',
             expires_at: { $gt: new Date() }
-        }).populate('group_id');
+        };
+        
+        if (email) {
+            query.email = email.toLowerCase();
+        }
+
+        const invitation = await Invitation.findOne(query).populate('group_id');
 
         if (!invitation) {
             return res.status(404).json({ error: 'Invalid or expired invitation code' });

@@ -8,15 +8,17 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const Register = () => {
     const [full_name, setFullName] = useState('');
     const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [group_name, setGroupName] = useState('');
     const [group_type, setGroupType] = useState('savings_and_loans');
-    const [role, setRole] = useState('');
-    const [otp, setOtp] = useState('');
+    const [role, setRole] = useState('member');
+    const [verificationCode, setVerificationCode] = useState('');
     const [agreed, setAgreed] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [step, setStep] = useState(1); // 1: registration, 2: phone verification
+    const [step, setStep] = useState(1); // 1: registration, 2: email verification
     const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
 
@@ -24,53 +26,75 @@ const Register = () => {
         e.preventDefault();
         setError('');
         setSuccess('');
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (!agreed) {
+            setError('Please agree to the terms and conditions');
+            return;
+        }
+
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/register`, {
+            const response = await axios.post(`${apiUrl}/api/auth/register`, {
                 full_name,
                 phone,
+                email,
                 password,
                 group_name,
                 group_type,
                 role
             });
 
-            if (response.data.requiresVerification) {
-                setMemberId(response.data.memberId);
-                setSuccess(response.data.message);
-                setStep(2); // Move to phone verification step
-            }
+            setMemberId(response.data.memberId);
+            setSuccess(response.data.message);
+            setStep(2); // Move to email verification step
         } catch (error) {
             setError(error.response?.data?.error || 'Registration failed. Please try again.');
         }
     };
 
-    const handlePhoneVerification = async (e) => {
+    const handleEmailVerification = async (e) => {
         e.preventDefault();
         setError('');
+
+        if (!verificationCode || verificationCode.length !== 6) {
+            setError('Please enter a valid 6-digit verification code');
+            return;
+        }
+
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/verify-phone`, {
-                memberId,
-                otp
+            const response = await axios.post(`${apiUrl}/api/auth/verify-email`, {
+                email,
+                verificationCode
             });
 
-            setSuccess(response.data.message);
+            const { status, requiresApproval } = response.data;
+
+            if (requiresApproval) {
+                setSuccess('Email verified! Your registration is pending admin approval. You\'ll receive an email once approved.');
+            } else {
+                setSuccess('Email verified successfully! You can now log in.');
+            }
             
             // Redirect to login after successful verification
             setTimeout(() => {
                 navigate('/login');
-            }, 2000);
+            }, 3000);
         } catch (error) {
-            setError(error.response?.data?.error || 'Phone verification failed. Please try again.');
+            setError(error.response?.data?.error || 'Email verification failed. Please try again.');
         }
     };
 
     const resendVerification = async () => {
         setError('');
         try {
-            await axios.post(`${apiUrl}/api/sms-auth/resend-verification`, {
-                memberId
+            await axios.post(`${apiUrl}/api/auth/resend-verification`, {
+                email
             });
-            setSuccess('New verification code sent to your phone');
+            setSuccess('New verification code sent to your email');
         } catch (error) {
             setError('Failed to resend verification code. Please try again.');
         }
@@ -108,12 +132,12 @@ const Register = () => {
                                 color: '#333',
                                 fontSize: '28px',
                                 fontWeight: 'bold'
-                            }}>{step === 1 ? 'Create Your Account' : 'Verify Your Phone'}</h2>
+                            }}>{step === 1 ? 'Create Your Account' : 'Verify Your Email'}</h2>
                             <p style={{
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '16px'
-                            }}>{step === 1 ? 'Join Jaza Nyumba and start your financial journey' : 'Enter the 6-digit code sent to your phone'}</p>
+                            }}>{step === 1 ? 'Join Jaza Nyumba and start your financial journey' : 'Enter the 6-digit code sent to your email'}</p>
                         </div>
 
                         {/* Error Message */}
@@ -237,6 +261,50 @@ const Register = () => {
                                     />
                                 </div>
                                 
+                                {/* Email */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="email" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        📧 Email Address
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="your.email@example.com"
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
                                 {/* Password */}
                                 <div style={{ marginBottom: '20px' }}>
                                     <label htmlFor="password" style={{
@@ -254,6 +322,51 @@ const Register = () => {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Must be at least 6 characters"
+                                        required
+                                        minLength="6"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            border: '2px solid #e1e5e9',
+                                            borderRadius: '10px',
+                                            fontSize: '16px',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none',
+                                            background: '#fafafa',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#667eea';
+                                            e.target.style.background = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = '#e1e5e9';
+                                            e.target.style.background = '#fafafa';
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
+                                    />
+                                </div>
+                                
+                                {/* Confirm Password */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label htmlFor="confirmPassword" style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '14px'
+                                    }}>
+                                        🔒 Confirm Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Re-enter your password"
                                         required
                                         minLength="6"
                                         style={{
@@ -564,11 +677,11 @@ const Register = () => {
                                         e.target.style.background = !agreed ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                                     }}
                                 >
-                                    📱 Register & Send Verification Code
+                                    � Register & Send Verification Email
                                 </button>
                             </form>
                         ) : (
-                            <form onSubmit={handlePhoneVerification}>
+                            <form onSubmit={handleEmailVerification}>
                                 <div style={{ textAlign: 'center', marginBottom: '25px' }}>
                                     <p style={{
                                         color: '#666',
@@ -581,12 +694,12 @@ const Register = () => {
                                         fontWeight: '600',
                                         fontSize: '16px',
                                         color: '#667eea'
-                                    }}>{phone}</p>
+                                    }}>{email}</p>
                                 </div>
                                 
-                                {/* OTP Input */}
+                                {/* Verification Code Input */}
                                 <div style={{ marginBottom: '25px' }}>
-                                    <label htmlFor="otp" style={{
+                                    <label htmlFor="verificationCode" style={{
                                         display: 'block',
                                         marginBottom: '8px',
                                         color: '#333',
@@ -597,9 +710,9 @@ const Register = () => {
                                     </label>
                                     <input
                                         type="text"
-                                        id="otp"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
+                                        id="verificationCode"
+                                        value={verificationCode}
+                                        onChange={(e) => setVerificationCode(e.target.value)}
                                         placeholder="Enter 6-digit code"
                                         maxLength="6"
                                         required
@@ -662,7 +775,7 @@ const Register = () => {
                                         e.target.style.outline = 'none';
                                     }}
                                 >
-                                    ✅ Verify Phone Number
+                                    ✅ Verify Email Address
                                 </button>
                                 
                                 {/* Resend & Back buttons */}

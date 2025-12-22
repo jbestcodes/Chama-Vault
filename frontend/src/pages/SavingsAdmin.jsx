@@ -204,7 +204,7 @@ function SavingsAdmin() {
       </div>
       {/* Add New Member Form */}
       <div style={{ marginBottom: 24, background: "#e3f2fd", padding: 16, borderRadius: 8 }}>
-        <h3>Add New Member</h3>
+        <h3>Invite New Member</h3>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -212,28 +212,33 @@ function SavingsAdmin() {
             setMessage("");
             const token = localStorage.getItem("token");
             try {
-              await axios.post(
-                `${apiUrl}/api/auth/register`,
-                { full_name: e.target.full_name.value, phone: e.target.phone.value },
+              const response = await axios.post(
+                `${apiUrl}/api/invites/send-invite`,
+                { 
+                  recipientName: e.target.full_name.value, 
+                  email: e.target.email.value 
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
-              setMessage("Member added successfully.");
+              setMessage(response.data.message || "Invitation sent successfully via email.");
               e.target.reset();
-              fetchMatrix();
             } catch (err) {
-              setError(err.response?.data?.error || "Error adding member");
+              setError(err.response?.data?.error || "Error sending invitation");
             }
           }}
           style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
         >
           <input name="full_name" placeholder="Full Name" required style={{ minWidth: 140 }} />
-          <input name="phone" placeholder="Phone Number" required style={{ minWidth: 140 }} />
+          <input name="email" type="email" placeholder="Email Address" required style={{ minWidth: 180 }} />
           <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "8px 18px", fontWeight: "bold" }}>
-            Add Member
+            Send Invitation
           </button>
           {message && <span style={{ color: "green", marginLeft: 10 }}>{message}</span>}
           {error && <span style={{ color: "red", marginLeft: 10 }}>{error}</span>}
         </form>
+        <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
+          💡 An invitation email will be sent with a registration link and invite code.
+        </p>
       </div>
       {/* Member List with Delete Option */}
       <div style={{ marginBottom: 32, background: "#f5f5f5", padding: 16, borderRadius: 8 }}>
