@@ -11,6 +11,10 @@ function Subscribe() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
 
+    useEffect(() => {
+        document.title = "Subscribe - Jaza Nyumba | Premium Features";
+    }, []);
+
     // Paystack configuration
     const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
     

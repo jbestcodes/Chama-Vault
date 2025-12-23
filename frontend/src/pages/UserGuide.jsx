@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function UserGuide() {
   const [activeSection, setActiveSection] = useState('getting-started');
+
+  useEffect(() => {
+    document.title = "User Guide - Jaza Nyumba | How to Use Our Platform";
+  }, []);
 
   const sections = {
     'getting-started': {

@@ -23,6 +23,11 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Set page title
+    useEffect(() => {
+        document.title = "Login - Jaza Nyumba | Access Your Account";
+    }, []);
+
     // Show auto-logout message if redirected from auto-logout
     useEffect(() => {
         if (location.state?.message) {

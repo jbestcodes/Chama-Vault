@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 function TermsAndConditions() {
+  useEffect(() => {
+    document.title = "Terms & Conditions - Jaza Nyumba | User Agreement";
+  }, []);
+
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>Terms & Conditions</h2>

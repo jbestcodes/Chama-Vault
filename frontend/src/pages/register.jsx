@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -21,6 +21,10 @@ const Register = () => {
     const [step, setStep] = useState(1); // 1: registration, 2: email verification
     const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        document.title = "Register - Jaza Nyumba | Join Our Platform";
+    }, []);
 
     const handleRegister = async (e) => {
         e.preventDefault();

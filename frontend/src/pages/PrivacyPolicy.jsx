@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 function PrivacyPolicy() {
+  useEffect(() => {
+    document.title = "Privacy Policy - Jaza Nyumba | Your Data Protection";
+  }, []);
+
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
       <h2>Privacy Policy</h2>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 
 function ContactUs() {
@@ -11,6 +11,10 @@ function ContactUs() {
   });
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    document.title = "Contact Us - Jaza Nyumba | Get in Touch";
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

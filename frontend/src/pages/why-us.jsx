@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function WhyUs() {
+  useEffect(() => {
+    document.title = "Why Choose Us - Jaza Nyumba | Smart Group Savings Platform";
+  }, []);
+
   return (
     <div style={{
       minHeight: "100vh",

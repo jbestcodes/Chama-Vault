@@ -6,6 +6,10 @@ const Home = () => {
     const isLoggedIn = !!localStorage.getItem("token");
     const [currentSlide, setCurrentSlide] = useState(0);
 
+    useEffect(() => {
+        document.title = "Jaza Nyumba - Smart Group Savings & Chama Management Platform";
+    }, []);
+
     const slides = [
         { 
             title: "💰 Welcome to Jaza Nyumba", 

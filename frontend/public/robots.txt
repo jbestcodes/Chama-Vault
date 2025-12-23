@@ -1,0 +1,27 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /dashboard
+Disallow: /admin-panel
+Disallow: /my-profile
+Disallow: /table-banking-admin
+Disallow: /table-banking-member
+Disallow: /savings-admin
+Disallow: /loans-and-repayments
+Disallow: /withdrawal-request
+Disallow: /subscribe
+
+# Allow public pages
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /why-us
+Allow: /terms-and-conditions
+Allow: /privacy-policy
+Allow: /contact-us
+Allow: /user-guide
+
+# Sitemap location
+Sitemap: https://jazanyumba.online/sitemap.xml
