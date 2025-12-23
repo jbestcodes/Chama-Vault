@@ -66,26 +66,9 @@ button:focus-visible {
   a:hover {
     color: #747bff;
   }
-  button {
-    background-color: #f9f9f9;
-  }
 }
-@media (prefers-color-scheme: light) {
-  body {
-    color: #000;
-    background-color: #f0f0f0;
-  }
-  h1 {
-    color: #333;
-  }
-  button {
-    background-color: #e0e0e0;
-    border-color: #ccc;
-  }
-  button:hover {
-    border-color: #aaa;
-  }
-}
+/* Removed button override to allow Tailwind classes to work */
+
 /* === Home Page styles === */
 #home-section {
   background-color: junglegreen;

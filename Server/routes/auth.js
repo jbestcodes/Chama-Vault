@@ -374,11 +374,14 @@ router.post('/login', async (req, res) => {
             token,
             member: {
                 id: member._id,
+                _id: member._id,
                 full_name: member.full_name,
                 phone: member.phone,
                 email: member.email,
                 role: member.role,
-                is_admin: member.is_admin
+                is_admin: member.is_admin,
+                group_id: member.group_id,
+                group_name: member.group_name
             }
         });
 

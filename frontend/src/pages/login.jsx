@@ -66,12 +66,6 @@ const Login = () => {
                     localStorage.setItem('email', memberData.email);
                 }
                 
-                console.log('✅ Login successful, stored data:', {
-                    memberId: memberData._id || memberData.id,
-                    group_id: memberData.group_id,
-                    role: memberData.role
-                });
-                
                 setSuccess('Login successful!');
                 setTimeout(() => {
                     navigate('/dashboard');
@@ -136,12 +130,6 @@ const Login = () => {
                 if (response.data.trialInfo) {
                     localStorage.setItem('aiTrialInfo', JSON.stringify(response.data.trialInfo));
                 }
-                
-                console.log('✅ OTP verified, stored data:', {
-                    memberId: memberData._id || memberData.id,
-                    group_id: memberData.group_id,
-                    role: memberData.role
-                });
 
                 navigate('/dashboard');
             }

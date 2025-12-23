@@ -26,8 +26,6 @@ const GroupSettings = () => {
             }
         }
         
-        console.log('GroupSettings - Using group_id:', userGroupId);
-        
         if (userGroupId) {
             setGroupId(userGroupId);
             fetchGroupSettings(userGroupId);

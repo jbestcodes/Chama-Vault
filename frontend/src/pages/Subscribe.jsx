@@ -16,7 +16,7 @@ function Subscribe() {
     
     const plans = {
         monthly: {
-            name: 'Monthly AI Access',
+            name: 'Monthly Premium',
             price: 10000, // KES 100 in kobo
             description: 'Full access to AI features and premium support',
             features: [
@@ -30,7 +30,7 @@ function Subscribe() {
             ]
         },
         weekly: {
-            name: 'Weekly AI Access',
+            name: 'Weekly Premium',
             price: 3000, // KES 30 in kobo
             description: 'Weekly access to AI features',
             features: [
