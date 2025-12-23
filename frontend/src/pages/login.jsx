@@ -173,18 +173,15 @@ const Login = () => {
         }
     };
 
-    const resendPhoneVerification = async () => {
+    const resendEmailVerification = async () => {
         setError('');
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/resend-verification-phone`, {
-                phone: emailOrPhone
+            const response = await axios.post(`${apiUrl}/api/auth/resend-verification`, {
+                email: emailOrPhone
             });
-            setSuccess(response.data.message);
-            if (response.data.debug?.verificationCode) {
-                setSuccess(`Verification code: ${response.data.debug.verificationCode} (SMS failed, use this code)`);
-            }
+            setSuccess(response.data.message || 'Verification code sent to your email');
             setShowVerificationModal(true);
         } catch (error) {
             setError(
@@ -206,13 +203,12 @@ const Login = () => {
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/verify-phone`, {
-                memberId: 'temp', // We'll find by phone
-                otp: verificationCode,
-                phone: emailOrPhone
+            const response = await axios.post(`${apiUrl}/api/auth/verify-email`, {
+                email: emailOrPhone,
+                verificationCode: verificationCode
             });
             
-            setSuccess('Phone verified successfully! You can now log in.');
+            setSuccess('Email verified successfully! You can now log in.');
             setShowVerificationModal(false);
             setVerificationCode('');
         } catch (error) {
@@ -283,16 +279,16 @@ const Login = () => {
                             }}>
                                 ⚠️ {error}
                                 
-                                {/* Show resend verification button if phone verification error */}
-                                {(error.includes('verify your phone') || 
-                                  error.includes('phone number first') || 
-                                  error.includes('Please verify your phone number first') ||
+                                {/* Show resend verification button if email verification error */}
+                                {(error.includes('verify your email') || 
+                                  error.includes('email first') || 
+                                  error.includes('Please verify your email') ||
                                   error.includes('pending admin approval') ||
                                   error.includes('membership is pending')) && (
                                     <div style={{ marginTop: '10px' }}>
                                         <button
                                             type="button"
-                                            onClick={resendPhoneVerification}
+                                            onClick={resendEmailVerification}
                                             disabled={isLoading}
                                             style={{
                                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -319,7 +315,7 @@ const Login = () => {
                                                 }
                                             }}
                                         >
-                                            📱 Resend Verification Code
+                                            � Resend Email Verification
                                         </button>
                                     </div>
                                 )}
@@ -701,7 +697,7 @@ const Login = () => {
                             </form>
                         )}  
                         
-                        {/* Phone Verification Help */}
+                        {/* Email Verification Help */}
                         <div style={{
                             textAlign: 'center',
                             marginTop: '20px',
@@ -716,11 +712,11 @@ const Login = () => {
                                 color: '#666',
                                 fontWeight: '500'
                             }}>
-                                📱 Having trouble logging in?
+                                📧 Having trouble logging in?
                             </p>
                             <button
                                 type="button"
-                                onClick={resendPhoneVerification}
+                                onClick={resendEmailVerification}
                                 disabled={isLoading || !emailOrPhone}
                                 style={{
                                     background: emailOrPhone ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#ccc',
@@ -747,14 +743,14 @@ const Login = () => {
                                     }
                                 }}
                             >
-                                📲 Resend Phone Verification
+                                📧 Resend Email Verification
                             </button>
                             <p style={{
                                 margin: '8px 0 0 0',
                                 fontSize: '12px',
                                 color: '#888'
                             }}>
-                                Enter your phone number above first
+                                Enter your email address above first
                             </p>
                         </div>
                         
@@ -817,7 +813,7 @@ const Login = () => {
                                 margin: 0,
                                 color: '#666',
                                 fontSize: '14px'
-                            }}>Enter the 6-digit code sent to {phone}</p>
+                            }}>Enter the 6-digit code sent to your email</p>
                         </div>
 
                         {error && (
