@@ -302,23 +302,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        // Check if member has no email (needs to add email)
-        if (!member.email || member.email === '' || member.email === null) {
-            return res.status(403).json({ 
-                error: 'Please add an email to your account',
-                needsEmail: true,
-                phone: member.phone
-            });
-        }
-
-        // Check if email is verified (only for email login)
-        if (member.email && !member.email_verified) {
-            return res.status(403).json({ 
-                error: 'Please verify your email before logging in',
-                emailVerified: false,
-                email: member.email,
-                phone: member.phone
-            });
+        // Verify password first before checking other conditions
+        const isValidPassword = await bcrypt.compare(password, member.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: 'Invalid credentials' });
         }
 
         // Check member status
@@ -333,9 +320,23 @@ router.post('/login', async (req, res) => {
             return res.status(403).json({ error: 'Your membership is still pending admin approval.' });
         }
 
-        const isValidPassword = await bcrypt.compare(password, member.password);
-        if (!isValidPassword) {
-            return res.status(400).json({ error: 'Invalid credentials' });
+        // Check if member has no email or undefined email (needs to add email)
+        if (!member.email || member.email.trim() === '') {
+            return res.status(403).json({ 
+                error: 'Please add an email to your account',
+                needsEmail: true,
+                phone: member.phone
+            });
+        }
+
+        // Check if email is verified
+        if (!member.email_verified) {
+            return res.status(403).json({ 
+                error: 'Please verify your email before logging in',
+                emailVerified: false,
+                email: member.email,
+                phone: member.phone
+            });
         }
 
         // Generate token for approved members only
