@@ -302,12 +302,22 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
+        // Check if member has no email (needs to add email)
+        if (!member.email || member.email === '' || member.email === null) {
+            return res.status(403).json({ 
+                error: 'Please add an email to your account',
+                needsEmail: true,
+                phone: member.phone
+            });
+        }
+
         // Check if email is verified (only for email login)
         if (member.email && !member.email_verified) {
             return res.status(403).json({ 
                 error: 'Please verify your email before logging in',
                 emailVerified: false,
-                email: member.email
+                email: member.email,
+                phone: member.phone
             });
         }
 
@@ -554,6 +564,122 @@ router.put('/members/sms-preferences', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error updating SMS preferences:', error);
         res.status(500).json({ error: 'Failed to update SMS preferences' });
+    }
+});
+
+// Add/Update email for existing users (for users who registered without email)
+router.post('/add-email', async (req, res) => {
+    const { phone, email } = req.body;
+
+    if (!phone || !email) {
+        return res.status(400).json({ error: 'Phone number and email are required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    try {
+        // Find member by phone
+        const member = await Member.findOne({ phone });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found with this phone number' });
+        }
+
+        // Check if email is already used by another member
+        const emailExists = await Member.findOne({ 
+            email: email.toLowerCase(),
+            _id: { $ne: member._id } 
+        });
+        
+        if (emailExists) {
+            return res.status(400).json({ error: 'This email is already registered to another account' });
+        }
+
+        // Generate email verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+        const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        // Update member with email and verification code
+        member.email = email.toLowerCase();
+        member.email_verified = false;
+        member.email_verification_code = verificationCode;
+        member.email_verification_expires = verificationExpires;
+        await member.save();
+
+        // Send verification email
+        try {
+            await brevoEmailService.sendVerificationEmail(email, member.full_name, verificationCode);
+        } catch (emailError) {
+            console.error('Error sending verification email:', emailError);
+            return res.status(500).json({ 
+                error: 'Failed to send verification email. Please try again.',
+                emailAdded: true // Email was added to account but sending failed
+            });
+        }
+
+        res.json({ 
+            message: 'Email added successfully! Please check your email for the verification code.',
+            emailSent: true,
+            email: email.toLowerCase()
+        });
+
+    } catch (error) {
+        console.error('Add email error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Verify email after adding it
+router.post('/verify-added-email', async (req, res) => {
+    const { phone, email, verificationCode } = req.body;
+
+    if (!phone || !email || !verificationCode) {
+        return res.status(400).json({ error: 'Phone, email, and verification code are required' });
+    }
+
+    try {
+        // Find member by phone and email
+        const member = await Member.findOne({ 
+            phone,
+            email: email.toLowerCase()
+        });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found or email does not match' });
+        }
+
+        if (member.email_verified) {
+            return res.status(400).json({ error: 'Email already verified' });
+        }
+
+        // Check if code expired
+        if (new Date() > member.email_verification_expires) {
+            return res.status(400).json({ error: 'Verification code expired. Please request a new one.' });
+        }
+
+        // Check if code matches
+        if (member.email_verification_code !== verificationCode) {
+            return res.status(400).json({ error: 'Invalid verification code' });
+        }
+
+        // Mark as verified
+        member.email_verified = true;
+        member.email_verification_code = undefined;
+        member.email_verification_expires = undefined;
+        await member.save();
+
+        res.json({ 
+            message: 'Email verified successfully! You can now log in with your email.',
+            emailVerified: true
+        });
+
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

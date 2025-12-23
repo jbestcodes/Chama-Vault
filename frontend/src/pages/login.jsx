@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import AddEmail from '../components/AddEmail';
 
 
 const apiUrl = import.meta.env.VITE_API_URL; 
@@ -11,6 +12,8 @@ const Login = () => {
     const [otp, setOtp] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [showVerificationModal, setShowVerificationModal] = useState(false);
+    const [showAddEmailModal, setShowAddEmailModal] = useState(false);
+    const [userPhone, setUserPhone] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -75,7 +78,12 @@ const Login = () => {
                 }, 500);
             }
         } catch (error) {
-            if (error.response?.data?.emailVerified === false) {
+            if (error.response?.data?.needsEmail) {
+                // User needs to add email
+                setUserPhone(error.response.data.phone);
+                setShowAddEmailModal(true);
+                setError('');
+            } else if (error.response?.data?.emailVerified === false) {
                 // Email not verified
                 setError(
                     <div>
@@ -223,6 +231,17 @@ const Login = () => {
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
+    };
+
+    const handleEmailVerified = () => {
+        setShowAddEmailModal(false);
+        setSuccess('Email verified successfully! Please log in again.');
+        setPassword(''); // Clear password for security
+    };
+
+    const handleCancelAddEmail = () => {
+        setShowAddEmailModal(false);
+        setError('You need to add an email to your account to log in.');
     };
 
     return (
@@ -908,6 +927,15 @@ const Login = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Add Email Modal */}
+            {showAddEmailModal && (
+                <AddEmail
+                    phone={userPhone}
+                    onEmailVerified={handleEmailVerified}
+                    onCancel={handleCancelAddEmail}
+                />
             )}
             
         </div>
