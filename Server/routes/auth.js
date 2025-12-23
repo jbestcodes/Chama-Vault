@@ -287,29 +287,47 @@ router.post('/resend-verification', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { emailOrPhone, password } = req.body;
 
+    console.log('🔐 Login attempt:', { emailOrPhone: emailOrPhone?.substring(0, 5) + '***', timestamp: new Date().toISOString() });
+
     if (!emailOrPhone || !password) {
+        console.log('❌ Login failed: Missing credentials');
         return res.status(400).json({ error: 'Email/Phone and password are required' });
     }
 
     try {
         // Check if input is email or phone
         const isEmail = emailOrPhone.includes('@');
+        console.log('🔍 Looking up member by:', isEmail ? 'email' : 'phone');
+        
         const member = isEmail 
             ? await Member.findOne({ email: emailOrPhone })
             : await Member.findOne({ phone: emailOrPhone });
         
         if (!member) {
+            console.log('❌ Member not found for:', isEmail ? 'email' : 'phone');
             return res.status(400).json({ error: 'Invalid credentials' });
         }
+
+        console.log('✅ Member found:', { 
+            id: member._id, 
+            phone: member.phone,
+            hasEmail: !!member.email,
+            emailVerified: member.email_verified,
+            status: member.status 
+        });
 
         // Verify password first before checking other conditions
         const isValidPassword = await bcrypt.compare(password, member.password);
         if (!isValidPassword) {
+            console.log('❌ Invalid password for member:', member._id);
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
+        console.log('✅ Password verified for member:', member._id);
+
         // Check member status
         if (member.status === 'denied') {
+            console.log('❌ Login denied - membership denied');
             return res.status(403).json({ 
                 error: 'Your membership was denied. Please contact admin or apply to a different group.',
                 rejection_reason: member.rejection_reason
@@ -317,11 +335,13 @@ router.post('/login', async (req, res) => {
         }
 
         if (member.status === 'pending') {
+            console.log('❌ Login denied - membership pending approval');
             return res.status(403).json({ error: 'Your membership is still pending admin approval.' });
         }
 
         // Check if member has no email or undefined email (needs to add email)
         if (!member.email || member.email.trim() === '') {
+            console.log('⚠️ Member needs to add email:', member._id);
             return res.status(403).json({ 
                 error: 'Please add an email to your account',
                 needsEmail: true,
@@ -331,6 +351,7 @@ router.post('/login', async (req, res) => {
 
         // Check if email is verified
         if (!member.email_verified) {
+            console.log('⚠️ Email not verified for member:', member._id);
             return res.status(403).json({ 
                 error: 'Please verify your email before logging in',
                 emailVerified: false,
@@ -340,12 +361,14 @@ router.post('/login', async (req, res) => {
         }
 
         // Generate token for approved members only
+        console.log('✅ All checks passed, generating token for member:', member._id);
         const token = jwt.sign(
             { id: member._id, phone: member.phone, email: member.email, is_admin: member.is_admin },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
+        console.log('✅ Login successful for:', member.full_name);
         res.json({
             message: 'Login successful',
             token,
@@ -360,7 +383,8 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error.message);
+        console.error('Stack:', error.stack);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -572,13 +596,17 @@ router.put('/members/sms-preferences', authenticateToken, async (req, res) => {
 router.post('/add-email', async (req, res) => {
     const { phone, email } = req.body;
 
+    console.log('📧 Add email request for phone:', phone?.substring(0, 5) + '***');
+
     if (!phone || !email) {
+        console.log('❌ Missing phone or email');
         return res.status(400).json({ error: 'Phone number and email are required' });
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+        console.log('❌ Invalid email format');
         return res.status(400).json({ error: 'Invalid email format' });
     }
 
@@ -587,8 +615,11 @@ router.post('/add-email', async (req, res) => {
         const member = await Member.findOne({ phone });
         
         if (!member) {
+            console.log('❌ Member not found for phone');
             return res.status(404).json({ error: 'Member not found with this phone number' });
         }
+
+        console.log('✅ Member found:', member._id);
 
         // Check if email is already used by another member
         const emailExists = await Member.findOne({ 
@@ -597,8 +628,11 @@ router.post('/add-email', async (req, res) => {
         });
         
         if (emailExists) {
+            console.log('❌ Email already registered to another account');
             return res.status(400).json({ error: 'This email is already registered to another account' });
         }
+
+        console.log('✅ Email available, generating verification code');
 
         // Generate email verification code
         const verificationCode = crypto.randomInt(100000, 999999).toString();
@@ -611,11 +645,14 @@ router.post('/add-email', async (req, res) => {
         member.email_verification_expires = verificationExpires;
         await member.save();
 
+        console.log('✅ Email added to member account, sending verification email');
+
         // Send verification email
         try {
             await brevoEmailService.sendVerificationEmail(email, member.full_name, verificationCode);
+            console.log('✅ Verification email sent successfully');
         } catch (emailError) {
-            console.error('Error sending verification email:', emailError);
+            console.error('❌ Error sending verification email:', emailError.message);
             return res.status(500).json({ 
                 error: 'Failed to send verification email. Please try again.',
                 emailAdded: true // Email was added to account but sending failed
@@ -629,7 +666,8 @@ router.post('/add-email', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Add email error:', error);
+        console.error('❌ Add email error:', error.message);
+        console.error('Stack:', error.stack);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -637,6 +675,8 @@ router.post('/add-email', async (req, res) => {
 // Verify email after adding it
 router.post('/verify-added-email', async (req, res) => {
     const { phone, email, verificationCode } = req.body;
+
+    console.log('🔍 Verify email request for phone:', phone?.substring(0, 5) + '***');
 
     if (!phone || !email || !verificationCode) {
         return res.status(400).json({ error: 'Phone, email, and verification code are required' });

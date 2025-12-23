@@ -3,6 +3,12 @@ const brevo = require('@getbrevo/brevo');
 
 class BrevoEmailService {
     constructor() {
+        if (!process.env.BREVO_API_KEY) {
+            console.error('❌ BREVO_API_KEY is not set in environment variables!');
+        } else {
+            console.log('✅ Brevo email service initialized');
+        }
+        
         this.apiInstance = new brevo.TransactionalEmailsApi();
         this.apiInstance.setApiKey(
             brevo.TransactionalEmailsApiApiKeys.apiKey, 
