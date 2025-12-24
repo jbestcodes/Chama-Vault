@@ -170,6 +170,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
                 await handleSubscriptionCreated(event.data);
                 break;
                 
+            case 'charge.success':
+                await handleChargeSuccess(event.data);
+                break;
+                
             case 'invoice.payment_failed':
                 await handlePaymentFailed(event.data);
                 break;
@@ -441,6 +445,65 @@ async function handleSubscriptionDisabled(data) {
 
     } catch (error) {
         console.error('Error handling subscription disabled:', error);
+    }
+}
+
+async function handleChargeSuccess(data) {
+    try {
+        console.log('Processing charge success webhook:', data);
+
+        const { reference, subscription_code, amount } = data;
+
+        if (!subscription_code) {
+            console.error('No subscription_code in charge success data');
+            return;
+        }
+
+        // Find subscription by subscription code
+        const subscription = await Subscription.findOne({ subscription_code });
+
+        if (!subscription) {
+            console.error('Subscription not found for code:', subscription_code);
+            return;
+        }
+
+        // Calculate expiry based on plan
+        const now = new Date();
+        const expiryDate = subscription.plan_type === 'weekly'
+            ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)  // 7 days
+            : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+        // Activate subscription
+        subscription.status = 'active';
+        subscription.start_date = now;
+        subscription.expires_at = expiryDate;
+        subscription.next_payment_date = expiryDate;
+        subscription.features = getPlanFeatures(subscription.plan_type);
+
+        // Add payment to history if not already there
+        const existingPayment = subscription.payments.find(p => p.reference === reference);
+        if (!existingPayment) {
+            subscription.payments.push({
+                reference: reference,
+                amount: amount,
+                status: 'success',
+                paid_at: new Date()
+            });
+        }
+
+        await subscription.save();
+
+        // Update member's subscription status
+        await Member.findByIdAndUpdate(subscription.member_id, {
+            has_active_subscription: true,
+            subscription_plan: subscription.plan_type,
+            subscription_expires: expiryDate
+        });
+
+        console.log('Subscription activated via webhook:', subscription._id);
+
+    } catch (error) {
+        console.error('Error handling charge success:', error);
     }
 }
 

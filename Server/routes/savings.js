@@ -13,10 +13,14 @@ router.get('/group', authenticateToken, isAdmin, async (req, res) => {
     try {
         const adminId = req.user.id;
         const admin = await Member.findById(adminId);
-        const groupId = admin?.group_id;
+
+        // Find admin's group from group_memberships
+        const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
+        const groupId = adminMembership?.group_id;
+
         if (!groupId) {
-            console.log('No group_id found for admin:', adminId);
-            return res.status(400).json({ error: 'No group assigned.' });
+            console.log('No admin group found for admin:', adminId);
+            return res.status(400).json({ error: 'No admin group assigned.' });
         }
 
         console.log('Fetching members for group:', groupId);
@@ -120,12 +124,16 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
     try {
         const adminId = req.user.id;
         const admin = await Member.findById(adminId);
-        const groupId = admin?.group_id;
-        if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
+
+        // Find admin's group from group_memberships
+        const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
+        const groupId = adminMembership?.group_id;
+
+        if (!groupId) return res.status(400).json({ error: 'No admin group assigned.' });
 
         // Get all registered members in group
         const members = await Member.find(
-            { group_id: groupId },
+            { 'group_memberships.group_id': groupId, 'group_memberships.status': 'approved' },
             { id: '$_id', full_name: 1, phone: 1 }
         ).sort({ full_name: 1 });
 
@@ -657,10 +665,13 @@ router.post('/non-members/add', authenticateToken, isAdmin, async (req, res) => 
         }
 
         const admin = await Member.findById(adminId);
-        const groupId = admin?.group_id;
+
+        // Find admin's group from group_memberships
+        const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
+        const groupId = adminMembership?.group_id;
         
         if (!groupId) {
-            return res.status(400).json({ error: 'No group assigned.' });
+            return res.status(400).json({ error: 'No admin group assigned.' });
         }
 
         // Create virtual member ID

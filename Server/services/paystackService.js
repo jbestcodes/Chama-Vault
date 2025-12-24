@@ -11,12 +11,14 @@ class PaystackService {
                 name: 'Monthly Premium',
                 amount: 10000, // KES 100 in kobo
                 interval: 'monthly',
+                plan_code: 'PLN_sdxjk0g1ufsv7xa',
                 features: ['All SMS notifications', 'AI assistant access', 'Loan notifications', 'Contribution reminders', 'Group invites']
             },
             weekly: {
                 name: 'Weekly Premium', 
                 amount: 3000, // KES 30 in kobo
                 interval: 'weekly',
+                plan_code: 'PLN_s35pjg5h2wxi5rx',
                 features: ['All SMS notifications', 'AI assistant access', 'Loan notifications', 'Contribution reminders', 'Group invites']
             }
         };
@@ -40,6 +42,7 @@ class PaystackService {
                 {
                     customer: memberEmail,
                     plan: planCode,
+                    callback_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`,
                     metadata: {
                         member_id: memberId,
                         phone: memberPhone,
@@ -72,47 +75,8 @@ class PaystackService {
 
     // Get or create a plan
     async getOrCreatePlan(planType, planDetails) {
-        try {
-            // Try to get existing plan
-            const planCode = `Jaza Nyumba-${planType}`;
-            
-            try {
-                const existingPlan = await axios.get(
-                    `${this.baseURL}/plan/${planCode}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${this.secretKey}`
-                        }
-                    }
-                );
-                return planCode;
-            } catch (notFoundError) {
-                // Plan doesn't exist, create it
-                const response = await axios.post(
-                    `${this.baseURL}/plan`,
-                    {
-                        name: planDetails.name,
-                        amount: planDetails.amount,
-                        interval: planDetails.interval,
-                        plan_code: planCode,
-                        currency: 'KES',
-                        description: `Jaza Nyumba ${planDetails.name} - ${planDetails.features.join(', ')}`
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${this.secretKey}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-
-                return response.data.data.plan_code;
-            }
-
-        } catch (error) {
-            console.error('Plan creation error:', error.response?.data || error.message);
-            throw error;
-        }
+        // Return the existing plan code directly
+        return planDetails.plan_code;
     }
 
     // Verify subscription payment

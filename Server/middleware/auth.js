@@ -15,7 +15,7 @@ function authenticateToken(req, res, next) {
 
 // Check if user is admin
 function isAdmin(req, res, next) {
-    if (!req.user || req.user.role !== 'admin') {
+    if (!req.user || !req.user.is_admin) {
         return res.status(403).json({ error: 'Access denied. Admin required.' });
     }
     next();

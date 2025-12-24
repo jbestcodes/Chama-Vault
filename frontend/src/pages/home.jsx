@@ -26,102 +26,166 @@ const Home = () => {
         const fetchStats = async () => {
             try {
                 // Use localhost for development, production URL for production
-                const apiUrl = window.location.hostname === 'localhost' 
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost
                     ? 'http://localhost:5000/api/public/stats'
                     : 'https://jazanyumba.online/api/public/stats';
-                
+
                 console.log('📡 Fetching from:', apiUrl);
                 const response = await fetch(apiUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    // Add timeout
+                    signal: AbortSignal.timeout(10000) // 10 second timeout
                 });
-                
+
                 console.log('📥 Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
                 console.log('📊 API Response:', data);
+
                 if (data.success) {
                     setStats(data.data);
                     console.log('✅ Stats loaded successfully');
                 } else {
-                    console.warn('⚠️ API returned success=false:', data);
-                    setStats(getFallbackStats());
+                    throw new Error('API returned success: false');
                 }
             } catch (error) {
-                console.warn('❌ Error fetching stats, using fallback:', error);
-                setStats(getFallbackStats());
+                console.error('❌ Error fetching stats:', error);
+                // Set fallback data so the page still works
+                setStats({
+                    totalMembers: 'Growing fast!',
+                    totalGroups: 'Growing fast!',
+                    totalSavingsAmount: 'Building momentum!',
+                    activeSubscriptions: 'Growing fast!',
+                    testimonials: [
+                        {
+                            name: "Sarah Wanjiku",
+                            group: "Hope Savings Group",
+                            message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
+                            rating: 5
+                        },
+                        {
+                            name: "David Kiprop",
+                            group: "Future Builders Chama",
+                            message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
+                            rating: 5
+                        },
+                        {
+                            name: "Grace Achieng",
+                            group: "Women's Empowerment Circle",
+                            message: "The automated reminders and secure payments make group savings so much easier.",
+                            rating: 5
+                        }
+                    ],
+                    features: [
+                        {
+                            icon: "🤖",
+                            title: "AI-Powered Insights",
+                            description: "Get personalized financial advice and group performance analytics"
+                        },
+                        {
+                            icon: "📱",
+                            title: "Smart Notifications",
+                            description: "Automated SMS and email reminders for contributions and loans"
+                        },
+                        {
+                            icon: "🛡️",
+                            title: "Bank-Level Security",
+                            description: "Secure payments with M-Pesa integration and encrypted data"
+                        },
+                        {
+                            icon: "📊",
+                            title: "Real-Time Dashboard",
+                            description: "Track your savings progress with beautiful, interactive charts"
+                        },
+                        {
+                            icon: "👥",
+                            title: "Group Management",
+                            description: "Powerful admin tools for managing members, loans, and contributions"
+                        },
+                        {
+                            icon: "🎯",
+                            title: "Goal Tracking",
+                            description: "Set and achieve savings milestones with progress tracking"
+                    }
+                    ]
+                });
+                console.log('⚠️ Using fallback stats data');
             } finally {
                 setLoading(false);
-                console.log('🏁 Loading complete, stats:', stats);
             }
         };
         fetchStats();
     }, []);
 
     // Fallback stats when API fails
-    const getFallbackStats = () => ({
-        totalMembers: 1250,
-        totalGroups: 89,
-        totalSavingsAmount: 2500000,
-        activeSubscriptions: 156,
-        testimonials: [
-            {
-                name: "Sarah Wanjiku",
-                group: "Hope Savings Group",
-                message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
-                rating: 5
-            },
-            {
-                name: "David Kiprop",
-                group: "Future Builders Chama",
-                message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
-                rating: 5
-            },
-            {
-                name: "Grace Achieng",
-                group: "Women's Empowerment Circle",
-                message: "The automated reminders and secure payments make group savings so much easier.",
-                rating: 5
-            }
-        ],
-        features: [
-            {
-                icon: "🤖",
-                title: "AI-Powered Insights",
-                description: "Get personalized financial advice and group performance analytics"
-            },
-            {
-                icon: "📱",
-                title: "Smart Notifications",
-                description: "Automated SMS and email reminders for contributions and loans"
-            },
-            {
-                icon: "🔒",
-                title: "Bank-Level Security",
-                description: "Secure payments with M-Pesa integration and encrypted data"
-            },
-            {
-                icon: "📊",
-                title: "Real-Time Dashboard",
-                description: "Track your savings progress with beautiful, interactive charts"
-            },
-            {
-                icon: "👥",
-                title: "Group Management",
-                description: "Powerful admin tools for managing members, loans, and contributions"
-            },
-            {
-                icon: "🎯",
-                title: "Goal Tracking",
-                description: "Set and achieve savings milestones with progress tracking"
-            }
-        ]
-    });
+    const getFallbackStats = () => {
+        console.log('🔄 Using fallback stats');
+        return {
+            totalMembers: 'Growing fast!',
+            totalGroups: 'Growing fast!',
+            totalSavingsAmount: 'Building momentum!',
+            activeSubscriptions: 'Growing fast!',
+            testimonials: [
+                {
+                    name: "Sarah Wanjiku",
+                    group: "Hope Savings Group",
+                    message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
+                    rating: 5
+                },
+                {
+                    name: "David Kiprop",
+                    group: "Future Builders Chama",
+                    message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
+                    rating: 5
+                },
+                {
+                    name: "Grace Achieng",
+                    group: "Women's Empowerment Circle",
+                    message: "The automated reminders and secure payments make group savings so much easier.",
+                    rating: 5
+                }
+            ],
+            features: [
+                {
+                    icon: "🤖",
+                    title: "AI-Powered Insights",
+                    description: "Get personalized financial advice and group performance analytics"
+                },
+                {
+                    icon: "📱",
+                    title: "Smart Notifications",
+                    description: "Automated SMS and email reminders for contributions and loans"
+                },
+                {
+                    icon: "🛡️",
+                    title: "Bank-Level Security",
+                    description: "Secure payments with M-Pesa integration and encrypted data"
+                },
+                {
+                    icon: "📊",
+                    title: "Real-Time Dashboard",
+                    description: "Track your savings progress with beautiful, interactive charts"
+                },
+                {
+                    icon: "👥",
+                    title: "Group Management",
+                    description: "Powerful admin tools for managing members, loans, and contributions"
+                },
+                {
+                    icon: "🎯",
+                    title: "Goal Tracking",
+                    description: "Set and achieve savings milestones with progress tracking"
+                }
+            ]
+        };
+    };
 
     const slides = [
         {
@@ -173,6 +237,60 @@ const Home = () => {
     };
 
     console.log('🏠 Home component rendering, stats:', stats, 'loading:', loading);
+
+    // Show loading screen while fetching data
+    if (loading && !stats) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column'
+            }}>
+                <div style={{
+                    background: 'white',
+                    borderRadius: '20px',
+                    padding: '40px',
+                    textAlign: 'center',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+                }}>
+                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>🏦</div>
+                    <h1 style={{
+                        margin: '0 0 16px 0',
+                        color: '#333',
+                        fontSize: '28px',
+                        fontWeight: 'bold'
+                    }}>
+                        Welcome to Jaza Nyumba
+                    </h1>
+                    <p style={{
+                        margin: '0 0 20px 0',
+                        color: '#666',
+                        fontSize: '16px'
+                    }}>
+                        Loading your smart savings platform...
+                    </p>
+                    <div style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '4px solid #f3f3f3',
+                        borderTop: '4px solid #667eea',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        margin: '0 auto'
+                    }}></div>
+                </div>
+                <style>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
+            </div>
+        );
+    }
 
     return (
         <div style={{
@@ -309,25 +427,25 @@ const Home = () => {
                                     number: loading ? '...' : (stats?.totalMembers || 'Growing fast!'),
                                     label: 'Active Members',
                                     icon: '👥',
-                                    subtext: typeof (stats?.totalMembers) === 'string' && stats.totalMembers.includes('Growing') ? 'Join the movement!' : ''
+                                    subtext: typeof (stats?.totalMembers) === 'string' && stats?.totalMembers?.includes('Growing') ? 'Join the movement!' : ''
                                 },
                                 {
                                     number: loading ? '...' : (stats?.totalGroups || 'Growing fast!'),
                                     label: 'Savings Groups',
                                     icon: '🏢',
-                                    subtext: typeof (stats?.totalGroups) === 'string' && stats.totalGroups.includes('Growing') ? 'Start your group today!' : ''
+                                    subtext: typeof (stats?.totalGroups) === 'string' && stats?.totalGroups?.includes('Growing') ? 'Start your group today!' : ''
                                 },
                                 {
                                     number: loading ? '...' : (stats?.totalSavingsAmount || 'Building momentum!'),
                                     label: 'Total Savings',
                                     icon: '💰',
-                                    subtext: typeof (stats?.totalSavingsAmount) === 'string' && stats.totalSavingsAmount.includes('Building') ? 'Every journey starts with the first save!' : ''
+                                    subtext: typeof (stats?.totalSavingsAmount) === 'string' && stats?.totalSavingsAmount?.includes('Building') ? 'Every journey starts with the first save!' : ''
                                 },
                                 {
                                     number: loading ? '...' : (stats?.activeSubscriptions || 'Growing fast!'),
                                     label: 'Premium Users',
                                     icon: '⭐',
-                                    subtext: typeof (stats?.activeSubscriptions) === 'string' && stats.activeSubscriptions.includes('Growing') ? 'Upgrade for AI insights!' : ''
+                                    subtext: typeof (stats?.activeSubscriptions) === 'string' && stats?.activeSubscriptions?.includes('Growing') ? 'Upgrade for AI insights!' : ''
                                 }
                             ].map((stat, index) => (
                                 <div
