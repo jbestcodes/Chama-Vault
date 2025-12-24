@@ -50,7 +50,16 @@ const Login = () => {
                 password
             });
             
-            // Direct login successful
+            // Check if OTP is required
+            if (response.data.requiresOTP) {
+                setMemberId(response.data.memberId);
+                setStep(2); // Move to OTP verification step
+                setSuccess(response.data.message || 'Please check your email for verification code');
+                setIsLoading(false);
+                return;
+            }
+            
+            // Direct login successful (shouldn't happen now, but keep for backwards compatibility)
             if (response.data.token) {
                 const memberData = response.data.member;
                 
@@ -109,7 +118,8 @@ const Login = () => {
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/verify-login`, {
+            // Try email OTP verification first (new system)
+            const response = await axios.post(`${apiUrl}/api/auth/verify-login-otp`, {
                 memberId,
                 otp
             });
@@ -130,13 +140,19 @@ const Login = () => {
                 if (memberData.group_name) {
                     localStorage.setItem('group_name', memberData.group_name);
                 }
+                if (memberData.email) {
+                    localStorage.setItem('email', memberData.email);
+                }
 
                 // Check AI trial status if available
                 if (response.data.trialInfo) {
                     localStorage.setItem('aiTrialInfo', JSON.stringify(response.data.trialInfo));
                 }
 
-                navigate('/dashboard');
+                setSuccess('Login successful!');
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 500);
             }
         } catch (error) {
             setError(
@@ -155,15 +171,11 @@ const Login = () => {
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${apiUrl}/api/sms-auth/resend-login-otp`, {
+            const response = await axios.post(`${apiUrl}/api/auth/resend-login-otp`, {
                 memberId
             });
             
-            let message = response.data.message || 'New OTP sent to your phone';
-            if (response.data.remainingAttempts !== undefined) {
-                message += ` (${response.data.remainingAttempts} attempts remaining)`;
-            }
-            setSuccess(message);
+            setSuccess(response.data.message || 'New OTP sent to your email');
         } catch (error) {
             setError(
                 error.response?.data?.error ||

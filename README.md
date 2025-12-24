@@ -6,6 +6,25 @@ Jaza Nyumba is a comprehensive digital platform for managing Chama (savings grou
 
 ## ✨ Key Features
 
+### 📱 Progressive Web App (NEW!)
+- **Install on home screen** - Works like a native app without app store
+- **Offline support** - Service worker caches essential data
+- **iOS & Android** - Smart install prompts for both platforms
+- **Google Analytics tracking** - Monitor PWA installs and usage
+- **Auto-dismissal** - Respectful prompts (7-day cooldown)
+
+### 🔗 Non-Member Tracking & Auto-Matching (NEW!)
+- **Track non-registered members** - Add savings for members without smartphones
+- **Auto-matching** - When they register later, all past savings automatically link
+- **Manual matching** - Admin can manually link accounts if needed
+- **Complete history** - Members see full contribution history from day one
+
+### 🔐 Enhanced Security
+- **Email OTP verification** - Required for every login
+- **10-minute expiration** - Secure time-limited codes
+- **Rate limiting** - 3 OTP requests per hour
+- **Email notifications** - Login attempts tracked and notified
+
 ### 📱 SMS Integration
 - **Phone verification** with OTP authentication
 - **Automated reminders** for contributions and repayments  
@@ -21,7 +40,7 @@ Jaza Nyumba is a comprehensive digital platform for managing Chama (savings grou
 - **Goal tracking** and milestone management
 
 ### 💰 Financial Management
-- **Group savings tracking**
+- **Group savings tracking** (including non-members)
 - **Loan application and approval workflow**
 - **Repayment scheduling and tracking**
 - **Member rankings and leaderboards**
@@ -33,6 +52,7 @@ Jaza Nyumba is a comprehensive digital platform for managing Chama (savings grou
 - **Group invitations** with codes
 - **Contribution schedule management**
 - **SMS preference controls**
+- **Non-member management** - Track and match unregistered members
 
 ### 💳 Subscription System
 - **Member-based subscriptions** (KES 100/month, KES 30/week)
@@ -360,6 +380,32 @@ Server/
 4. Members can then register using their phone numbers
 5. Start tracking savings and managing loans!
 6. Try the AI assistant for personalized financial advice!
+
+### Generate PWA Icons (No Logo Needed!)
+
+Run this to create placeholder icons instantly:
+
+```bash
+cd frontend
+node generate-icons.js
+```
+
+This creates all 8 icon sizes with "JN" (Jaza Nyumba) text. Replace with your logo later!
+
+**Or use online tools:**
+- [PWA Asset Generator](https://www.pwabuilder.com/imageGenerator) - Upload any image
+- [Favicon.io](https://favicon.io/favicon-converter/) - Quick conversion
+
+### Google Analytics PWA Tracking
+
+Already integrated! Track these events in GA:
+- `pwa_prompt_shown` - Install prompt displayed
+- `pwa_install_accepted` - User installed app
+- `pwa_install_dismissed` - User declined install
+- `pwa_launched` - App opened from home screen
+- `pwa_ios_instructions_shown` - iOS guide viewed
+
+View in GA: Events → All Events → Filter by "pwa_"
 
 ## Route Analysis
 

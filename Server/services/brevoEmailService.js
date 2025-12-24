@@ -185,6 +185,71 @@ class BrevoEmailService {
     }
 
     /**
+     * Send login OTP for additional security
+     */
+    async sendLoginOTP(email, fullName, otpCode) {
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
+        
+        sendSmtpEmail.subject = "Your Login Verification Code - Jaza Nyumba";
+        sendSmtpEmail.sender = { 
+            name: "Jaza Nyumba", 
+            email: process.env.BREVO_SECURITY_EMAIL || "security@jazanyumba.online" 
+        };
+        sendSmtpEmail.to = [{ email, name: fullName }];
+        sendSmtpEmail.htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .code { background: #fff; padding: 15px; font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 8px; border: 2px dashed #4F46E5; border-radius: 8px; margin: 20px 0; color: #4F46E5; }
+                    .warning { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px; margin: 20px 0; }
+                    .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔐 Login Verification</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Hello ${fullName},</h2>
+                        <p>Someone is trying to sign in to your Jaza Nyumba account. Please enter this verification code to complete your login:</p>
+                        <div class="code">${otpCode}</div>
+                        <p><strong>This code will expire in 10 minutes.</strong></p>
+                        
+                        <div class="warning">
+                            <strong>⚠️ Security Notice:</strong><br>
+                            If you didn't attempt to log in, please ignore this email and consider changing your password immediately.
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #6b7280;">
+                            This is an extra security measure to protect your account. Never share this code with anyone.
+                        </p>
+                    </div>
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} Jaza Nyumba. All rights reserved.</p>
+                        <p>This is an automated security email. Please do not reply.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        try {
+            const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+            console.log('✅ Login OTP email sent:', response);
+            return { success: true, messageId: response.messageId };
+        } catch (error) {
+            console.error('❌ Error sending login OTP email:', error);
+            throw new Error('Failed to send login OTP email');
+        }
+    }
+
+    /**
      * Send password reset email
      */
     async sendPasswordResetEmail(email, fullName, resetToken) {

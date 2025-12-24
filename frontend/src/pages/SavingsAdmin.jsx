@@ -24,6 +24,8 @@ function SavingsAdmin() {
   const [memberId, setMemberId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [inviteError, setInviteError] = useState("");
   const [pendingMembers, setPendingMembers] = useState([]);
   const [approvalMsg, setApprovalMsg] = useState("");
   const [editing, setEditing] = useState({}); // { [week_member]: true }
@@ -208,8 +210,8 @@ function SavingsAdmin() {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            setError("");
-            setMessage("");
+            setInviteError("");
+            setInviteMessage("");
             const token = localStorage.getItem("token");
             try {
               const response = await axios.post(
@@ -220,10 +222,10 @@ function SavingsAdmin() {
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
-              setMessage(response.data.message || "Invitation sent successfully via email.");
+              setInviteMessage(response.data.message || "Invitation sent successfully via email.");
               e.target.reset();
             } catch (err) {
-              setError(err.response?.data?.error || "Error sending invitation");
+              setInviteError(err.response?.data?.error || "Error sending invitation");
             }
           }}
           style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
@@ -233,8 +235,8 @@ function SavingsAdmin() {
           <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "8px 18px", fontWeight: "bold" }}>
             Send Invitation
           </button>
-          {message && <span style={{ color: "green", marginLeft: 10 }}>{message}</span>}
-          {error && <span style={{ color: "red", marginLeft: 10 }}>{error}</span>}
+          {inviteMessage && <span style={{ color: "green", marginLeft: 10 }}>{inviteMessage}</span>}
+          {inviteError && <span style={{ color: "red", marginLeft: 10 }}>{inviteError}</span>}
         </form>
         <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
           💡 An invitation email will be sent with a registration link and invite code.

@@ -123,36 +123,78 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
         const groupId = admin?.group_id;
         if (!groupId) return res.status(400).json({ error: 'No group assigned.' });
 
-        // Get all members in group
+        // Get all registered members in group
         const members = await Member.find(
             { group_id: groupId },
             { id: '$_id', full_name: 1, phone: 1 }
         ).sort({ full_name: 1 });
 
-        // Get all distinct weeks for this group
+        // Get all distinct weeks for this group (including non-members)
         const memberIds = members.map(m => m._id);
-        const weeks = await Savings.distinct('week_number', { member_id: { $in: memberIds } });
-        weeks.sort((a, b) => a - b);
+        
+        // Get all savings for registered members
+        const registeredSavings = await Savings.find({ 
+            member_id: { $in: memberIds } 
+        });
+        
+        // Get all savings for non-members in this group
+        const nonMemberSavings = await Savings.find({ 
+            is_non_member: true,
+            group_id: groupId 
+        });
+        
+        // Combine all savings
+        const allSavings = [...registeredSavings, ...nonMemberSavings];
+        
+        // Get distinct weeks from all savings
+        const weeks = [...new Set(allSavings.map(s => s.week_number))].sort((a, b) => a - b);
 
-        // Get all savings for this group
-        const savings = await Savings.find({ member_id: { $in: memberIds } });
+        // Create virtual member entries for non-members
+        const nonMembers = [];
+        const nonMemberMap = new Map();
+        
+        nonMemberSavings.forEach(saving => {
+            if (!nonMemberMap.has(saving.member_id)) {
+                nonMemberMap.set(saving.member_id, {
+                    _id: saving.member_id,
+                    id: saving.member_id,
+                    full_name: saving.member_name + ' (Not Registered)',
+                    phone: 'N/A',
+                    is_non_member: true
+                });
+            }
+        });
+        
+        nonMembers.push(...nonMemberMap.values());
+
+        // Combine registered members and non-members
+        const allMembers = [...members.map(m => ({
+            _id: m._id,
+            id: m._id,
+            full_name: m.full_name,
+            phone: m.phone,
+            is_non_member: false
+        })), ...nonMembers];
 
         // Build matrix (convert member_id to string for frontend lookup)
         const matrix = {};
         weeks.forEach(week => { matrix[week] = {}; });
-        savings.forEach(saving => {
+        allSavings.forEach(saving => {
             if (!matrix[saving.week_number]) matrix[saving.week_number] = {};
             matrix[saving.week_number][saving.member_id.toString()] = saving.amount;
         });
 
-        // Calculate group total
-        const groupTotal = savings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
+        // Calculate group total (including non-members)
+        const groupTotal = allSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
 
         res.json({
-            members,
+            members: allMembers,
             weeks,
             matrix,
-            groupTotal
+            groupTotal,
+            registeredCount: members.length,
+            nonMemberCount: nonMembers.length,
+            totalMemberCount: allMembers.length
         });
     } catch (err) {
         console.error("MATRIX ERROR:", err);
@@ -460,7 +502,45 @@ router.get('/my-profile', authenticateToken, async (req, res) => {
 // Admin: Add savings for any member
 router.post('/admin/add', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const { member_id, week_number, amount } = req.body;
+        const { member_id, week_number, amount, non_member_name, non_member_phone, non_member_email } = req.body;
+        
+        // Allow admin to add savings for non-member (member not registered in app)
+        if (non_member_name && !member_id) {
+            if (!week_number || !amount) {
+                return res.status(400).json({ error: 'Week number and amount are required for non-member savings.' });
+            }
+            
+            const adminId = req.user.id;
+            const admin = await Member.findById(adminId);
+            const groupId = admin?.group_id;
+            
+            if (!groupId) {
+                return res.status(400).json({ error: 'No group assigned.' });
+            }
+            
+            // Create a virtual member ID using a special format for non-members
+            // This allows tracking their savings without requiring app registration
+            const virtualMemberId = `non-member-${groupId}-${non_member_name.toLowerCase().replace(/\s+/g, '-')}`;
+            
+            const newSavings = new Savings({
+                member_id: virtualMemberId,
+                week_number,
+                amount,
+                member_name: non_member_name, // Store the actual name
+                is_non_member: true,
+                group_id: groupId,
+                non_member_phone: non_member_phone, // Store for future matching
+                non_member_email: non_member_email  // Store for future matching
+            });
+            
+            await newSavings.save();
+            return res.status(201).json({ 
+                message: `Savings added successfully for ${non_member_name}`,
+                non_member: true
+            });
+        }
+        
+        // Regular member savings
         if (!member_id || !week_number || !amount) {
             return res.status(400).json({ error: 'Member, week, and amount are required.' });
         }
@@ -513,6 +593,267 @@ router.post('/admin/delete', authenticateToken, isAdmin, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error deleting savings.' });
+    }
+});
+
+// Get all non-members in group
+router.get('/non-members', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const adminId = req.user.id;
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
+        
+        if (!groupId) {
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
+
+        // Get all non-member savings for this group
+        const nonMemberSavings = await Savings.find({ 
+            is_non_member: true,
+            group_id: groupId 
+        });
+
+        // Extract unique non-members
+        const nonMemberMap = new Map();
+        nonMemberSavings.forEach(saving => {
+            if (!nonMemberMap.has(saving.member_id)) {
+                // Calculate total savings for this non-member
+                const totalSavings = nonMemberSavings
+                    .filter(s => s.member_id === saving.member_id)
+                    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+                
+                nonMemberMap.set(saving.member_id, {
+                    id: saving.member_id,
+                    member_id: saving.member_id,
+                    full_name: saving.member_name,
+                    phone: saving.non_member_phone || 'Not provided',
+                    email: saving.non_member_email || 'Not provided',
+                    total_savings: totalSavings,
+                    is_non_member: true
+                });
+            }
+        });
+
+        const nonMembers = Array.from(nonMemberMap.values());
+
+        res.json({ 
+            non_members: nonMembers,
+            count: nonMembers.length
+        });
+    } catch (error) {
+        console.error('Get non-members error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Add non-member to group
+router.post('/non-members/add', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { full_name } = req.body;
+        const adminId = req.user.id;
+        
+        if (!full_name || full_name.trim() === '') {
+            return res.status(400).json({ error: 'Full name is required.' });
+        }
+
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
+        
+        if (!groupId) {
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
+
+        // Create virtual member ID
+        const virtualMemberId = `non-member-${groupId}-${full_name.toLowerCase().replace(/\s+/g, '-')}`;
+        
+        // Check if non-member already exists
+        const existingNonMember = await Savings.findOne({ 
+            member_id: virtualMemberId,
+            is_non_member: true 
+        });
+        
+        if (existingNonMember) {
+            return res.status(400).json({ error: 'This non-member already exists in your group.' });
+        }
+
+        res.json({ 
+            message: `Non-member "${full_name}" added successfully. You can now add their savings.`,
+            non_member: {
+                id: virtualMemberId,
+                member_id: virtualMemberId,
+                full_name: full_name,
+                is_non_member: true
+            }
+        });
+    } catch (error) {
+        console.error('Add non-member error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Remove non-member and all their savings
+router.post('/non-members/remove', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { member_id } = req.body;
+        const adminId = req.user.id;
+        
+        if (!member_id) {
+            return res.status(400).json({ error: 'Member ID is required.' });
+        }
+
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
+        
+        if (!groupId) {
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
+
+        // Delete all savings for this non-member
+        const result = await Savings.deleteMany({ 
+            member_id: member_id,
+            is_non_member: true,
+            group_id: groupId 
+        });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Non-member not found or has no savings.' });
+        }
+
+        res.json({ 
+            message: 'Non-member and all their savings removed successfully.',
+            deleted_savings: result.deletedCount
+        });
+    } catch (error) {
+        console.error('Remove non-member error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Manually match non-member with registered member
+router.post('/non-members/match', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { non_member_id, registered_member_id } = req.body;
+        const adminId = req.user.id;
+        
+        if (!non_member_id || !registered_member_id) {
+            return res.status(400).json({ error: 'Both non-member ID and registered member ID are required.' });
+        }
+
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
+        
+        if (!groupId) {
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
+
+        // Verify registered member exists and is in the same group
+        const registeredMember = await Member.findOne({ 
+            _id: registered_member_id,
+            group_id: groupId
+        });
+
+        if (!registeredMember) {
+            return res.status(404).json({ error: 'Registered member not found in your group.' });
+        }
+
+        // Update all non-member savings to point to registered member
+        const result = await Savings.updateMany(
+            {
+                member_id: non_member_id,
+                is_non_member: true,
+                group_id: groupId
+            },
+            {
+                $set: {
+                    matched_member_id: registered_member_id,
+                    matched_at: new Date(),
+                    member_id: registered_member_id,
+                    is_non_member: false
+                }
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ error: 'No non-member savings found to match.' });
+        }
+
+        res.json({ 
+            message: `Successfully matched ${result.modifiedCount} savings records to ${registeredMember.full_name}`,
+            matched_savings: result.modifiedCount,
+            member: {
+                id: registeredMember._id,
+                full_name: registeredMember.full_name,
+                phone: registeredMember.phone,
+                email: registeredMember.email
+            }
+        });
+    } catch (error) {
+        console.error('Match non-member error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get potential matches for a non-member
+router.get('/non-members/:non_member_id/potential-matches', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { non_member_id } = req.params;
+        const adminId = req.user.id;
+        
+        const admin = await Member.findById(adminId);
+        const groupId = admin?.group_id;
+        
+        if (!groupId) {
+            return res.status(400).json({ error: 'No group assigned.' });
+        }
+
+        // Get the non-member's info
+        const nonMemberSaving = await Savings.findOne({ 
+            member_id: non_member_id,
+            is_non_member: true,
+            group_id: groupId
+        });
+
+        if (!nonMemberSaving) {
+            return res.status(404).json({ error: 'Non-member not found.' });
+        }
+
+        // Find potential matches by phone or email
+        const potentialMatches = [];
+        
+        if (nonMemberSaving.non_member_phone) {
+            const phoneMatches = await Member.find({ 
+                phone: nonMemberSaving.non_member_phone,
+                group_id: groupId
+            }).select('_id full_name phone email');
+            potentialMatches.push(...phoneMatches);
+        }
+
+        if (nonMemberSaving.non_member_email) {
+            const emailMatches = await Member.find({ 
+                email: nonMemberSaving.non_member_email,
+                group_id: groupId
+            }).select('_id full_name phone email');
+            potentialMatches.push(...emailMatches);
+        }
+
+        // Remove duplicates
+        const uniqueMatches = Array.from(
+            new Map(potentialMatches.map(m => [m._id.toString(), m])).values()
+        );
+
+        res.json({ 
+            non_member: {
+                id: non_member_id,
+                name: nonMemberSaving.member_name,
+                phone: nonMemberSaving.non_member_phone,
+                email: nonMemberSaving.non_member_email
+            },
+            potential_matches: uniqueMatches,
+            count: uniqueMatches.length
+        });
+    } catch (error) {
+        console.error('Get potential matches error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

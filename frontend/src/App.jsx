@@ -19,6 +19,7 @@ import Subscribe from './pages/Subscribe';
 import MemberPerformance from './components/MemberPerformance';
 import UserGuide from './pages/UserGuide';
 import SupportChat from './components/SupportChat';
+import InstallPWA from './components/InstallPWA';
 import useAutoLogout from './hooks/useAutoLogout';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -38,6 +39,7 @@ function App() {
 
   return (
     <>
+      <InstallPWA />
       <style>{`
         /* Fix button focus states - only remove outline, don't change colors */
         button:focus,

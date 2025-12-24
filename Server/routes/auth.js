@@ -132,6 +132,48 @@ router.post('/register', async (req, res) => {
             await Group.findByIdAndUpdate(group._id, { admin_id: newMember._id });
         }
 
+        // Check for non-member savings that can be matched
+        try {
+            const Savings = require('../models/Savings');
+            const nonMemberSavings = await Savings.find({
+                is_non_member: true,
+                group_id: group._id,
+                matched_member_id: null,
+                $or: [
+                    { non_member_phone: phone },
+                    { non_member_email: email }
+                ]
+            });
+
+            if (nonMemberSavings.length > 0) {
+                // Match found! Convert non-member savings to this member
+                const updateResult = await Savings.updateMany(
+                    {
+                        is_non_member: true,
+                        group_id: group._id,
+                        matched_member_id: null,
+                        $or: [
+                            { non_member_phone: phone },
+                            { non_member_email: email }
+                        ]
+                    },
+                    {
+                        $set: {
+                            matched_member_id: newMember._id,
+                            matched_at: new Date(),
+                            member_id: newMember._id, // Update to actual member ID
+                            is_non_member: false // Now they're a registered member
+                        }
+                    }
+                );
+
+                console.log(`✅ Auto-matched ${updateResult.modifiedCount} non-member savings to new member ${newMember.full_name}`);
+            }
+        } catch (matchError) {
+            console.error('Error matching non-member savings:', matchError);
+            // Don't fail registration if matching fails
+        }
+
         // Send verification email
         try {
             await brevoEmailService.sendVerificationEmail(email, full_name, verificationCode);
@@ -360,8 +402,89 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Generate token for approved members only
-        console.log('✅ All checks passed, generating token for member:', member._id);
+        // Generate and send login OTP for additional security
+        console.log('🔐 Generating login OTP for member:', member._id);
+        const loginOTP = crypto.randomInt(100000, 999999).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        member.login_otp = loginOTP;
+        member.login_otp_expires = otpExpires;
+        
+        // Track OTP requests for rate limiting
+        if (!member.otp_requests) {
+            member.otp_requests = [];
+        }
+        
+        // Remove old requests (older than 1 hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        member.otp_requests = member.otp_requests.filter(req => req.timestamp > oneHourAgo);
+        
+        member.otp_requests.push({
+            timestamp: new Date(),
+            type: 'login'
+        });
+        
+        await member.save();
+
+        // Send OTP via email
+        try {
+            await brevoEmailService.sendLoginOTP(member.email, member.full_name, loginOTP);
+            console.log('✅ Login OTP sent to:', member.email);
+        } catch (emailError) {
+            console.error('Failed to send login OTP:', emailError);
+            return res.status(500).json({ error: 'Failed to send login OTP' });
+        }
+
+        console.log('✅ Login OTP required for:', member.full_name);
+        res.json({
+            message: 'Login OTP sent to your email',
+            requiresOTP: true,
+            memberId: member._id,
+            email: member.email
+        });
+
+    } catch (error) {
+        console.error('❌ Login error:', error.message);
+        console.error('Stack:', error.stack);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Verify login OTP and complete login
+router.post('/verify-login-otp', async (req, res) => {
+    const { memberId, otp } = req.body;
+
+    console.log('🔐 Login OTP verification attempt for:', memberId);
+
+    if (!memberId || !otp) {
+        return res.status(400).json({ error: 'Member ID and OTP are required' });
+    }
+
+    try {
+        const member = await Member.findById(memberId);
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Check if OTP is valid and not expired
+        if (!member.login_otp || member.login_otp !== otp) {
+            console.log('❌ Invalid OTP for member:', member._id);
+            return res.status(400).json({ error: 'Invalid OTP' });
+        }
+
+        if (new Date() > member.login_otp_expires) {
+            console.log('❌ Expired OTP for member:', member._id);
+            return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+        }
+
+        // Clear login OTP
+        member.login_otp = undefined;
+        member.login_otp_expires = undefined;
+        await member.save();
+
+        // Generate token for approved members
+        console.log('✅ OTP verified, generating token for member:', member._id);
         const token = jwt.sign(
             { id: member._id, phone: member.phone, email: member.email, is_admin: member.is_admin },
             process.env.JWT_SECRET,
@@ -386,8 +509,50 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Login error:', error.message);
-        console.error('Stack:', error.stack);
+        console.error('❌ Login OTP verification error:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend login OTP
+router.post('/resend-login-otp', async (req, res) => {
+    const { memberId } = req.body;
+
+    if (!memberId) {
+        return res.status(400).json({ error: 'Member ID is required' });
+    }
+
+    try {
+        const member = await Member.findById(memberId);
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Generate new login OTP
+        const loginOTP = crypto.randomInt(100000, 999999).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        member.login_otp = loginOTP;
+        member.login_otp_expires = otpExpires;
+        await member.save();
+
+        // Send OTP via email
+        try {
+            await brevoEmailService.sendLoginOTP(member.email, member.full_name, loginOTP);
+            console.log('✅ Login OTP resent to:', member.email);
+        } catch (emailError) {
+            console.error('Failed to resend login OTP:', emailError);
+            return res.status(500).json({ error: 'Failed to send login OTP' });
+        }
+
+        res.json({ 
+            message: 'New login OTP sent to your email',
+            email: member.email
+        });
+
+    } catch (error) {
+        console.error('Error resending login OTP:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
