@@ -19,6 +19,20 @@ const TrialStatus = () => {
         try {
             const token = localStorage.getItem('token');
             
+            // Check localStorage first for immediate UI update
+            const memberData = localStorage.getItem('member');
+            if (memberData) {
+                const member = JSON.parse(memberData);
+                if (member.has_active_subscription && new Date() < new Date(member.subscription_expires)) {
+                    setSubscriptionInfo({
+                        hasActiveSubscription: true,
+                        plan: member.subscription_plan || 'premium',
+                        frequency: member.subscription_plan === 'weekly' ? 'weekly' : 'monthly',
+                        expiresAt: member.subscription_expires
+                    });
+                }
+            }
+            
             // Try to get AI trial status
             try {
                 const trialResponse = await axios.get(`${apiUrl}/api/ai/trial-status`, {
@@ -33,14 +47,15 @@ const TrialStatus = () => {
                 }
             }
 
-            // Get subscription info
+            // Get subscription info from API (this will override localStorage if API is available)
             try {
                 const subResponse = await axios.get(`${apiUrl}/api/subscriptions/status`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setSubscriptionInfo(subResponse.data);
             } catch (subError) {
-                // No subscription info available - this is normal for free users
+                // Keep localStorage data if API fails
+                console.log('Using localStorage subscription data');
             }
 
         } catch (error) {

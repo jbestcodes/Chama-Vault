@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
 import TrialStatus from '../components/TrialStatus';
 import GroupLeaderboard from '../components/GroupLeaderboard';
+import GroupSettingsView from '../components/GroupSettingsView';
 import useSEO from '../hooks/useSEO';
 
 const apiUrl = import.meta.env.VITE_API_URL; 
@@ -250,6 +251,9 @@ const Dashboard = () => {
           <p><strong>Group:</strong> {data.group_name}</p>
         )}
       </div>
+      
+      {/* Group Settings View for Members */}
+      <GroupSettingsView />
       
       {/* Group Leaderboard */}
       <GroupLeaderboard />

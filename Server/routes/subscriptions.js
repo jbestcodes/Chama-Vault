@@ -153,22 +153,29 @@ router.post('/subscribe', authenticateToken, async (req, res) => {
 // Handle Paystack webhook
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     try {
+        // Verify webhook signature
+        const hash = require('crypto')
+            .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+            .update(JSON.stringify(req.body))
+            .digest('hex');
+
+        if (hash !== req.headers['x-paystack-signature']) {
+            return res.status(400).json({ error: 'Invalid signature' });
+        }
+
         const event = req.body;
-        
-        // Verify webhook signature (implement based on Paystack docs)
-        // const signature = req.headers['x-paystack-signature'];
         
         switch (event.event) {
             case 'subscription.create':
-                await this.handleSubscriptionCreated(event.data);
+                await handleSubscriptionCreated(event.data);
                 break;
                 
             case 'invoice.payment_failed':
-                await this.handlePaymentFailed(event.data);
+                await handlePaymentFailed(event.data);
                 break;
                 
             case 'subscription.disable':
-                await this.handleSubscriptionDisabled(event.data);
+                await handleSubscriptionDisabled(event.data);
                 break;
                 
             default:
@@ -318,19 +325,120 @@ function getPlanFeatures(planType) {
 }
 
 async function handleSubscriptionCreated(data) {
-    // Handle subscription creation webhook
-    console.log('Subscription created:', data);
+    try {
+        console.log('Processing subscription created webhook:', data);
+
+        const { subscription_code, customer, plan, metadata } = data;
+        const memberId = metadata.member_id;
+        const planType = metadata.plan_type;
+
+        if (!memberId) {
+            console.error('No member_id in subscription metadata');
+            return;
+        }
+
+        // Get plan details to determine features
+        const planFeatures = getPlanFeatures(planType);
+
+        // Create or update subscription
+        const subscriptionData = {
+            member_id: memberId,
+            plan_type: planType,
+            status: 'active',
+            subscription_code: subscription_code,
+            customer_code: customer.customer_code,
+            amount: plan.amount / 100, // Convert from kobo to KES
+            currency: plan.currency,
+            interval: plan.interval,
+            start_date: new Date(),
+            next_payment_date: new Date(Date.now() + (planType === 'monthly' ? 30 : 7) * 24 * 60 * 60 * 1000),
+            features: planFeatures,
+            updated_at: new Date()
+        };
+
+        // Use upsert to create or update
+        await Subscription.findOneAndUpdate(
+            { member_id: memberId },
+            subscriptionData,
+            { upsert: true, new: true }
+        );
+
+        // Update member's subscription status
+        const expiryDate = subscriptionData.next_payment_date;
+        await Member.findByIdAndUpdate(memberId, {
+            has_active_subscription: true,
+            subscription_plan: planType,
+            subscription_expires: expiryDate
+        });
+
+        console.log(`Subscription activated for member ${memberId}`);
+
+    } catch (error) {
+        console.error('Error handling subscription created:', error);
+    }
 }
 
 async function handlePaymentFailed(data) {
-    // Handle failed payment webhook
-    console.log('Payment failed:', data);
-    // You might want to send notifications here
+    try {
+        console.log('Processing payment failed webhook:', data);
+
+        const { subscription_code } = data;
+
+        if (!subscription_code) {
+            console.error('No subscription_code in payment failed data');
+            return;
+        }
+
+        // Find subscription and mark as suspended or handle failed payment
+        const subscription = await Subscription.findOne({ subscription_code });
+
+        if (subscription) {
+            // You might want to suspend features or send notifications
+            console.log(`Payment failed for subscription ${subscription_code}, member ${subscription.member_id}`);
+            // Could update status to 'suspended' or send notification
+        }
+
+    } catch (error) {
+        console.error('Error handling payment failed:', error);
+    }
 }
 
 async function handleSubscriptionDisabled(data) {
-    // Handle subscription disabled webhook
-    console.log('Subscription disabled:', data);
+    try {
+        console.log('Processing subscription disabled webhook:', data);
+
+        const { subscription_code } = data;
+
+        if (!subscription_code) {
+            console.error('No subscription_code in subscription disabled data');
+            return;
+        }
+
+        // Update subscription status to cancelled
+        const subscription = await Subscription.findOneAndUpdate(
+            { subscription_code },
+            {
+                status: 'cancelled',
+                cancelled_at: new Date(),
+                updated_at: new Date()
+            },
+            { new: true }
+        );
+
+        // Update member's subscription status if subscription found
+        if (subscription) {
+            await Member.findByIdAndUpdate(subscription.member_id, {
+                has_active_subscription: false,
+                subscription_plan: null,
+                subscription_expires: null
+            });
+        }
+
+        console.log(`Subscription ${subscription_code} cancelled`);
+
+    } catch (error) {
+        console.error('Error handling subscription disabled:', error);
+    }
 }
 
 module.exports = router;

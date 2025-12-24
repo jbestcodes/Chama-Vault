@@ -28,8 +28,9 @@ function SavingsAdmin() {
   const [inviteError, setInviteError] = useState("");
   const [pendingMembers, setPendingMembers] = useState([]);
   const [approvalMsg, setApprovalMsg] = useState("");
-  const [editing, setEditing] = useState({}); // { [week_member]: true }
-  const [editValue, setEditValue] = useState("");
+  const [isNonMember, setIsNonMember] = useState(false);
+  const [nonMemberName, setNonMemberName] = useState("");
+  const [nonMemberPhone, setNonMemberPhone] = useState("");
 
   // Fetch only the group-specific matrix (members, weeks, matrix, groupTotal)
   const fetchMatrix = async () => {
@@ -85,17 +86,54 @@ function SavingsAdmin() {
     e.preventDefault();
     setError("");
     setMessage("");
+
+    // Validation
+    if (isNonMember && !nonMemberName.trim()) {
+      setError("Please enter the member's full name");
+      return;
+    }
+    if (!isNonMember && !memberId) {
+      setError("Please select a member");
+      return;
+    }
+    if (!amount || !weekNumber) {
+      setError("Please enter amount and week number");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${apiUrl}/api/savings/admin/add`, // <-- Use backticks and apiUrl
-        { member_id: memberId, week_number: weekNumber, amount },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMessage("Savings added successfully.");
+
+      if (isNonMember) {
+        // Add savings for non-registered member
+        await axios.post(
+          `${apiUrl}/api/savings/admin/add-non-member`,
+          {
+            full_name: nonMemberName.trim(),
+            phone: nonMemberPhone.trim() || null,
+            week_number: weekNumber,
+            amount
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setMessage(`Savings added successfully for ${nonMemberName}`);
+      } else {
+        // Add savings for registered member
+        await axios.post(
+          `${apiUrl}/api/savings/admin/add`,
+          { member_id: memberId, week_number: weekNumber, amount },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setMessage("Savings added successfully.");
+      }
+
+      // Reset form
       setAmount("");
       setWeekNumber("");
       setMemberId("");
+      setNonMemberName("");
+      setNonMemberPhone("");
+      setIsNonMember(false);
       await fetchMatrix();
     } catch (err) {
       setError(err.response?.data?.error || "Error adding savings");
@@ -272,47 +310,91 @@ function SavingsAdmin() {
         </table>
       </div>
       {/* Savings Matrix Table */}
-      <form onSubmit={handleAdd} style={{ marginBottom: 24, background: "#f5f5f5", padding: 16, borderRadius: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-        <select
-          id="memberId"
-          name="memberId"
-          value={memberId}
-          onChange={(e) => setMemberId(e.target.value)}
-          required
-          style={{ minWidth: 140 }}
-        >
-          <option value="">Select Member</option>
-          {members.filter(m => m.id != null).map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.full_name}
-            </option>
-          ))}
-        </select>
-        <input
-          id="amount"
-          name="amount"
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          style={{ minWidth: 100 }}
-        />
-        <input
-          id="weekNumber"
-          name="weekNumber"
-          type="number"
-          placeholder="Week Number"
-          value={weekNumber}
-          onChange={(e) => setWeekNumber(e.target.value)}
-          required
-          style={{ minWidth: 120 }}
-        />
-        <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "8px 18px", fontWeight: "bold" }}>
-          Add Savings
-        </button>
-        {message && <span style={{ color: "green", marginLeft: 10 }}>{message}</span>}
-        {error && <span style={{ color: "red", marginLeft: 10 }}>{error}</span>}
+      <form onSubmit={handleAdd} style={{ marginBottom: 24, background: "#f5f5f5", padding: 16, borderRadius: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
+          <input
+            type="checkbox"
+            id="isNonMember"
+            checked={isNonMember}
+            onChange={(e) => {
+              setIsNonMember(e.target.checked);
+              if (!e.target.checked) {
+                setNonMemberName("");
+                setNonMemberPhone("");
+                setMemberId("");
+              }
+            }}
+            style={{ marginRight: 8 }}
+          />
+          <label htmlFor="isNonMember" style={{ fontSize: 14, fontWeight: 500 }}>
+            Add savings for non-registered member
+          </label>
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+          {isNonMember ? (
+            <>
+              <input
+                type="text"
+                placeholder="Member Full Name"
+                value={nonMemberName}
+                onChange={(e) => setNonMemberName(e.target.value)}
+                required={isNonMember}
+                style={{ minWidth: 160 }}
+              />
+              <input
+                type="tel"
+                placeholder="Phone Number (optional)"
+                value={nonMemberPhone}
+                onChange={(e) => setNonMemberPhone(e.target.value)}
+                style={{ minWidth: 140 }}
+              />
+            </>
+          ) : (
+            <select
+              id="memberId"
+              name="memberId"
+              value={memberId}
+              onChange={(e) => setMemberId(e.target.value)}
+              required={!isNonMember}
+              style={{ minWidth: 140 }}
+            >
+              <option value="">Select Member</option>
+              {members.filter(m => m.id != null).map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.full_name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <input
+            id="amount"
+            name="amount"
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+            style={{ minWidth: 100 }}
+          />
+          <input
+            id="weekNumber"
+            name="weekNumber"
+            type="number"
+            placeholder="Week Number"
+            value={weekNumber}
+            onChange={(e) => setWeekNumber(e.target.value)}
+            required
+            style={{ minWidth: 120 }}
+          />
+          <button type="submit" style={{ background: "#1976d2", color: "#fff", border: "none", borderRadius: 4, padding: "8px 18px", fontWeight: "bold" }}>
+            Add Savings
+          </button>
+        </div>
+
+        {message && <div style={{ color: "green", marginTop: 10, fontSize: 14 }}>{message}</div>}
+        {error && <div style={{ color: "red", marginTop: 10, fontSize: 14 }}>{error}</div>}
       </form>
       <table style={{ borderCollapse: "collapse", minWidth: 600 }}>
         <thead>

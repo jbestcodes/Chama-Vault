@@ -4,7 +4,7 @@ import logoImage from './media/logo.png';
 
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const navigate = useNavigate();
     const location = window.location.pathname;
@@ -31,7 +31,7 @@ function Navbar() {
 
     // Responsive handler
     useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth <= 600);
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
@@ -329,38 +329,76 @@ function Navbar() {
                         >
                             Logout
                         </button>
-                    ) : !token && location !== '/login' && location !== '/register' && (
-                        <Link
-                            to="/login"
-                            onClick={() => setIsMenuOpen(false)}
-                            style={{
-                                background: "#4CAF50",
-                                color: "#fff",
-                                textDecoration: "none",
-                                borderRadius: "6px",
-                                padding: "8px 16px",
-                                fontWeight: "600",
-                                fontSize: "14px",
-                                marginLeft: isMobile ? 0 : "8px",
-                                marginTop: isMobile ? "10px" : 0,
-                                display: "inline-block",
-                                transition: "all 0.3s ease",
-                                boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.backgroundColor = "#388e3c";
-                                e.target.style.transform = "translateY(-1px)";
-                                e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.backgroundColor = "#4CAF50";
-                                e.target.style.transform = "translateY(0)";
-                                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-                            }}
-                        >
-                            Login
-                        </Link>
-                    )}
+                    ) : !token ? (
+                        <div style={{
+                            display: "flex",
+                            flexDirection: isMobile ? "column" : "row",
+                            gap: isMobile ? "10px" : "8px",
+                            marginLeft: isMobile ? 0 : "8px",
+                            marginTop: isMobile ? "10px" : 0
+                        }}>
+                            <Link
+                                to="/login"
+                                onClick={() => setIsMenuOpen(false)}
+                                style={{
+                                    background: "#4CAF50",
+                                    color: "#fff",
+                                    textDecoration: "none",
+                                    borderRadius: "6px",
+                                    padding: "8px 16px",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                    display: "inline-block",
+                                    transition: "all 0.3s ease",
+                                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                    textAlign: "center"
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.backgroundColor = "#388e3c";
+                                    e.target.style.transform = "translateY(-1px)";
+                                    e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.backgroundColor = "#4CAF50";
+                                    e.target.style.transform = "translateY(0)";
+                                    e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+                                }}
+                            >
+                                Login
+                            </Link>
+                            {location !== '/register' && (
+                                <Link
+                                    to="/register"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    style={{
+                                        background: "#1976d2",
+                                        color: "#fff",
+                                        textDecoration: "none",
+                                        borderRadius: "6px",
+                                        padding: "8px 16px",
+                                        fontWeight: "600",
+                                        fontSize: "14px",
+                                        display: "inline-block",
+                                        transition: "all 0.3s ease",
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                        textAlign: "center"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = "#1565c0";
+                                        e.target.style.transform = "translateY(-1px)";
+                                        e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = "#1976d2";
+                                        e.target.style.transform = "translateY(0)";
+                                        e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+                                    }}
+                                >
+                                    Sign Up
+                                </Link>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </nav>

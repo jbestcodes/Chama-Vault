@@ -10,6 +10,8 @@ function Subscribe() {
     const [selectedPlan, setSelectedPlan] = useState('monthly');
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
+    const [showManualVerify, setShowManualVerify] = useState(false);
+    const [transactionRef, setTransactionRef] = useState('');
 
     useEffect(() => {
         document.title = "Subscribe - Jaza Nyumba | Premium Features";
@@ -113,27 +115,82 @@ function Subscribe() {
         setProcessing(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${apiUrl}/api/subscriptions/verify`, {
+            const response = await fetch(`${apiUrl}/api/subscriptions/verify/${reference.reference}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    reference: reference.reference,
                     plan: selectedPlan
                 })
             });
 
             if (response.ok) {
+                const data = await response.json();
                 alert('Subscription activated successfully!');
+                // Update localStorage to reflect premium status
+                const memberData = localStorage.getItem('member');
+                if (memberData) {
+                    const member = JSON.parse(memberData);
+                    member.has_active_subscription = true;
+                    member.subscription_plan = selectedPlan;
+                    member.subscription_expires = data.subscription.expiresAt;
+                    localStorage.setItem('member', JSON.stringify(member));
+                }
                 navigate('/dashboard');
             } else {
-                alert('Payment verification failed. Please contact support.');
+                const errorData = await response.json();
+                alert(`Payment verification failed: ${errorData.error || 'Please contact support.'}`);
             }
         } catch (error) {
             console.error('Error verifying payment:', error);
             alert('Payment verification failed. Please contact support.');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleManualVerification = async () => {
+        if (!transactionRef.trim()) {
+            alert('Please enter a transaction reference');
+            return;
+        }
+
+        setProcessing(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/subscriptions/verify/${transactionRef.trim()}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    plan: selectedPlan
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert('Subscription activated successfully!');
+                // Update localStorage to reflect premium status
+                const memberData = localStorage.getItem('member');
+                if (memberData) {
+                    const member = JSON.parse(memberData);
+                    member.has_active_subscription = true;
+                    member.subscription_plan = selectedPlan;
+                    member.subscription_expires = data.subscription.expiresAt;
+                    localStorage.setItem('member', JSON.stringify(member));
+                }
+                navigate('/dashboard');
+            } else {
+                const errorData = await response.json();
+                alert(`Payment verification failed: ${errorData.error || 'Please check your transaction reference and try again.'}`);
+            }
+        } catch (error) {
+            console.error('Error verifying payment:', error);
+            alert('Payment verification failed. Please check your transaction reference and try again.');
         } finally {
             setProcessing(false);
         }
@@ -289,7 +346,44 @@ function Subscribe() {
                     <div className="mt-6 text-center text-sm text-gray-500">
                         <p>Secure payment powered by Paystack</p>
                         <p>Your subscription will auto-renew unless cancelled</p>
+                        <button
+                            onClick={() => setShowManualVerify(!showManualVerify)}
+                            className="mt-2 text-blue-600 hover:text-blue-800 underline"
+                        >
+                            Already paid? Verify with transaction code
+                        </button>
                     </div>
+
+                    {/* Manual Verification Section */}
+                    {showManualVerify && (
+                        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <h4 className="text-lg font-semibold mb-2 text-yellow-800">Manual Payment Verification</h4>
+                            <p className="text-sm text-yellow-700 mb-4">
+                                If you've already made a payment but it hasn't been verified automatically,
+                                enter your transaction reference below to activate your subscription.
+                            </p>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={transactionRef}
+                                    onChange={(e) => setTransactionRef(e.target.value)}
+                                    placeholder="Use the code beginning with T... sent to your email"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    disabled={processing}
+                                />
+                                <button
+                                    onClick={handleManualVerification}
+                                    disabled={processing || !transactionRef.trim()}
+                                    className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-md transition-colors"
+                                >
+                                    {processing ? 'Verifying...' : 'Verify'}
+                                </button>
+                            </div>
+                            <p className="text-xs text-yellow-600 mt-2">
+                                You can find your transaction reference in your payment confirmation email or SMS from Paystack.
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

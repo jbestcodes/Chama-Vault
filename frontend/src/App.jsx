@@ -149,6 +149,12 @@ function App() {
           <div className="flex justify-centre gap-4 text-sm">
             <a href="/terms" style={{ color: "#1976d2"}}>Terms & Conditions</a>
             <a href="/privacy" style={{ color: "#1976d2"}}>Privacy Policy</a>
+            {!localStorage.getItem('token') && (
+              <>
+                <a href="/login" style={{ color: "#1976d2"}}>Login</a>
+                <a href="/register" style={{ color: "#1976d2"}}>Sign Up</a>
+              </>
+            )}
           </div>
           <div style={{ color: "#1976d2" }} className="text-sm">
             Built with ❤️ by{' '}

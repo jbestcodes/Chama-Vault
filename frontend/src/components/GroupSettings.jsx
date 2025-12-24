@@ -17,6 +17,7 @@ const GroupSettings = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [groupId, setGroupId] = useState(null);
+    const [settingsSaved, setSettingsSaved] = useState(false);
 
     useEffect(() => {
         // Get group_id from localStorage or member object
@@ -88,6 +89,7 @@ const GroupSettings = () => {
             if (response.ok) {
                 const data = await response.json();
                 setMessage('Settings updated successfully! ✅');
+                setSettingsSaved(true);
                 // Update local settings with confirmed values
                 if (data.interest_rate !== undefined) {
                     setSettings(prev => ({ ...prev, interest_rate: data.interest_rate }));
@@ -399,7 +401,7 @@ const GroupSettings = () => {
                         fontSize: '14px'
                     }}
                 >
-                    {loading ? 'Updating...' : '💾 Save Settings'}
+                    {loading ? 'Updating...' : (settingsSaved ? '✏️ Edit Settings' : '💾 Save Settings')}
                 </button>
             </form>
 
