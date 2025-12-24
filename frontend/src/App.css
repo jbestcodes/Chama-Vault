@@ -107,18 +107,18 @@ nav a:hover {
 
 /*==== Buttons ====*/
 button {
-  background-color: var(--jungle-green);
-  color: var(--white);
+  /* Removed global button styles to allow Tailwind classes to work */
+  /* background-color: var(--jungle-green); */
+  /* color: var(--white); */
   border: none;
   border-radius: 4px;
-  padding: 10px 20px;
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s;
 }
 
 button:hover {
-  background-color: darken(var(--jungle-green), 10%);
+  /* background-color: darken(var(--jungle-green), 10%); */
 }
 
 /* ==== Dashboard Layout ==== */

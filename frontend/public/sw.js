@@ -64,7 +64,7 @@ self.addEventListener('fetch', (event) => {
           return caches.match(request);
         })
     );
-  } else {
+  } else if (!url.pathname.startsWith('/api/')) {
     // Static assets - cache first, then network
     event.respondWith(
       caches.match(request)

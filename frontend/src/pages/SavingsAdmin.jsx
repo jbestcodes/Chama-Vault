@@ -107,7 +107,7 @@ function SavingsAdmin() {
       if (isNonMember) {
         // Add savings for non-registered member
         await axios.post(
-          `${apiUrl}/api/savings/admin/add-non-member`,
+          `${apiUrl}/api/savings/non-members/add`,
           {
             full_name: nonMemberName.trim(),
             phone: nonMemberPhone.trim() || null,

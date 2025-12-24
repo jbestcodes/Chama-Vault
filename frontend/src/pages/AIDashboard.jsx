@@ -191,7 +191,7 @@ const AIDashboard = () => {
                                         </button>
                                     </Link>
                                     <Link to="/register">
-                                        <button className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                                        <button className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-800 transition-colors font-semibold">
                                             Register
                                         </button>
                                     </Link>
@@ -235,7 +235,7 @@ const AIDashboard = () => {
                                                         </button>
                                                     </Link>
                                                     <Link to="/register">
-                                                        <button className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition-colors">
+                                                        <button className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-800 transition-colors">
                                                             Register
                                                         </button>
                                                     </Link>
@@ -319,7 +319,7 @@ const AIDashboard = () => {
                                             </button>
                                         </Link>
                                         <Link to="/register">
-                                            <button className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors">
+                                            <button className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-800 transition-colors">
                                                 Register Free
                                             </button>
                                         </Link>

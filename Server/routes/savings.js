@@ -649,7 +649,7 @@ router.get('/non-members', authenticateToken, isAdmin, async (req, res) => {
 // Add non-member to group
 router.post('/non-members/add', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const { full_name } = req.body;
+        const { full_name, phone, week_number, amount } = req.body;
         const adminId = req.user.id;
         
         if (!full_name || full_name.trim() === '') {
@@ -676,15 +676,40 @@ router.post('/non-members/add', authenticateToken, isAdmin, async (req, res) => 
             return res.status(400).json({ error: 'This non-member already exists in your group.' });
         }
 
-        res.json({ 
-            message: `Non-member "${full_name}" added successfully. You can now add their savings.`,
-            non_member: {
-                id: virtualMemberId,
+        // If amount and week_number provided, add the savings
+        if (amount && week_number) {
+            const newSaving = new Savings({
                 member_id: virtualMemberId,
-                full_name: full_name,
-                is_non_member: true
-            }
-        });
+                group_id: groupId,
+                amount: Number(amount),
+                week_number: Number(week_number),
+                is_non_member: true,
+                member_name: full_name,
+                non_member_phone: phone || null
+            });
+            
+            await newSaving.save();
+            
+            res.json({ 
+                message: `Savings of KSh ${amount} added successfully for non-member "${full_name}" in week ${week_number}.`,
+                non_member: {
+                    id: virtualMemberId,
+                    member_id: virtualMemberId,
+                    full_name: full_name,
+                    is_non_member: true
+                }
+            });
+        } else {
+            res.json({ 
+                message: `Non-member "${full_name}" added successfully. You can now add their savings.`,
+                non_member: {
+                    id: virtualMemberId,
+                    member_id: virtualMemberId,
+                    full_name: full_name,
+                    is_non_member: true
+                }
+            });
+        }
     } catch (error) {
         console.error('Add non-member error:', error);
         res.status(500).json({ error: 'Internal server error' });
