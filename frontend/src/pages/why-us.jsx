@@ -53,7 +53,7 @@ function WhyUs() {
           <li style={{ marginBottom: 8 }}><strong>🤖 AI Financial Insights:</strong> Get personalized financial advice and deadline nudges powered by advanced AI</li>
           <li style={{ marginBottom: 8 }}><strong>⚡ Smart Performance Ratings:</strong> Track timing quality for contributions and loan repayments (excellent/good/fair/poor)</li>
           <li style={{ marginBottom: 8 }}><strong>🏆 Privacy-First Leaderboards:</strong> Masked member names with color-coded performance ratings protect privacy while fostering healthy competition</li>
-          <li style={{ marginBottom: 8 }}><strong>📱 Automated SMS Reminders:</strong> Never miss a payment with intelligent SMS notifications via Africa's Talking</li>
+          <li style={{ marginBottom: 8 }}><strong>📱 Automated SMS/Email Reminders:</strong> Never miss a payment with intelligent SMS notifications via Africa's Talking</li>
           <li style={{ marginBottom: 8 }}><strong>🎯 Milestone Deadline Tracking:</strong> Set savings goals with target dates and get AI alerts when deadlines approach</li>
           <li style={{ marginBottom: 8 }}><strong>💬 Live AI Support Chat:</strong> Get instant help 24/7 with context-aware support powered by AI</li>
           <li style={{ marginBottom: 8 }}><strong>📊 Table Banking Management:</strong> Complete table banking with contribution timing ratings and detailed analytics</li>

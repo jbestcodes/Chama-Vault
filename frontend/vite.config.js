@@ -10,8 +10,9 @@ export default defineConfig({
     }
   },
   build: {
-    // Enable code splitting and chunk optimization
+    // Explicitly set entry point
     rollupOptions: {
+      input: './index.html',
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],

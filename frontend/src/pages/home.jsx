@@ -59,30 +59,11 @@ const Home = () => {
                 console.error('❌ Error fetching stats:', error);
                 // Set fallback data so the page still works
                 setStats({
-                    totalMembers: 'Growing fast!',
-                    totalGroups: 'Growing fast!',
-                    totalSavingsAmount: 'Building momentum!',
-                    activeSubscriptions: 'Growing fast!',
-                    testimonials: [
-                        {
-                            name: "Sarah Wanjiku",
-                            group: "Hope Savings Group",
-                            message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
-                            rating: 5
-                        },
-                        {
-                            name: "David Kiprop",
-                            group: "Future Builders Chama",
-                            message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
-                            rating: 5
-                        },
-                        {
-                            name: "Grace Achieng",
-                            group: "Women's Empowerment Circle",
-                            message: "The automated reminders and secure payments make group savings so much easier.",
-                            rating: 5
-                        }
-                    ],
+                    totalMembers: null,
+                    totalGroups: null,
+                    totalSavingsAmount: null,
+                    activeSubscriptions: null,
+                    testimonials: [],
                     features: [
                         {
                             icon: "🤖",
@@ -128,30 +109,11 @@ const Home = () => {
     const getFallbackStats = () => {
         console.log('🔄 Using fallback stats');
         return {
-            totalMembers: 'Growing fast!',
-            totalGroups: 'Growing fast!',
-            totalSavingsAmount: 'Building momentum!',
-            activeSubscriptions: 'Growing fast!',
-            testimonials: [
-                {
-                    name: "Sarah Wanjiku",
-                    group: "Hope Savings Group",
-                    message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
-                    rating: 5
-                },
-                {
-                    name: "David Kiprop",
-                    group: "Future Builders Chama",
-                    message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
-                    rating: 5
-                },
-                {
-                    name: "Grace Achieng",
-                    group: "Women's Empowerment Circle",
-                    message: "The automated reminders and secure payments make group savings so much easier.",
-                    rating: 5
-                }
-            ],
+            totalMembers: null,
+            totalGroups: null,
+            totalSavingsAmount: null,
+            activeSubscriptions: null,
+            testimonials: [],
             features: [
                 {
                     icon: "🤖",
@@ -426,28 +388,28 @@ const Home = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                             {[
                                 {
-                                    number: loading ? '...' : (stats?.totalMembers || 'Growing fast!'),
+                                    number: loading ? '...' : (stats?.totalMembers || 'Coming Soon'),
                                     label: 'Active Members',
                                     icon: '👥',
-                                    subtext: typeof (stats?.totalMembers) === 'string' && stats?.totalMembers?.includes('Growing') ? 'Join the movement!' : ''
+                                    subtext: !stats?.totalMembers ? 'Real data coming soon!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : (stats?.totalGroups || 'Growing fast!'),
+                                    number: loading ? '...' : (stats?.totalGroups || 'Coming Soon'),
                                     label: 'Savings Groups',
                                     icon: '🏢',
-                                    subtext: typeof (stats?.totalGroups) === 'string' && stats?.totalGroups?.includes('Growing') ? 'Start your group today!' : ''
+                                    subtext: !stats?.totalGroups ? 'Start the first group!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : (stats?.totalSavingsAmount || 'Building momentum!'),
+                                    number: loading ? '...' : (stats?.totalSavingsAmount || 'Coming Soon'),
                                     label: 'Total Savings',
                                     icon: '💰',
-                                    subtext: typeof (stats?.totalSavingsAmount) === 'string' && stats?.totalSavingsAmount?.includes('Building') ? 'Every journey starts with the first save!' : ''
+                                    subtext: !stats?.totalSavingsAmount ? 'Every journey starts with the first save!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : (stats?.activeSubscriptions || 'Growing fast!'),
+                                    number: loading ? '...' : (stats?.activeSubscriptions || 'Coming Soon'),
                                     label: 'Premium Users',
                                     icon: '⭐',
-                                    subtext: typeof (stats?.activeSubscriptions) === 'string' && stats?.activeSubscriptions?.includes('Growing') ? 'Upgrade for AI insights!' : ''
+                                    subtext: !stats?.activeSubscriptions ? 'Be the first to upgrade!' : ''
                                 }
                             ].map((stat, index) => (
                                 <div
@@ -524,26 +486,7 @@ const Home = () => {
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    {(stats?.testimonials || [
-                                        {
-                                            name: "Sarah Wanjiku",
-                                            group: "Hope Savings Group",
-                                            message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
-                                            rating: 5
-                                        },
-                                        {
-                                            name: "David Kiprop",
-                                            group: "Future Builders Chama",
-                                            message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
-                                            rating: 5
-                                        },
-                                        {
-                                            name: "Grace Achieng",
-                                            group: "Women's Empowerment Circle",
-                                            message: "The automated reminders and secure payments make group savings so much easier.",
-                                            rating: 5
-                                        }
-                                    ]).map((testimonial, index) => (
+                                    {(stats?.testimonials && stats.testimonials.length > 0) ? stats.testimonials.map((testimonial, index) => (
                                         <div
                                             key={index}
                                             className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
@@ -559,7 +502,13 @@ const Home = () => {
                                                 <div className="text-gray-600 text-sm">{testimonial.group}</div>
                                             </div>
                                         </div>
-                                    ))}
+                                    )) : (
+                                        <div className="col-span-full text-center py-12">
+                                            <div className="text-6xl mb-4">💬</div>
+                                            <h3 className="text-xl font-bold text-gray-800 mb-2">Testimonials Coming Soon</h3>
+                                            <p className="text-gray-600">Real user stories will be shared here as our community grows!</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -31,6 +31,8 @@ function SavingsAdmin() {
   const [isNonMember, setIsNonMember] = useState(false);
   const [nonMemberName, setNonMemberName] = useState("");
   const [nonMemberPhone, setNonMemberPhone] = useState("");
+  const [editing, setEditing] = useState({});
+  const [editValue, setEditValue] = useState("");
 
   // Fetch only the group-specific matrix (members, weeks, matrix, groupTotal)
   const fetchMatrix = async () => {
