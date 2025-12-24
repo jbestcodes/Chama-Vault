@@ -4,7 +4,7 @@ import TrialStatus from '../components/TrialStatus';
 
 
 const AIDashboard = () => {
-    const BASE_URL = import.meta.env.VITE_API_URL || 'https://chama-vault-1.onrender.com';
+    const BASE_URL = import.meta.env.VITE_API_URL || 'https://your-production-server.com';
     const [messages, setMessages] = useState([]);
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);

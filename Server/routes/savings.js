@@ -14,9 +14,15 @@ router.get('/group', authenticateToken, isAdmin, async (req, res) => {
         const adminId = req.user.id;
         const admin = await Member.findById(adminId);
 
-        // Find admin's group from group_memberships
+        // Find admin's group from group_memberships or fallback to old structure
+        let groupId = null;
         const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
-        const groupId = adminMembership?.group_id;
+        if (adminMembership) {
+            groupId = adminMembership.group_id;
+        } else if (admin?.group_id) {
+            // Fallback to old structure
+            groupId = admin.group_id;
+        }
 
         if (!groupId) {
             console.log('No admin group found for admin:', adminId);
@@ -24,12 +30,30 @@ router.get('/group', authenticateToken, isAdmin, async (req, res) => {
         }
 
         console.log('Fetching members for group:', groupId);
-        const members = await Member.find({ group_id: groupId })
-            .select('_id full_name phone status created_at')
+        
+        // Query members using both old and new structures
+        const members = await Member.find({
+            $or: [
+                { group_id: groupId }, // Old structure
+                { 'group_memberships.group_id': groupId, 'group_memberships.status': 'approved' } // New structure
+            ]
+        })
+            .select('_id full_name phone status created_at group_memberships')
             .lean();
         
+        // Filter to ensure we only get approved members and handle mixed structures
+        const approvedMembers = members.filter(member => {
+            // If using new structure, check membership status
+            if (member.group_memberships && member.group_memberships.length > 0) {
+                const membership = member.group_memberships.find(m => m.group_id.toString() === groupId.toString());
+                return membership && membership.status === 'approved';
+            }
+            // If using old structure, check status field
+            return member.status === 'approved' || member.status === 'active';
+        });
+        
         // Add id field for frontend compatibility
-        const membersWithId = members.map(m => ({
+        const membersWithId = approvedMembers.map(m => ({
             ...m,
             id: m._id.toString()
         }));
@@ -125,9 +149,15 @@ router.get('/matrix', authenticateToken, isAdmin, async (req, res) => {
         const adminId = req.user.id;
         const admin = await Member.findById(adminId);
 
-        // Find admin's group from group_memberships
+        // Find admin's group from group_memberships or fallback to old structure
+        let groupId = null;
         const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
-        const groupId = adminMembership?.group_id;
+        if (adminMembership) {
+            groupId = adminMembership.group_id;
+        } else if (admin?.group_id) {
+            // Fallback to old structure
+            groupId = admin.group_id;
+        }
 
         if (!groupId) return res.status(400).json({ error: 'No admin group assigned.' });
 
@@ -607,12 +637,18 @@ router.post('/admin/delete', authenticateToken, isAdmin, async (req, res) => {
 // Get all non-members in group
 router.get('/non-members', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const adminId = req.user.id;
-        const admin = await Member.findById(adminId);
-        const groupId = admin?.group_id;
+        // Find admin's group from group_memberships or fallback to old structure
+        let groupId = null;
+        const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
+        if (adminMembership) {
+            groupId = adminMembership.group_id;
+        } else if (admin?.group_id) {
+            // Fallback to old structure
+            groupId = admin.group_id;
+        }
         
         if (!groupId) {
-            return res.status(400).json({ error: 'No group assigned.' });
+            return res.status(400).json({ error: 'No admin group assigned.' });
         }
 
         // Get all non-member savings for this group
@@ -666,9 +702,15 @@ router.post('/non-members/add', authenticateToken, isAdmin, async (req, res) => 
 
         const admin = await Member.findById(adminId);
 
-        // Find admin's group from group_memberships
+        // Find admin's group from group_memberships or fallback to old structure
+        let groupId = null;
         const adminMembership = admin?.group_memberships?.find(m => m.is_admin);
-        const groupId = adminMembership?.group_id;
+        if (adminMembership) {
+            groupId = adminMembership.group_id;
+        } else if (admin?.group_id) {
+            // Fallback to old structure
+            groupId = admin.group_id;
+        }
         
         if (!groupId) {
             return res.status(400).json({ error: 'No admin group assigned.' });

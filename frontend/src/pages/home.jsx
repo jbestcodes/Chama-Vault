@@ -238,6 +238,8 @@ const Home = () => {
 
     console.log('🏠 Home component rendering, stats:', stats, 'loading:', loading);
 
+    const currentSlideData = slides[currentSlide];
+
     // Show loading screen while fetching data
     if (loading && !stats) {
         return (
