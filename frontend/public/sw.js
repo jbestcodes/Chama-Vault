@@ -1,5 +1,5 @@
 // Service Worker for Jaza Nyumba PWA
-const CACHE_NAME = 'jaza-nyumba-v1';
+const CACHE_NAME = 'jaza-nyumba-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -47,8 +47,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // API calls - network first, then cache
-  if (url.pathname.startsWith('/api/')) {
+  // API calls - network first, then cache (only GET requests)
+  if (url.pathname.startsWith('/api/') && request.method === 'GET') {
     event.respondWith(
       fetch(request)
         .then((response) => {

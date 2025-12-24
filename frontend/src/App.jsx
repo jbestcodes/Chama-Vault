@@ -10,7 +10,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Lazy load components for better performance
-const Home = lazy(() => import("./pages/home"));
+import Home from "./pages/home";
 const Login = lazy(() => import("./pages/login"));
 const MyProfile = lazy(() => import("./pages/my-profile"));
 const Dashboard = lazy(() => import("./pages/dashboard"));

@@ -291,20 +291,11 @@ What would you like to know? 😊`;
         try {
             // Create rich context for OpenAI
             const userContext = `
-            User Profile:
-            - Name: ${member.full_name}
-            - Group: ${member.group_name}
-            - Total Savings: KSh ${totalSavings.toLocaleString()}
-            - Active Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
-            - Current Milestone: ${milestone ? `${milestone.milestone_name} (Target: KSh ${milestone.target_amount.toLocaleString()})` : 'None set'}
-            - Recent Savings Entries: ${userSavings.length}
-            
-            Chama Rules:
-            - Minimum savings for loan eligibility: KSh ${groupMinSavings.toLocaleString()}
-            - Maximum loan amount: 3x total savings
-            - Interest rate: ${groupInterestRate}%
-            - Currency: Kenyan Shillings (KSh)
-            - Group-based savings and loans
+            User: ${member.full_name} in ${member.group_name}
+            Savings: KSh ${totalSavings.toLocaleString()}
+            Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
+            Goal: ${milestone ? `${milestone.milestone_name} (KSh ${milestone.target_amount.toLocaleString()})` : 'None'}
+            Rules: Min savings KSh ${groupMinSavings.toLocaleString()}, 3x loan limit, ${groupInterestRate}% interest
             `;
 
             // Use enhanced OpenAI service with group rules

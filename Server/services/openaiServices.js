@@ -20,12 +20,13 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-5-mini",
+                model: "gpt-4o-mini", // Temporarily test with GPT-4
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 80,
                 temperature: 0.7
             });
 
+            console.log('OpenAI nudge response:', response.choices[0].message.content);
             return response.choices[0].message.content.trim();
         } catch (error) {
             console.error('OpenAI Financial Nudge Error:', error);
@@ -48,14 +49,14 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-5-mini",
+                model: "gpt-4o-mini", // Temporarily test with GPT-4
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 100,
                 temperature: 0.6
             });
 
-            const result = response.choices[0].message.content.trim();
-            return this.parseLoanAnalysis(result);
+            console.log('OpenAI loan response:', response.choices[0].message.content);
+            return this.parseLoanAnalysis(response.choices[0].message.content.trim());
         } catch (error) {
             console.error('OpenAI Loan Analysis Error:', error);
             return {
@@ -86,14 +87,14 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-5-mini",
+                model: "gpt-4o-mini", // Temporarily test with GPT-4
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 120,
                 temperature: 0.7
             });
 
-            const result = response.choices[0].message.content.trim();
-            return this.parseHealthInsight(result);
+            console.log('OpenAI health response:', response.choices[0].message.content);
+            return this.parseHealthInsight(response.choices[0].message.content.trim());
         } catch (error) {
             console.error('OpenAI Health Insight Error:', error);
             return {
@@ -163,7 +164,7 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-5-nano",
+                model: "gpt-4o-mini", // Temporarily test with GPT-4
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: `${context}\n\nQuestion: ${userQuestion}` }
@@ -172,9 +173,11 @@ class OpenAIService {
                 temperature: 0.8
             });
 
+            console.log('OpenAI response:', response.choices[0].message.content);
             return response.choices[0].message.content.trim();
         } catch (error) {
             console.error('OpenAI Chatbot Error:', error);
+            console.error('Error details:', error.response?.data || error.message);
             return "I'm sorry, I'm having trouble responding right now. Please try again later or contact support for assistance with savings rules and loan terms.";
         }
     }
