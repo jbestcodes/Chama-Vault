@@ -291,11 +291,24 @@ What would you like to know? 😊`;
         try {
             // Create rich context for OpenAI
             const userContext = `
-            User: ${member.full_name} in ${member.group_name}
-            Savings: KSh ${totalSavings.toLocaleString()}
-            Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()}` : 'None'}
-            Goal: ${milestone ? `${milestone.milestone_name} (KSh ${milestone.target_amount.toLocaleString()})` : 'None'}
-            Rules: Min savings KSh ${groupMinSavings.toLocaleString()}, 3x loan limit, ${groupInterestRate}% interest
+            User Information:
+            - Name: ${member.full_name}
+            - Group: ${member.group_name}
+            - Total Savings: KSh ${totalSavings.toLocaleString()}
+            - Active Loan: ${activeLoan ? `KSh ${activeLoan.total_due.toLocaleString()} (Amount: KSh ${activeLoan.amount.toLocaleString()}, Due Date: ${activeLoan.due_date})` : 'None'}
+            - Current Savings Goal: ${milestone ? `${milestone.milestone_name} - Target: KSh ${milestone.target_amount.toLocaleString()}, Progress: KSh ${totalSavings.toLocaleString()} (${((totalSavings / milestone.target_amount) * 100).toFixed(1)}%)` : 'No active goal set'}
+            - Recent Activity: ${userSavings.length} savings entries recorded
+            
+            Group Rules:
+            - Minimum savings for loan eligibility: KSh ${groupMinSavings.toLocaleString()}
+            - Maximum loan amount: 3x total savings
+            - Interest rate: ${groupInterestRate}% per month
+            - Weekly contributions required
+            - Loan repayment period: up to 12 months
+            - Late payment fee: 5% of due amount
+            - Membership requires 3 months consistent savings
+            
+            Current Date: ${new Date().toLocaleDateString()}
             `;
 
             // Use enhanced OpenAI service with group rules
@@ -320,6 +333,100 @@ What would you like to know? 😊`;
         // Return user-friendly error with fallback
         res.json({ 
             response: "I'm sorry, I'm having trouble responding right now. But I can tell you that I can help with questions about your savings, loans, goals, and group rules. Please try asking a specific question! 😊" 
+        });
+    }
+});
+
+// Support Chat endpoint (no auth required, general FAQs)
+router.post('/support/chat', async (req, res) => {
+    try {
+        const { message, chatHistory } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        console.log('Support chat request:', message);
+
+        // Create system prompt for general support
+        const systemPrompt = `
+        You are a friendly support assistant for Jaza Nyumba, a Chama (savings group) management platform in Kenya.
+
+        Your role is to help visitors and users with:
+        1. General questions about the app and its features
+        2. How to get started with Chama management
+        3. Basic explanations of savings groups, loans, and financial concepts
+        4. Account registration and login help
+        5. Subscription and pricing information
+        6. Troubleshooting common issues
+
+        Key App Features:
+        - Group savings management
+        - Loan tracking and repayments
+        - Member performance analytics
+        - AI-powered financial insights
+        - SMS notifications
+        - Table banking (merry-go-round)
+        - Milestone tracking
+        - Admin panel for group management
+
+        Pricing:
+        - Weekly subscription: KSh 30
+        - Monthly subscription: KSh 100
+        - Premium features include AI insights, SMS notifications, and advanced analytics
+
+        Important Guidelines:
+        - Be helpful, friendly, and patient
+        - Keep responses clear and concise
+        - If you can't answer something, suggest contacting support@jazanyumba.com
+        - Don't provide personal financial advice
+        - Direct users to create accounts or contact admins for specific group issues
+        - Encourage registration for full features
+
+        Current date: ${new Date().toLocaleDateString()}
+        `;
+
+        // Prepare messages for OpenAI
+        const messages = [
+            { role: 'system', content: systemPrompt }
+        ];
+
+        // Add chat history (limit to last 10 messages for context)
+        if (chatHistory && Array.isArray(chatHistory)) {
+            const recentHistory = chatHistory.slice(-10);
+            recentHistory.forEach(msg => {
+                messages.push({
+                    role: msg.role === 'user' ? 'user' : 'assistant',
+                    content: msg.content
+                });
+            });
+        }
+
+        // Add current message
+        messages.push({ role: 'user', content: message });
+
+        // Call OpenAI
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: messages,
+            max_tokens: 300,
+            temperature: 0.7
+        });
+
+        const reply = response.choices[0].message.content.trim();
+
+        console.log('Support chat response generated');
+
+        res.json({
+            reply: reply,
+            source: 'ai'
+        });
+
+    } catch (error) {
+        console.error('Support chat error:', error);
+        res.json({
+            reply: '😔 Sorry, I\'m having trouble connecting right now. Please try again in a moment or contact support@jazanyumba.com for urgent issues.',
+            source: 'error'
         });
     }
 });

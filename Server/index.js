@@ -68,6 +68,98 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Public homepage statistics endpoint
+app.get('/api/public/stats', async (req, res) => {
+    try {
+        const Member = require('./models/Member');
+        const Group = require('./models/Group');
+        const Savings = require('./models/Savings');
+        const Subscription = require('./models/Subscription');
+
+        // Get total statistics
+        const [totalMembers, totalGroups, totalSavings, activeSubscriptions] = await Promise.all([
+            Member.countDocuments(),
+            Group.countDocuments(),
+            Savings.aggregate([
+                { $match: { amount: { $gt: 0 } } },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]),
+            Subscription.countDocuments({ status: 'active' })
+        ]);
+
+        const totalSavingsAmount = totalSavings.length > 0 ? totalSavings[0].total : 0;
+
+        res.json({
+            success: true,
+            data: {
+                totalMembers,
+                totalGroups,
+                totalSavingsAmount: Math.round(totalSavingsAmount),
+                activeSubscriptions,
+                // Some sample testimonials (you can replace with real ones)
+                testimonials: [
+                    {
+                        name: "Sarah Wanjiku",
+                        group: "Hope Savings Group",
+                        message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
+                        rating: 5
+                    },
+                    {
+                        name: "David Kiprop",
+                        group: "Future Builders Chama",
+                        message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
+                        rating: 5
+                    },
+                    {
+                        name: "Grace Achieng",
+                        group: "Women's Empowerment Circle",
+                        message: "The automated reminders and secure payments make group savings so much easier.",
+                        rating: 5
+                    }
+                ],
+                features: [
+                    {
+                        icon: "🤖",
+                        title: "AI-Powered Insights",
+                        description: "Get personalized financial advice and group performance analytics"
+                    },
+                    {
+                        icon: "📱",
+                        title: "Smart Notifications",
+                        description: "Automated SMS and email reminders for contributions and loans"
+                    },
+                    {
+                        icon: "🔒",
+                        title: "Bank-Level Security",
+                        description: "Secure payments with M-Pesa integration and encrypted data"
+                    },
+                    {
+                        icon: "📊",
+                        title: "Real-Time Dashboard",
+                        description: "Track your savings progress with beautiful, interactive charts"
+                    },
+                    {
+                        icon: "👥",
+                        title: "Group Management",
+                        description: "Powerful admin tools for managing members, loans, and contributions"
+                    },
+                    {
+                        icon: "🎯",
+                        title: "Goal Tracking",
+                        description: "Set and achieve savings milestones with progress tracking"
+                    }
+                ]
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching public stats:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Unable to fetch statistics' 
+        });
+    }
+});
+
 console.log('🚀 Jaza Nyumba server starting...');
 console.log('📱 SMS service initialized');
 console.log('⏰ Reminder schedulers active');

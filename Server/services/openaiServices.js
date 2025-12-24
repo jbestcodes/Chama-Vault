@@ -143,31 +143,30 @@ class OpenAIService {
             }
             
             const systemPrompt = `
-            You are a helpful Jaza Nyumba financial assistant. You specialize in:
+            You are a helpful Jaza Nyumba financial assistant. You have access to the user's current data:
+
+            ${userContext}
+
+            You specialize in:
             1. Chama savings rules and regulations
             2. Loan terms and conditions
             3. Group savings best practices
             4. Financial literacy for group savings
             5. Table banking (merry-go-round) operations
             
-            Default Jaza Nyumba Rules:
-            - Weekly savings contributions required
-            - Members can borrow up to 3x their savings
-            - Loan interest rate: 2% per month (unless specified otherwise)
-            - Loan repayment period: up to 12 months
-            - Late payment fee: 5% of due amount
-            - Membership requires consistent savings for 3 months before loan eligibility
-            - Table banking cycles rotate monthly with equal contributions
-            ${customRules}
+            Group-Specific Rules:
+            ${customRules || 'No specific group rules have been set. Use general Chama best practices.'}
             
-            Answer questions clearly and helpfully. If custom group rules apply, prioritize them over default rules. Stay focused on Chama/group savings topics.
+            Use the user's data and group rules to provide personalized, specific answers. If you cannot fully answer the question with the available information, suggest contacting the group admin or support at /contact.
+            
+            Answer questions clearly and helpfully. Stay focused on Chama/group savings topics.
             `;
 
             const response = await openai.chat.completions.create({
                 model: "gpt-4o-mini", // Temporarily test with GPT-4
                 messages: [
                     { role: "system", content: systemPrompt },
-                    { role: "user", content: `${context}\n\nQuestion: ${userQuestion}` }
+                    { role: "user", content: userQuestion }
                 ],
                 max_tokens: 250,
                 temperature: 0.8

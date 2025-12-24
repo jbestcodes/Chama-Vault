@@ -3,7 +3,10 @@ const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Loan = require('../models/Loan');
 const Subscription = require('../models/Subscription');
+const Savings = require('../models/Savings');
 const brevoEmailService = require('./brevoEmailService');
+const smsService = require('./smsService');
+const openaiService = require('./openaiServices');
 const { checkNotificationTrialStatus } = require('../middleware/subscription');
 
 class ReminderService {
@@ -23,7 +26,13 @@ class ReminderService {
             this.sendDelayedWeekendReminders();
         });
 
+        // Run daily at 10:00 AM to check for group contribution days and send nudges
+        cron.schedule('0 10 * * *', () => { // Every day at 10 AM
+            this.sendDailyFinancialNudges();
+        });
+
         console.log('📧 Email reminder schedulers initialized (Monday-Saturday only)');
+        console.log('🤖 AI nudge scheduler initialized (daily at 10 AM - group contribution days)');
     }
 
     // Calculate next contribution due date
@@ -291,6 +300,119 @@ class ReminderService {
         } catch (error) {
             console.error('Error sending test reminder:', error);
             throw error;
+        }
+    }
+
+    // Send daily AI financial nudges to subscribed members on their group contribution days
+    async sendDailyFinancialNudges() {
+        try {
+            console.log('🤖 Starting daily financial nudges check...');
+
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const dayOfMonth = today.getDate();
+
+            // Find all groups that have contributions due today
+            const groupsWithDueContributions = await Group.find({
+                $or: [
+                    // Weekly groups with due_day matching today
+                    {
+                        'contribution_settings.frequency': 'weekly',
+                        'contribution_settings.due_day': dayOfWeek === 0 ? 7 : dayOfWeek // Convert 0 to 7 for Sunday
+                    },
+                    // Monthly groups with due_day matching today
+                    {
+                        'contribution_settings.frequency': 'monthly',
+                        'contribution_settings.due_day': dayOfMonth
+                    }
+                ]
+            });
+
+            console.log(`📊 Found ${groupsWithDueContributions.length} groups with contributions due today`);
+
+            if (groupsWithDueContributions.length === 0) {
+                console.log('📅 No groups have contributions due today, skipping nudges');
+                return;
+            }
+
+            // Get all active subscriptions for members in these groups
+            const groupIds = groupsWithDueContributions.map(g => g._id);
+            const subscriptions = await Subscription.find({
+                status: 'active',
+                'member_id': { $ne: null }
+            })
+            .populate({
+                path: 'member_id',
+                match: { group_id: { $in: groupIds } }
+            })
+            .exec();
+
+            // Filter out subscriptions where member_id is null after population
+            const validSubscriptions = subscriptions.filter(sub => sub.member_id);
+
+            console.log(`📧 Found ${validSubscriptions.length} active subscriptions in groups with due contributions today`);
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const subscription of validSubscriptions) {
+                try {
+                    const member = subscription.member_id;
+                    if (!member) continue;
+
+                    // Get member's savings data for nudge generation
+                    const userSavings = await Savings.find({ member_id: member._id });
+                    const totalSavings = userSavings.reduce((sum, saving) => sum + Number(saving.amount || 0), 0);
+
+                    // Get group info
+                    const group = await Group.findById(member.group_id);
+
+                    // Prepare member data for nudge
+                    const memberData = {
+                        totalSavings: totalSavings,
+                        weeklyAverage: totalSavings / Math.max(userSavings.length, 1), // rough average
+                        missedWeeks: 0, // Could calculate this
+                        rank: 'N/A', // Could calculate ranking
+                        contributionDay: group?.contribution_settings?.frequency === 'weekly' ?
+                            ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][group.contribution_settings.due_day === 7 ? 0 : group.contribution_settings.due_day] :
+                            `Monthly (${group?.contribution_settings?.due_day})`
+                    };
+
+                    // Generate personalized nudge
+                    const nudgeMessage = await openaiService.generateFinancialNudge(memberData);
+
+                    if (nudgeMessage) {
+                        // Send via email (SMS can be added later as fallback)
+                        const message = `Hi ${member.full_name}! ${nudgeMessage} - Jaza Nyumba`;
+
+                        // Send via email
+                        if (member.email) {
+                            await brevoEmailService.sendFinancialNudge(
+                                member.email,
+                                member.full_name,
+                                nudgeMessage
+                            );
+                            console.log(`📧 Nudge email sent to ${member.full_name} (${memberData.contributionDay})`);
+                        } else {
+                            console.log(`⚠️ No email available for ${member.full_name}, skipping nudge`);
+                        }
+
+                        successCount++;
+                    }
+
+                    // Small delay to avoid rate limits
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                } catch (memberError) {
+                    console.error(`❌ Error sending nudge to ${subscription.member_id?.full_name}:`, memberError.message);
+                    errorCount++;
+                }
+            }
+
+            console.log(`✅ Daily nudges completed: ${successCount} sent, ${errorCount} errors`);
+
+        } catch (error) {
+            console.error('❌ Error in daily financial nudges:', error);
         }
     }
 }

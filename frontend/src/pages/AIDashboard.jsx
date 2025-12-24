@@ -191,7 +191,7 @@ const AIDashboard = () => {
                                         </button>
                                     </Link>
                                     <Link to="/register">
-                                        <button className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-800 transition-colors font-semibold">
+                                        <button className="px-6 py-3 rounded-lg font-semibold">
                                             Register
                                         </button>
                                     </Link>
@@ -235,7 +235,7 @@ const AIDashboard = () => {
                                                         </button>
                                                     </Link>
                                                     <Link to="/register">
-                                                        <button className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-800 transition-colors">
+                                                        <button className="px-4 py-2 rounded text-sm">
                                                             Register
                                                         </button>
                                                     </Link>
@@ -279,7 +279,7 @@ const AIDashboard = () => {
                                 <button
                                     onClick={handleSendMessage}
                                     disabled={isLoading || !userInput.trim()}
-                                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Send
                                 </button>
@@ -314,12 +314,12 @@ const AIDashboard = () => {
                                     <p className="text-xs text-yellow-800 mb-2">🔐 Want personalized financial advice?</p>
                                     <div className="flex gap-2">
                                         <Link to="/login">
-                                            <button className="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors">
+                                            <button className="text-xs px-3 py-1 rounded">
                                                 Login
                                             </button>
                                         </Link>
                                         <Link to="/register">
-                                            <button className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-800 transition-colors">
+                                            <button className="text-xs px-3 py-1 rounded">
                                                 Register Free
                                             </button>
                                         </Link>

@@ -194,16 +194,19 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.post('/verify/:reference', authenticateToken, async (req, res) => {
     try {
         const { reference } = req.params;
+        console.log('Verifying subscription:', reference, 'for user:', req.user.id);
         
         const verification = await paystackService.verifySubscription(reference);
+        console.log('Paystack verification result:', verification);
         
         if (!verification.success) {
             return res.status(400).json({ error: 'Payment verification failed' });
         }
 
         const memberId = verification.metadata.member_id;
+        console.log('Transaction member_id:', memberId, 'Request user_id:', req.user.id);
         if (memberId !== req.user.id) {
-            return res.status(403).json({ error: 'Unauthorized' });
+            return res.status(403).json({ error: 'Unauthorized - transaction does not belong to you' });
         }
 
         const subscription = await Subscription.findOne({ member_id: memberId });
