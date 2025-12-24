@@ -20,7 +20,7 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-5-mini",
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 80,
                 temperature: 0.7
@@ -48,7 +48,7 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-5-mini",
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 100,
                 temperature: 0.6
@@ -86,7 +86,7 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-5-mini",
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 120,
                 temperature: 0.7
@@ -163,7 +163,7 @@ class OpenAIService {
             `;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
+                model: "gpt-5-nano",
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: `${context}\n\nQuestion: ${userQuestion}` }
