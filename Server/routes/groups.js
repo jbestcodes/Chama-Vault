@@ -9,7 +9,7 @@ const brevoEmailService = require('../services/brevoEmailService');
 // Update group settings endpoint
 router.put('/settings', authenticateToken, async (req, res) => {
     try {
-        const { interest_rate, minimum_loan_savings } = req.body;
+        const { interest_rate, minimum_loan_savings, contribution_settings } = req.body;
         
         // Find member's group
         const member = await Member.findById(req.user.id);
@@ -39,17 +39,37 @@ router.put('/settings', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Minimum savings cannot be negative' });
         }
         
+        // Validate contribution_settings
+        if (contribution_settings) {
+            if (contribution_settings.amount !== undefined && contribution_settings.amount < 0) {
+                return res.status(400).json({ error: 'Contribution amount cannot be negative' });
+            }
+            if (contribution_settings.frequency && !['weekly', 'monthly'].includes(contribution_settings.frequency)) {
+                return res.status(400).json({ error: 'Frequency must be weekly or monthly' });
+            }
+            if (contribution_settings.due_day !== undefined) {
+                if (contribution_settings.frequency === 'weekly' && (contribution_settings.due_day < 1 || contribution_settings.due_day > 7)) {
+                    return res.status(400).json({ error: 'For weekly, due_day must be 1-7 (Monday-Sunday)' });
+                }
+                if (contribution_settings.frequency === 'monthly' && (contribution_settings.due_day < 1 || contribution_settings.due_day > 31)) {
+                    return res.status(400).json({ error: 'For monthly, due_day must be 1-31' });
+                }
+            }
+        }
+        
         // Update group settings
         const updateData = {};
         if (interest_rate !== undefined) updateData.interest_rate = interest_rate;
         if (minimum_loan_savings !== undefined) updateData.minimum_loan_savings = minimum_loan_savings;
+        if (contribution_settings) updateData.contribution_settings = contribution_settings;
         
         await Group.findByIdAndUpdate(groupId, updateData);
         
         res.json({ 
             message: 'Group settings updated successfully',
             interest_rate: interest_rate,
-            minimum_loan_savings: minimum_loan_savings
+            minimum_loan_savings: minimum_loan_savings,
+            contribution_settings: contribution_settings
         });
         
     } catch (error) {
@@ -70,7 +90,7 @@ router.get('/settings', authenticateToken, async (req, res) => {
         
         const groupId = member.group_id;
         
-        const group = await Group.findById(groupId).select('interest_rate minimum_loan_savings');
+        const group = await Group.findById(groupId).select('interest_rate minimum_loan_savings contribution_settings');
         
         if (!group) {
             return res.status(404).json({ error: 'Group not found' });
@@ -78,7 +98,16 @@ router.get('/settings', authenticateToken, async (req, res) => {
         
         res.json({
             interest_rate: group.interest_rate || 5.0,
-            minimum_loan_savings: group.minimum_loan_savings || 500.00
+            minimum_loan_savings: group.minimum_loan_savings || 500.00,
+            contribution_settings: group.contribution_settings || {
+                amount: 1000,
+                frequency: 'monthly',
+                due_day: 1,
+                reminder_days_before: 1,
+                penalty_amount: 0,
+                grace_period_days: 0,
+                auto_reminders: true
+            }
         });
         
     } catch (error) {

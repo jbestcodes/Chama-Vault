@@ -1,10 +1,16 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import useSEO from '../hooks/useSEO';
 
 function WhyUs() {
-  useEffect(() => {
-    document.title = "Why Choose Us - Jaza Nyumba | Smart Group Savings Platform";
-  }, []);
+  // SEO optimization for why-us page
+  useSEO({
+    title: "Why Choose Jaza Nyumba - Smart Group Savings Platform",
+    description: "Discover why thousands of Chamas trust Jaza Nyumba for their group savings. AI-powered insights, automated SMS notifications, secure loan management, and comprehensive financial tools.",
+    keywords: "why choose us, Chama benefits, group savings advantages, AI financial insights, SMS notifications, loan management, secure savings platform",
+    url: "https://jazanyumba.online/why-us",
+    type: "website"
+  });
 
   return (
     <div style={{

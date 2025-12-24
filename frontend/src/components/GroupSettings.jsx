@@ -3,7 +3,16 @@ import React, { useState, useEffect } from 'react';
 const GroupSettings = () => {
     const [settings, setSettings] = useState({
         interest_rate: 5.0,
-        minimum_loan_savings: 500.00
+        minimum_loan_savings: 500.00,
+        contribution_settings: {
+            amount: 1000,
+            frequency: 'monthly',
+            due_day: 1,
+            reminder_days_before: 1,
+            penalty_amount: 0,
+            grace_period_days: 0,
+            auto_reminders: true
+        }
     });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -158,6 +167,219 @@ const GroupSettings = () => {
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             minWidth: '140px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+
+                <div style={{ width: '100%', borderTop: '2px solid #ddd', margin: '16px 0' }}></div>
+
+                <h4 style={{ width: '100%', margin: '0 0 12px 0', color: '#1976d2' }}>📅 Contribution Schedule</h4>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        💵 Contribution Amount (KSh) <span style={{ color: '#999', fontWeight: 'normal' }}>(optional)</span>
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        placeholder="e.g., 1000"
+                        value={settings.contribution_settings?.amount || ''}
+                        onChange={(e) => setSettings({
+                            ...settings, 
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                amount: e.target.value ? parseFloat(e.target.value) : undefined
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '140px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        🔄 Frequency
+                    </label>
+                    <select
+                        value={settings.contribution_settings?.frequency || 'monthly'}
+                        onChange={(e) => setSettings({
+                            ...settings,
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                frequency: e.target.value,
+                                due_day: e.target.value === 'monthly' ? 1 : 1 // Reset to default
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '120px',
+                            fontSize: '14px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        📆 {settings.contribution_settings?.frequency === 'weekly' ? 'Day of Week' : 'Day of Month'}
+                    </label>
+                    <select
+                        value={settings.contribution_settings?.due_day || 1}
+                        onChange={(e) => setSettings({
+                            ...settings,
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                due_day: parseInt(e.target.value)
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '140px',
+                            fontSize: '14px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        {settings.contribution_settings?.frequency === 'weekly' ? (
+                            <>
+                                <option value={1}>Monday</option>
+                                <option value={2}>Tuesday</option>
+                                <option value={3}>Wednesday</option>
+                                <option value={4}>Thursday</option>
+                                <option value={5}>Friday</option>
+                                <option value={6}>Saturday</option>
+                                <option value={7}>Sunday</option>
+                            </>
+                        ) : (
+                            Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                <option key={day} value={day}>{day}</option>
+                            ))
+                        )}
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        ⏰ Remind Days Before
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        max="7"
+                        value={settings.contribution_settings?.reminder_days_before || 1}
+                        onChange={(e) => setSettings({
+                            ...settings,
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                reminder_days_before: parseInt(e.target.value)
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '80px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        ⚠️ Penalty Amount (KSh)
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="10"
+                        value={settings.contribution_settings?.penalty_amount || 0}
+                        onChange={(e) => setSettings({
+                            ...settings,
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                penalty_amount: parseFloat(e.target.value)
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '120px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ 
+                        display: 'block', 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        🕐 Grace Period (Days)
+                    </label>
+                    <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={settings.contribution_settings?.grace_period_days || 0}
+                        onChange={(e) => setSettings({
+                            ...settings,
+                            contribution_settings: {
+                                ...settings.contribution_settings,
+                                grace_period_days: parseInt(e.target.value)
+                            }
+                        })}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '80px',
                             fontSize: '14px'
                         }}
                     />

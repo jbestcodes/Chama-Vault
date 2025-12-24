@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import heroImage from '../media/hero.jpg';
+import useSEO from '../hooks/useSEO';
 
 const Home = () => {
     const isLoggedIn = !!localStorage.getItem("token");
     const [currentSlide, setCurrentSlide] = useState(0);
 
-    useEffect(() => {
-        document.title = "Jaza Nyumba - Smart Group Savings & Chama Management Platform";
-    }, []);
+    // SEO optimization for homepage
+    useSEO({
+        title: "Jaza Nyumba - Smart Group Savings & Chama Management Platform",
+        description: "Manage your Chama savings, loans, and contributions with ease. AI-powered insights, SMS notifications, and secure payment integration. Join thousands of successful savings groups in Kenya.",
+        keywords: "Chama, Savings Group, Kenya Chama, Group Savings, Table Banking, ROSCA, Merry Go Round, Savings Platform, Loan Management, Contribution Tracking, Group Finance, AI Financial Insights, Mpesa Payments, SMS Notifications",
+        url: "https://jazanyumba.online",
+        type: "website"
+    });
 
     const slides = [
         { 

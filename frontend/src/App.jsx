@@ -1,30 +1,34 @@
 import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import Navbar from './Navbar';
-import Home from "./pages/home";
-import Login from "./pages/login";
-import MyProfile from "./pages/my-profile";
-import Dashboard from "./pages/dashboard";
-import Register from "./pages/register";
-import RequestPasswordReset from "./pages/RequestPasswordReset";
-import ResetPassword from "./pages/ResetPassword";
-import SavingsAdmin from "./pages/SavingsAdmin"; 
-import WhyUs from "./pages/why-us";
-import ContactUs from "./pages/ContactUs";
-import TermsAndConditions from './pages/TermsAndConditions';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import LoansAndRepayments from "./pages/LoansAndRepayments"; 
-import AIDashboard from './pages/AIDashboard';
-import WithdrawalRequest from './pages/WithdrawalRequest';
-import Subscribe from './pages/Subscribe';
-import MemberPerformance from './components/MemberPerformance';
-import UserGuide from './pages/UserGuide';
-import SupportChat from './components/SupportChat';
 import InstallPWA from './components/InstallPWA';
+import Breadcrumbs from './components/Breadcrumbs';
 import useAutoLogout from './hooks/useAutoLogout';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+// Lazy load components for better performance
+const Home = lazy(() => import("./pages/home"));
+const Login = lazy(() => import("./pages/login"));
+const MyProfile = lazy(() => import("./pages/my-profile"));
+const Dashboard = lazy(() => import("./pages/dashboard"));
+const Register = lazy(() => import("./pages/register"));
+const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const SavingsAdmin = lazy(() => import("./pages/SavingsAdmin"));
+const WhyUs = lazy(() => import("./pages/why-us"));
+const ContactUs = lazy(() => import("./pages/ContactUs"));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const LoansAndRepayments = lazy(() => import("./pages/LoansAndRepayments"));
+const AIDashboard = lazy(() => import('./pages/AIDashboard'));
+const WithdrawalRequest = lazy(() => import('./pages/WithdrawalRequest'));
+const Subscribe = lazy(() => import('./pages/Subscribe'));
+const MemberPerformance = lazy(() => import('./components/MemberPerformance'));
+const UserGuide = lazy(() => import('./pages/UserGuide'));
+const SupportChat = lazy(() => import('./components/SupportChat'));
 
 
 function App() {
@@ -64,28 +68,31 @@ function App() {
         }
       `}</style>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/my-profile" element={<MyProfile />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/request-password-reset" element={<RequestPasswordReset />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/admin-panel" element={<SavingsAdmin />} />
-        <Route path="/why-us" element={<WhyUs />} />
-        <Route path="/contact" element={<ContactUs />} />
-        <Route path="/terms" element={<TermsAndConditions />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/loans" element={<LoansAndRepayments />} /> 
-        <Route path="/ai-dashboard" element={<AIDashboard />} />
-        <Route path="/performance" element={<MemberPerformance />} />
-        <Route path="/user-guide" element={<UserGuide />} />
-        <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
-        <Route path="/subscribe" element={<Subscribe />} />
-        
-        {/* Add more routes as needed */}
-      </Routes>
+      <Breadcrumbs />
+      <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div></div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/request-password-reset" element={<RequestPasswordReset />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admin-panel" element={<SavingsAdmin />} />
+          <Route path="/why-us" element={<WhyUs />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/loans" element={<LoansAndRepayments />} /> 
+          <Route path="/ai-dashboard" element={<AIDashboard />} />
+          <Route path="/performance" element={<MemberPerformance />} />
+          <Route path="/user-guide" element={<UserGuide />} />
+          <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
+          <Route path="/subscribe" element={<Subscribe />} />
+          
+          {/* Add more routes as needed */}
+        </Routes>
+      </Suspense>
       
       {/* Floating Support Chat Button */}
       {showSupportButton && (

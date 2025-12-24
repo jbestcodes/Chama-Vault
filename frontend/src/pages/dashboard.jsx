@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Milestones from './Milestones';
 import TrialStatus from '../components/TrialStatus';
 import GroupLeaderboard from '../components/GroupLeaderboard';
+import useSEO from '../hooks/useSEO';
 
 const apiUrl = import.meta.env.VITE_API_URL; 
 
@@ -15,6 +16,16 @@ const Dashboard = () => {
 
   // Get user's name from localStorage if available
   const userName = localStorage.getItem('full_name');
+
+  // SEO optimization for dashboard
+  useSEO({
+    title: 'Dashboard - Chama Vault | Manage Your Chama Savings',
+    description: 'Access your Chama Vault dashboard to manage savings, view group performance, track milestones, and monitor your chama activities. Secure and easy-to-use platform for Kenyan chamas.',
+    keywords: 'chama dashboard, savings management, group performance, chama milestones, Kenyan savings groups, chama administration',
+    ogTitle: 'Chama Vault Dashboard - Manage Your Savings Group',
+    ogDescription: 'Secure dashboard for managing your chama savings, tracking contributions, and monitoring group performance in Kenya.',
+    canonical: '/dashboard'
+  });
 
   // Check if user is logged in
   if (!token) {

@@ -2,7 +2,9 @@ const cron = require('node-cron');
 const Member = require('../models/Member');
 const Group = require('../models/Group');
 const Loan = require('../models/Loan');
+const Subscription = require('../models/Subscription');
 const brevoEmailService = require('./brevoEmailService');
+const { checkNotificationTrialStatus } = require('../middleware/subscription');
 
 class ReminderService {
     constructor() {
@@ -58,8 +60,9 @@ class ReminderService {
     // Send contribution reminders for monthly contributions
     async sendContributionReminders() {
         try {
+            // Find all groups with contribution settings configured
             const groups = await Group.find({ 
-                'contribution_settings.auto_reminders': true
+                'contribution_settings.frequency': { $exists: true }
             });
 
             for (const group of groups) {
@@ -129,7 +132,6 @@ class ReminderService {
             
             // Check for weekly contributions that were due on Monday (reminder should have been Sunday)
             const groups = await Group.find({ 
-                'contribution_settings.auto_reminders': true,
                 'contribution_settings.frequency': 'weekly',
                 'contribution_settings.due_day': 1 // Monday
             });
@@ -157,6 +159,20 @@ class ReminderService {
 
             for (const member of members) {
                 try {
+                    // Check if member has trial access or active subscription
+                    const trialStatus = await checkNotificationTrialStatus(member._id);
+                    const subscription = await Subscription.findOne({ 
+                        member_id: member._id,
+                        status: 'active'
+                    });
+                    
+                    const hasAccess = trialStatus.inTrial || (subscription && subscription.isActive());
+                    
+                    if (!hasAccess) {
+                        console.log(`⏭️ Skipping reminder for ${member.email} - trial expired, no active subscription`);
+                        continue; // Skip sending to this member
+                    }
+
                     await brevoEmailService.sendContributionReminder(
                         member.email,
                         member.full_name,
@@ -200,6 +216,20 @@ class ReminderService {
             for (const loan of loansWithRepaymentsDue) {
                 if (loan.member_id.email_verified && loan.member_id.email) {
                     try {
+                        // Check if member has trial access or active subscription
+                        const trialStatus = await checkNotificationTrialStatus(loan.member_id._id);
+                        const subscription = await Subscription.findOne({ 
+                            member_id: loan.member_id._id,
+                            status: 'active'
+                        });
+                        
+                        const hasAccess = trialStatus.inTrial || (subscription && subscription.isActive());
+                        
+                        if (!hasAccess) {
+                            console.log(`⏭️ Skipping loan reminder for ${loan.member_id.email} - trial expired, no active subscription`);
+                            continue; // Skip sending to this member
+                        }
+
                         const totalDue = loan.amount + (loan.amount * loan.interest_rate / 100);
                         
                         await brevoEmailService.sendLoanRepaymentReminder(

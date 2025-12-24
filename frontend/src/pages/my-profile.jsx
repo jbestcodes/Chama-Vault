@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import SMSPreferences from '../components/SMSPreferences';
+import AccountStatement from '../components/AccountStatement';
+import useSEO from '../hooks/useSEO';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -14,6 +16,16 @@ function MyProfile() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [success, setSuccess] = useState('');
+
+  // SEO optimization for profile page
+  useSEO({
+    title: 'My Profile - Chama Vault | Manage Your Account',
+    description: 'View and manage your Chama Vault profile, track your savings contributions, view account statements, and customize your preferences. Secure platform for Kenyan chama members.',
+    keywords: 'chama profile, account management, savings tracking, account statement, SMS preferences, Kenyan savings',
+    ogTitle: 'My Profile - Chama Vault Account Management',
+    ogDescription: 'Manage your chama savings account, view statements, and customize preferences on Chama Vault.',
+    canonical: '/my-profile'
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -501,6 +513,11 @@ function MyProfile() {
           <SMSPreferences />
         </div>
       </details>
+
+      {/* Account Statement Section */}
+      <div style={{ marginTop: "24px" }}>
+        <AccountStatement />
+      </div>
 
       {/* Responsive styles */}
       <style>

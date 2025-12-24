@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import useSEO from '../hooks/useSEO';
 
-
-const apiUrl = import.meta.env.VITE_API_URL; 
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Register = () => {
     const [full_name, setFullName] = useState('');
@@ -22,9 +22,14 @@ const Register = () => {
     const [memberId, setMemberId] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        document.title = "Register - Jaza Nyumba | Join Our Platform";
-    }, []);
+    // SEO optimization for registration page
+    useSEO({
+        title: "Register - Jaza Nyumba | Create Your Chama Account",
+        description: "Join Jaza Nyumba today and start managing your Chama savings, loans, and contributions. Create your account with secure registration and email verification.",
+        keywords: "register, signup, create account, Chama registration, group savings registration, join Chama platform",
+        url: "https://jazanyumba.online/register",
+        type: "website"
+    });
 
     const handleRegister = async (e) => {
         e.preventDefault();

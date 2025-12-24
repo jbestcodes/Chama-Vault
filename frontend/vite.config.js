@@ -8,5 +8,28 @@ export default defineConfig({
     hmr: {
       overlay: false
     }
+  },
+  build: {
+    // Enable code splitting and chunk optimization
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          charts: ['recharts'],
+          utils: ['axios']
+        }
+      }
+    },
+    // Enable source maps for better debugging
+    sourcemap: true,
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000
+  },
+  // Add base URL for proper asset loading
+  base: '/',
+  // Enable gzip compression
+  esbuild: {
+    drop: ['console', 'debugger'] // Remove console.logs in production
   }
 })

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import AddEmail from '../components/AddEmail';
+import useSEO from '../hooks/useSEO';
 
-
-const apiUrl = import.meta.env.VITE_API_URL; 
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Login = () => {
     const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -23,10 +23,14 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Set page title
-    useEffect(() => {
-        document.title = "Login - Jaza Nyumba | Access Your Account";
-    }, []);
+    // SEO optimization for login page
+    useSEO({
+        title: "Login - Jaza Nyumba | Access Your Chama Account",
+        description: "Secure login to your Jaza Nyumba account. Access your Chama savings, loans, and group management dashboard with two-factor authentication.",
+        keywords: "login, Chama login, group savings login, secure login, two-factor authentication, account access",
+        url: "https://jazanyumba.online/login",
+        type: "website"
+    });
 
     // Show auto-logout message if redirected from auto-logout
     useEffect(() => {

@@ -213,6 +213,30 @@ const checkLeaderboardTrialStatus = async (memberId) => {
     }
 };
 
+// Check if member is still in notifications/reminders trial period (2 weeks)
+const checkNotificationTrialStatus = async (memberId) => {
+    try {
+        const member = await Member.findById(memberId);
+        if (!member) return { inTrial: false, daysLeft: 0 };
+
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        
+        const isInTrialPeriod = new Date(member.created_at) > twoWeeksAgo;
+        
+        if (isInTrialPeriod) {
+            const daysSinceSignup = Math.floor((new Date() - new Date(member.created_at)) / (1000 * 60 * 60 * 24));
+            const daysLeft = 14 - daysSinceSignup;
+            return { inTrial: true, daysLeft: Math.max(0, daysLeft) };
+        }
+        
+        return { inTrial: false, daysLeft: 0 };
+    } catch (error) {
+        console.error('Error checking notification trial status:', error);
+        return { inTrial: false, daysLeft: 0 };
+    }
+};
+
 module.exports = {
     requireSubscription,
     requireFeature,
@@ -222,5 +246,6 @@ module.exports = {
     requireLeaderboard,
     allowBasicFeatures,
     checkAITrialStatus,
-    checkLeaderboardTrialStatus
+    checkLeaderboardTrialStatus,
+    checkNotificationTrialStatus
 };

@@ -824,6 +824,30 @@ class BrevoEmailService {
 
         return results;
     }
+
+    /**
+     * Send account statement to member
+     */
+    async sendAccountStatement(email, fullName, statementHTML) {
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
+
+        sendSmtpEmail.subject = "Your Account Statement - Jaza Nyumba";
+        sendSmtpEmail.sender = { 
+            name: "Jaza Nyumba Statements", 
+            email: process.env.BREVO_SENDER_EMAIL || "noreply@jazanyumba.online" 
+        };
+        sendSmtpEmail.to = [{ email, name: fullName }];
+        sendSmtpEmail.htmlContent = statementHTML;
+
+        try {
+            const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+            console.log(`✅ Account statement sent to ${email}`);
+            return { success: true, messageId: response.messageId };
+        } catch (error) {
+            console.error('❌ Error sending account statement:', error);
+            throw new Error('Failed to send account statement');
+        }
+    }
 }
 
 module.exports = new BrevoEmailService();
