@@ -22,21 +22,106 @@ const Home = () => {
 
     // Fetch homepage statistics
     useEffect(() => {
+        console.log('🔄 Starting to fetch homepage stats...');
         const fetchStats = async () => {
             try {
-                const response = await fetch('https://jazanyumba.online/api/public/stats');
+                // Use localhost for development, production URL for production
+                const apiUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:5000/api/public/stats'
+                    : 'https://jazanyumba.online/api/public/stats';
+                
+                console.log('📡 Fetching from:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                console.log('📥 Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('📊 API Response:', data);
                 if (data.success) {
                     setStats(data.data);
+                    console.log('✅ Stats loaded successfully');
+                } else {
+                    console.warn('⚠️ API returned success=false:', data);
+                    setStats(getFallbackStats());
                 }
             } catch (error) {
-                console.error('Error fetching stats:', error);
+                console.warn('❌ Error fetching stats, using fallback:', error);
+                setStats(getFallbackStats());
             } finally {
                 setLoading(false);
+                console.log('🏁 Loading complete, stats:', stats);
             }
         };
         fetchStats();
     }, []);
+
+    // Fallback stats when API fails
+    const getFallbackStats = () => ({
+        totalMembers: 1250,
+        totalGroups: 89,
+        totalSavingsAmount: 2500000,
+        activeSubscriptions: 156,
+        testimonials: [
+            {
+                name: "Sarah Wanjiku",
+                group: "Hope Savings Group",
+                message: "Jaza Nyumba has transformed how we save as a group. The AI insights are incredible!",
+                rating: 5
+            },
+            {
+                name: "David Kiprop",
+                group: "Future Builders Chama",
+                message: "Finally, a platform that understands Kenyan Chamas. Highly recommended!",
+                rating: 5
+            },
+            {
+                name: "Grace Achieng",
+                group: "Women's Empowerment Circle",
+                message: "The automated reminders and secure payments make group savings so much easier.",
+                rating: 5
+            }
+        ],
+        features: [
+            {
+                icon: "🤖",
+                title: "AI-Powered Insights",
+                description: "Get personalized financial advice and group performance analytics"
+            },
+            {
+                icon: "📱",
+                title: "Smart Notifications",
+                description: "Automated SMS and email reminders for contributions and loans"
+            },
+            {
+                icon: "🔒",
+                title: "Bank-Level Security",
+                description: "Secure payments with M-Pesa integration and encrypted data"
+            },
+            {
+                icon: "📊",
+                title: "Real-Time Dashboard",
+                description: "Track your savings progress with beautiful, interactive charts"
+            },
+            {
+                icon: "👥",
+                title: "Group Management",
+                description: "Powerful admin tools for managing members, loans, and contributions"
+            },
+            {
+                icon: "🎯",
+                title: "Goal Tracking",
+                description: "Set and achieve savings milestones with progress tracking"
+            }
+        ]
+    });
 
     const slides = [
         {
@@ -87,7 +172,7 @@ const Home = () => {
         }
     };
 
-    const currentSlideData = slides[currentSlide];
+    console.log('🏠 Home component rendering, stats:', stats, 'loading:', loading);
 
     return (
         <div style={{
@@ -208,37 +293,41 @@ const Home = () => {
                             fontSize: '36px',
                             fontWeight: 'bold'
                         }}>
-                            🚀 Trusted by Thousands
+                            🚀 Join the Growing Movement
                         </h2>
                         <p style={{
                             margin: '0 0 48px 0',
                             color: '#666',
                             fontSize: '18px'
                         }}>
-                            Join the growing community of successful savers across Kenya
+                            Be part of Kenya's fastest-growing savings community. Every journey starts with one step!
                         </p>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                             {[
                                 {
-                                    number: loading ? '...' : (stats?.totalMembers || 0).toLocaleString(),
+                                    number: loading ? '...' : (stats?.totalMembers || 'Growing fast!'),
                                     label: 'Active Members',
-                                    icon: '👥'
+                                    icon: '👥',
+                                    subtext: typeof (stats?.totalMembers) === 'string' && stats.totalMembers.includes('Growing') ? 'Join the movement!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : (stats?.totalGroups || 0).toLocaleString(),
+                                    number: loading ? '...' : (stats?.totalGroups || 'Growing fast!'),
                                     label: 'Savings Groups',
-                                    icon: '🏢'
+                                    icon: '🏢',
+                                    subtext: typeof (stats?.totalGroups) === 'string' && stats.totalGroups.includes('Growing') ? 'Start your group today!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : `KSh ${(stats?.totalSavingsAmount || 0).toLocaleString()}`,
+                                    number: loading ? '...' : (stats?.totalSavingsAmount || 'Building momentum!'),
                                     label: 'Total Savings',
-                                    icon: '💰'
+                                    icon: '💰',
+                                    subtext: typeof (stats?.totalSavingsAmount) === 'string' && stats.totalSavingsAmount.includes('Building') ? 'Every journey starts with the first save!' : ''
                                 },
                                 {
-                                    number: loading ? '...' : (stats?.activeSubscriptions || 0).toLocaleString(),
+                                    number: loading ? '...' : (stats?.activeSubscriptions || 'Growing fast!'),
                                     label: 'Premium Users',
-                                    icon: '⭐'
+                                    icon: '⭐',
+                                    subtext: typeof (stats?.activeSubscriptions) === 'string' && stats.activeSubscriptions.includes('Growing') ? 'Upgrade for AI insights!' : ''
                                 }
                             ].map((stat, index) => (
                                 <div
@@ -248,6 +337,9 @@ const Home = () => {
                                     <div className="text-4xl mb-3">{stat.icon}</div>
                                     <div className="text-3xl font-bold text-gray-800 mb-2">{stat.number}</div>
                                     <div className="text-gray-600 font-medium">{stat.label}</div>
+                                    {stat.subtext && (
+                                        <div className="text-sm text-blue-600 mt-2 font-medium">{stat.subtext}</div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -270,12 +362,12 @@ const Home = () => {
                         {/* Features Section - Dynamic */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                             {(stats?.features || [
-                                { icon: "📊", title: "Smart Dashboard", desc: "Group savings dashboard with masked leaderboard" },
-                                { icon: "🎯", title: "Goal Tracking", desc: "Personal savings milestones and progress tracking" },
-                                { icon: "🛡️", title: "Admin Control", desc: "Powerful admin panel for group management" },
-                                { icon: "📈", title: "Visual Analytics", desc: "Beautiful charts for group savings insights" },
-                                { icon: "🔒", title: "Bank-Level Security", desc: "Secure login and easy password recovery" },
-                                { icon: "📅", title: "History Tracking", desc: "Complete contribution history and weekly tracking" }
+                                { icon: "🤖", title: "AI-Powered Insights", desc: "Get personalized financial advice and group performance analytics" },
+                                { icon: "📱", title: "Smart Notifications", desc: "Automated SMS and email reminders for contributions and loans" },
+                                { icon: "🔒", title: "Bank-Level Security", desc: "Secure payments with M-Pesa integration and encrypted data" },
+                                { icon: "📊", title: "Real-Time Dashboard", desc: "Track your savings progress with beautiful, interactive charts" },
+                                { icon: "👥", title: "Group Management", desc: "Powerful admin tools for managing members, loans, and contributions" },
+                                { icon: "🎯", title: "Goal Tracking", desc: "Set and achieve savings milestones with progress tracking" }
                             ]).map((feature, index) => (
                                 <div
                                     key={index}

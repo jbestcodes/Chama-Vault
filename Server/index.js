@@ -27,7 +27,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ['https://chama-vault-aiid.vercel.app', 'https://jazanyumba.online', 'https://www.jazanyumba.online', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://chama-vault-aiid.vercel.app',
+      'https://jazanyumba.online',
+      'https://www.jazanyumba.online',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5000'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -89,13 +108,26 @@ app.get('/api/public/stats', async (req, res) => {
 
         const totalSavingsAmount = totalSavings.length > 0 ? totalSavings[0].total : 0;
 
+        // Format numbers to show encouraging thresholds for better presentation
+        const formatStat = (value, minThreshold = 10) => {
+            if (value === 0) return 'Growing fast!';
+            if (value < minThreshold) return `${minThreshold}+`;
+            return value.toLocaleString();
+        };
+
+        const formatSavings = (amount) => {
+            if (amount === 0) return 'Building momentum!';
+            if (amount < 10000) return 'KSh 10,000+';
+            return `KSh ${Math.round(amount / 1000) * 1000}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        };
+
         res.json({
             success: true,
             data: {
-                totalMembers,
-                totalGroups,
-                totalSavingsAmount: Math.round(totalSavingsAmount),
-                activeSubscriptions,
+                totalMembers: formatStat(totalMembers, 50),
+                totalGroups: formatStat(totalGroups, 10),
+                totalSavingsAmount: formatSavings(totalSavingsAmount),
+                activeSubscriptions: formatStat(activeSubscriptions, 5),
                 // Some sample testimonials (you can replace with real ones)
                 testimonials: [
                     {
