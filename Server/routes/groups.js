@@ -1,3 +1,34 @@
+// List all members in the admin's group (including admin)
+router.get('/members', authenticateToken, async (req, res) => {
+    try {
+        const member = await Member.findById(req.user.id);
+        if (!member || !member.group_id) {
+            return res.status(403).json({ error: 'Not in a group' });
+        }
+        const members = await Member.find({ group_id: member.group_id }).select('full_name phone email status is_admin createdAt');
+        res.json({ members });
+    } catch (error) {
+        console.error('Error fetching group members:', error);
+        res.status(500).json({ error: 'Failed to fetch group members' });
+    }
+});
+
+// Admin: Delete a member from the group
+router.delete('/member/:memberId', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const admin = await Member.findById(req.user.id);
+        const target = await Member.findById(req.params.memberId);
+        if (!admin || !admin.is_admin) return res.status(403).json({ error: 'Admin access required' });
+        if (!target) return res.status(404).json({ error: 'Member not found' });
+        if (String(target.group_id) !== String(admin.group_id)) return res.status(403).json({ error: 'Can only delete members in your group' });
+        if (String(target._id) === String(admin._id)) return res.status(400).json({ error: 'Admin cannot delete themselves' });
+        await target.deleteOne();
+        res.json({ message: 'Member deleted' });
+    } catch (error) {
+        console.error('Error deleting member:', error);
+        res.status(500).json({ error: 'Failed to delete member' });
+    }
+});
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, isAdmin } = require('../middleware/auth'); // ✅

@@ -1,3 +1,20 @@
+  // Non-member matching state
+  const [nonMembers, setNonMembers] = useState([]);
+  const [matching, setMatching] = useState({});
+  const [matchMsg, setMatchMsg] = useState("");
+
+  // Fetch non-members for matching
+  const fetchNonMembers = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await axios.get(`${apiUrl}/api/savings/non-members`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNonMembers(res.data.non_members || []);
+    } catch (err) {
+      setNonMembers([]);
+    }
+  };
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -66,8 +83,68 @@ function SavingsAdmin() {
   useEffect(() => {
     fetchMatrix();
     fetchPendingMembers();
+    fetchNonMembers();
     // eslint-disable-next-line
   }, []);
+  // Match non-member to registered member
+  const handleMatch = async (nonMemberId, registeredMemberId) => {
+    setMatching({ ...matching, [nonMemberId]: true });
+    setMatchMsg("");
+    const token = localStorage.getItem("token");
+    try {
+      const res = await axios.post(`${apiUrl}/api/savings/non-members/match`, {
+        non_member_id: nonMemberId,
+        registered_member_id: registeredMemberId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMatchMsg(res.data.message || "Matched successfully");
+      fetchMatrix();
+      fetchNonMembers();
+    } catch (err) {
+      setMatchMsg(err.response?.data?.error || "Error matching non-member");
+    } finally {
+      setMatching({ ...matching, [nonMemberId]: false });
+    }
+  };
+      {/* Non-member Matching Section */}
+      {nonMembers.length > 0 && (
+        <div style={{ marginBottom: 32, background: "#fffbe6", padding: 16, borderRadius: 8 }}>
+          <h3>Unmatched Non-Member Savings</h3>
+          <table style={{ borderCollapse: "collapse", minWidth: 400 }}>
+            <thead>
+              <tr>
+                <th style={{ border: "1px solid #ccc", padding: 8 }}>Name</th>
+                <th style={{ border: "1px solid #ccc", padding: 8 }}>Phone</th>
+                <th style={{ border: "1px solid #ccc", padding: 8 }}>Total Savings</th>
+                <th style={{ border: "1px solid #ccc", padding: 8 }}>Match to Registered</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nonMembers.map((nm) => (
+                <tr key={nm.id}>
+                  <td style={{ border: "1px solid #ccc", padding: 8 }}>{nm.full_name}</td>
+                  <td style={{ border: "1px solid #ccc", padding: 8 }}>{nm.phone}</td>
+                  <td style={{ border: "1px solid #ccc", padding: 8 }}>{nm.total_savings}</td>
+                  <td style={{ border: "1px solid #ccc", padding: 8 }}>
+                    <select
+                      onChange={e => handleMatch(nm.id, e.target.value)}
+                      defaultValue=""
+                      disabled={matching[nm.id]}
+                    >
+                      <option value="">Select Registered Member</option>
+                      {members.map(m => (
+                        <option key={m.id} value={m.id}>{m.full_name}</option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {matchMsg && <div style={{ color: matchMsg.includes('success') ? 'green' : 'red', marginTop: 8 }}>{matchMsg}</div>}
+        </div>
+      )}
 
   // Correct way to sum member totals
   const getMemberTotal = (memberId) => {

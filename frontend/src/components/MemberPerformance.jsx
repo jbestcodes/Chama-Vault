@@ -12,8 +12,9 @@ const MemberPerformance = () => {
     const [selectedMemberId, setSelectedMemberId] = useState(null);
     const [groupMembers, setGroupMembers] = useState([]);
 
+
     useEffect(() => {
-        fetchMemberData();
+        fetchMemberDataAndGroup();
     }, []);
 
     useEffect(() => {
@@ -22,22 +23,28 @@ const MemberPerformance = () => {
         }
     }, [selectedMemberId]);
 
-    const fetchMemberData = async () => {
+    // Fetch member info and group members for admin
+    const fetchMemberDataAndGroup = async () => {
         try {
             const token = localStorage.getItem('token');
             const storedMember = JSON.parse(localStorage.getItem('member'));
-            
             setMemberData(storedMember);
-            setIsAdmin(storedMember?.is_admin || storedMember?.role === 'admin');
-            
-            // Set current member as selected
-            setIsAdmin(storedMember?.is_admin || storedMember?.role === 'admin');
+            const isAdminVal = storedMember?.is_admin || storedMember?.role === 'admin';
+            setIsAdmin(isAdminVal);
             setSelectedMemberId(storedMember._id || storedMember.id);
-            
-            // Note: Group member selection removed - will be added when endpoint is available
+
+            // If admin, fetch all group members
+            if (isAdminVal && storedMember?.group_id) {
+                const res = await axios.get(`${apiUrl}/api/groups/members`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setGroupMembers(res.data.members || []);
+            } else {
+                setGroupMembers([{...storedMember, _id: storedMember._id || storedMember.id, full_name: storedMember.full_name || storedMember.name}]);
+            }
         } catch (error) {
-            console.error('Error fetching member data:', error);
-            setError('Failed to load member data');
+            console.error('Error fetching member/group data:', error);
+            setError('Failed to load member/group data');
         }
     };
 
@@ -127,6 +134,7 @@ const MemberPerformance = () => {
             </div>
 
             {/* Member Selector (Admin Only) */}
+
             {isAdmin && groupMembers.length > 0 && (
                 <div style={{ 
                     background: 'white',
@@ -152,7 +160,8 @@ const MemberPerformance = () => {
                     >
                         {groupMembers.map(member => (
                             <option key={member._id} value={member._id}>
-                                {member.first_name} {member.last_name}
+                                {member.full_name || member.name || (member.first_name + ' ' + member.last_name) || member.phone}
+                                {member.is_admin ? ' (Admin)' : ''}
                             </option>
                         ))}
                     </select>

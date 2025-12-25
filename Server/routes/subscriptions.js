@@ -207,9 +207,13 @@ router.post('/verify/:reference', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Payment verification failed' });
         }
 
-        const memberId = verification.metadata.member_id;
-        console.log('Transaction member_id:', memberId, 'Request user_id:', req.user.id);
-        if (memberId !== req.user.id) {
+        const memberIdRaw = verification.metadata && verification.metadata.member_id;
+        const memberId = memberIdRaw && typeof memberIdRaw === 'object' && memberIdRaw.toString
+            ? memberIdRaw.toString()
+            : String(memberIdRaw);
+        const requestUserId = String(req.user.id);
+        console.log('Transaction member_id:', memberId, 'Request user_id:', requestUserId);
+        if (memberId !== requestUserId) {
             return res.status(403).json({ error: 'Unauthorized - transaction does not belong to you' });
         }
 

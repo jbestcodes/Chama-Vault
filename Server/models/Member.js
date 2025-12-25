@@ -47,6 +47,16 @@ const MemberSchema = new mongoose.Schema({
     contribution_reminders: { type: Boolean, default: true },
     repayment_reminders: { type: Boolean, default: true }
   },
+
+  // Notification schedule (when member wants reminders sent)
+  notification_schedule: {
+    // day can be 'any' or weekday name (e.g., 'monday')
+    day: { type: String, default: 'any' },
+    // preferred time in HH:MM 24h format
+    time: { type: String, default: '09:00' },
+    // method can be 'sms', 'email', or 'both'
+    method: { type: String, enum: ['sms', 'email', 'both'], default: 'sms' }
+  },
   
   // Subscription status (quick reference)
   has_active_subscription: { type: Boolean, default: false },

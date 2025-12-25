@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import SMSPreferences from '../components/SMSPreferences';
+import NotificationSchedule from '../components/NotificationSchedule';
 import AccountStatement from '../components/AccountStatement';
 import useSEO from '../hooks/useSEO';
 
@@ -492,7 +492,7 @@ function MyProfile() {
         </div>
       </div>
 
-      {/* SMS Notification Preferences - Collapsible */}
+      {/* Notification Schedule - Collapsible */}
       <details style={{ 
         background: "#f5f5f5", 
         borderRadius: 8, 
@@ -507,10 +507,10 @@ function MyProfile() {
           cursor: "pointer",
           userSelect: "none"
         }}>
-          📱 SMS Notification Settings (Optional)
+          🔔 Notification Schedule (Optional)
         </summary>
         <div style={{ marginTop: "16px" }}>
-          <SMSPreferences />
+          <NotificationSchedule />
         </div>
       </details>
 

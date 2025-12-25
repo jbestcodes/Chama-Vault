@@ -760,6 +760,44 @@ router.put('/members/sms-preferences', authenticateToken, async (req, res) => {
     }
 });
 
+// Get notification schedule for member
+router.get('/members/notification-schedule', authenticateToken, async (req, res) => {
+    try {
+        const member = await Member.findById(req.user.id);
+        if (!member) return res.status(404).json({ error: 'Member not found' });
+
+        res.json({ notificationSchedule: member.notification_schedule || { day: 'any', time: '09:00', method: 'sms' } });
+    } catch (error) {
+        console.error('Error fetching notification schedule:', error);
+        res.status(500).json({ error: 'Failed to fetch notification schedule' });
+    }
+});
+
+// Update notification schedule for member
+router.put('/members/notification-schedule', authenticateToken, async (req, res) => {
+    try {
+        const { notificationSchedule } = req.body;
+        if (!notificationSchedule || typeof notificationSchedule !== 'object') {
+            return res.status(400).json({ error: 'Invalid notification schedule data' });
+        }
+
+        const member = await Member.findById(req.user.id);
+        if (!member) return res.status(404).json({ error: 'Member not found' });
+
+        member.notification_schedule = {
+            ...member.notification_schedule,
+            ...notificationSchedule
+        };
+
+        await member.save();
+
+        res.json({ message: 'Notification schedule updated', notificationSchedule: member.notification_schedule });
+    } catch (error) {
+        console.error('Error updating notification schedule:', error);
+        res.status(500).json({ error: 'Failed to update notification schedule' });
+    }
+});
+
 // Add/Update email for existing users (for users who registered without email)
 router.post('/add-email', async (req, res) => {
     const { phone, email } = req.body;
