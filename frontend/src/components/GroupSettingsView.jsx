@@ -97,7 +97,29 @@ const GroupSettingsView = () => {
         }}>
             <h3 style={{ margin: '0 0 16px 0', color: '#2e7d32' }}>📋 Group Financial Rules</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr)), gap: '16px' }}>
+                <div style={{
+                    background: 'white',
+                    padding: '16px',
+                    borderRadius: '6px',
+                    border: '1px solid #e0e0e0'
+                }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#1976d2', fontSize: '16px' }}>🏧 Group Account Type</h4>
+                    <p style={{ margin: 0, fontSize: '16px', color: '#333' }}>
+                        {settings.account_type ? settings.account_type.charAt(0).toUpperCase() + settings.account_type.slice(1) : 'Not set'}
+                    </p>
+                </div>
+                <div style={{
+                    background: 'white',
+                    padding: '16px',
+                    borderRadius: '6px',
+                    border: '1px solid #e0e0e0'
+                }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#1976d2', fontSize: '16px' }}>🆔 Group Account Number</h4>
+                    <p style={{ margin: 0, fontSize: '16px', color: '#333' }}>
+                        {settings.account_number || 'Not set'}
+                    </p>
+                </div>
                 <div style={{
                     background: 'white',
                     padding: '16px',

@@ -1,3 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const { authenticateToken, isAdmin } = require('../middleware/auth'); // ✅
+
+const Group = require('../models/Group');
+const Member = require('../models/Member'); 
+const brevoEmailService = require('../services/brevoEmailService');
+
 // List all members in the admin's group (including admin)
 router.get('/members', authenticateToken, async (req, res) => {
     try {
@@ -29,18 +37,11 @@ router.delete('/member/:memberId', authenticateToken, isAdmin, async (req, res) 
         res.status(500).json({ error: 'Failed to delete member' });
     }
 });
-const express = require('express');
-const router = express.Router();
-const { authenticateToken, isAdmin } = require('../middleware/auth'); // ✅
-
-const Group = require('../models/Group');
-const Member = require('../models/Member'); 
-const brevoEmailService = require('../services/brevoEmailService');
 
 // Update group settings endpoint
 router.put('/settings', authenticateToken, async (req, res) => {
     try {
-        const { interest_rate, minimum_loan_savings, contribution_settings } = req.body;
+        const { interest_rate, minimum_loan_savings, contribution_settings, account_type, account_number } = req.body;
         
         // Find member's group
         const member = await Member.findById(req.user.id);
@@ -93,14 +94,18 @@ router.put('/settings', authenticateToken, async (req, res) => {
         if (interest_rate !== undefined) updateData.interest_rate = interest_rate;
         if (minimum_loan_savings !== undefined) updateData.minimum_loan_savings = minimum_loan_savings;
         if (contribution_settings) updateData.contribution_settings = contribution_settings;
-        
+        if (account_type !== undefined) updateData.account_type = account_type;
+        if (account_number !== undefined) updateData.account_number = account_number;
+
         await Group.findByIdAndUpdate(groupId, updateData);
-        
+
         res.json({ 
             message: 'Group settings updated successfully',
             interest_rate: interest_rate,
             minimum_loan_savings: minimum_loan_savings,
-            contribution_settings: contribution_settings
+            contribution_settings: contribution_settings,
+            account_type: account_type,
+            account_number: account_number
         });
         
     } catch (error) {
@@ -121,7 +126,7 @@ router.get('/settings', authenticateToken, async (req, res) => {
         
         const groupId = member.group_id;
         
-        const group = await Group.findById(groupId).select('interest_rate minimum_loan_savings contribution_settings');
+        const group = await Group.findById(groupId).select('interest_rate minimum_loan_savings contribution_settings account_type account_number');
         
         if (!group) {
             return res.status(404).json({ error: 'Group not found' });
@@ -138,7 +143,9 @@ router.get('/settings', authenticateToken, async (req, res) => {
                 penalty_amount: 0,
                 grace_period_days: 0,
                 auto_reminders: true
-            }
+            },
+            account_type: group.account_type || '',
+            account_number: group.account_number || ''
         });
         
     } catch (error) {

@@ -122,6 +122,60 @@ const GroupSettings = () => {
             
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'end' }}>
                 <div>
+                    <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        🏧 Group Account Type
+                    </label>
+                    <select
+                        value={settings.account_type || ''}
+                        onChange={e => setSettings({...settings, account_type: e.target.value})}
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '140px',
+                            fontSize: '14px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="">Select type</option>
+                        <option value="paybill">Paybill</option>
+                        <option value="account">Account Number</option>
+                        <option value="mpesa">Mpesa Number</option>
+                        <option value="airtel">Airtel Number</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#333',
+                        marginBottom: '4px'
+                    }}>
+                        🆔 Group Account Number
+                    </label>
+                    <input
+                        type="text"
+                        value={settings.account_number || ''}
+                        onChange={e => setSettings({...settings, account_number: e.target.value})}
+                        placeholder="Enter account/paybill/phone number"
+                        style={{
+                            padding: '8px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            minWidth: '140px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+                <div>
                     <label style={{ 
                         display: 'block', 
                         fontSize: '14px', 
