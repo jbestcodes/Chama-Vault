@@ -17,6 +17,7 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const supportRoutes = require('./routes/support');
 const statementRoutes = require('./routes/statements');
 const connectDB = require('./db'); // Import the new MongoDB connection
+const webhookHandlerRoutes = require('./routes/webhookHandler');
 
 // Initialize services
 const reminderService = require('./services/reminderService'); // This will start cron jobs
@@ -26,33 +27,36 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://chama-vault-aiid.vercel.app',
-      'https://jazanyumba.online',
-      'https://www.jazanyumba.online',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:5000'
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        const allowedOrigins = [
+            'https://chama-vault-aiid.vercel.app',
+            'https://jazanyumba.online',
+            'https://www.jazanyumba.online',
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'http://localhost:5000'
+        ];
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
 }));
+
+// PAYSTACK WEBHOOK — MUST COME FIRST
+const { webhookHandler } = require('./routes/subscriptions');
+app.post(
+    '/api/subscriptions/webhook',
+    express.raw({ type: 'application/json' }),
+    webhookHandler
+);
+
+// NOW it's safe to parse JSON
 app.use(express.json());
 
 // Routes
@@ -73,6 +77,7 @@ app.use('/api/group-rules', groupRulesRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/statements', statementRoutes);
+app.use('/api/subscriptions/webhook', webhookHandlerRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
