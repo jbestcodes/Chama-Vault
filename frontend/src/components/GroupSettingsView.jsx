@@ -97,7 +97,7 @@ const GroupSettingsView = () => {
         }}>
             <h3 style={{ margin: '0 0 16px 0', color: '#2e7d32' }}>📋 Group Financial Rules</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr)), gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
                 <div style={{
                     background: 'white',
                     padding: '16px',
