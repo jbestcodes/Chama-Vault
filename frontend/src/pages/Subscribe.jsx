@@ -235,7 +235,8 @@ function Subscribe() {
         text: `Subscribe - KES ${plans[selectedPlan].price / 100}`,
         onSuccess: handlePaymentSuccess,
         onClose: handlePaymentClose,
-        currency: 'KES'
+        currency: 'KES',
+        plan: selectedPlan === 'monthly' ? 'PLN_sdxjk0g1ufsv7xa' : 'PLN_s35pjg5h2wxi5rx'
     };
 
     return (

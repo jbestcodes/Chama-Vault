@@ -54,7 +54,7 @@ function SavingsAdmin() {
   const fetchPendingMembers = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get(`${apiUrl}/api/savings/group`, { // <-- Use backticks and apiUrl
+      const res = await axios.get(`${apiUrl}/api/groups/members`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Filter for pending status
@@ -270,7 +270,7 @@ function SavingsAdmin() {
     setApprovalMsg("");
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`${apiUrl}/api/auth/delete-member/${member.id}`, { // <-- Use backticks and apiUrl
+      await axios.delete(`${apiUrl}/api/groups/member/${member.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApprovalMsg("Member deleted.");
