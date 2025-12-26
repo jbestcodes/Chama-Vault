@@ -1,20 +1,3 @@
-  // Non-member matching state
-  const [nonMembers, setNonMembers] = useState([]);
-  const [matching, setMatching] = useState({});
-  const [matchMsg, setMatchMsg] = useState("");
-
-  // Fetch non-members for matching
-  const fetchNonMembers = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await axios.get(`${apiUrl}/api/savings/non-members`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNonMembers(res.data.non_members.map(m => ({ ...m, id: m.id || m._id })) || []);
-    } catch (err) {
-      setNonMembers([]);
-    }
-  };
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -29,7 +12,7 @@ import {
 } from "recharts";
 import GroupSettings from '../components/GroupSettings';
 
-const apiUrl = import.meta.env.VITE_API_URL; // <-- Add this line
+const apiUrl = import.meta.env.VITE_API_URL; 
 
 function SavingsAdmin() {
   const [members, setMembers] = useState([]);
