@@ -57,7 +57,12 @@ app.post(
 // NOW it's safe to parse JSON
 app.use(express.json());
 
-// Routes
+
+// Serve frontend static files
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sms-auth', authWithSMSRoutes);
 app.use('/api/savings', savingsRoutes);
@@ -192,6 +197,11 @@ app.get('/api/public/stats', async (req, res) => {
             error: 'Unable to fetch statistics' 
         });
     }
+});
+
+// SPA Fallback: serve index.html for all other routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 console.log('🚀 Jaza Nyumba server starting...');
