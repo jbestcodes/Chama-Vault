@@ -9,7 +9,7 @@ const repaymentsRoutes = require('./routes/repayments');
 const aiRoutes = require('./routes/ai');
 const withdrawalRoutes = require('./routes/withdrawals');
 const notificationRoutes = require('./routes/notifications');
-const subscriptionRoutes = require('./routes/subscriptions');
+const { router: subscriptionRoutes, webhookHandler } = require('./routes/subscriptions');
 const inviteRoutes = require('./routes/invites');
 const tableBankingRoutes = require('./routes/tableBanking');
 const groupRulesRoutes = require('./routes/groupRules');
@@ -17,7 +17,6 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const supportRoutes = require('./routes/support');
 const statementRoutes = require('./routes/statements');
 const connectDB = require('./db'); // Import the new MongoDB connection
-const webhookHandlerRoutes = require('./routes/webhookHandler');
 
 // Initialize services
 const reminderService = require('./services/reminderService'); // This will start cron jobs
@@ -49,7 +48,6 @@ app.use(cors({
 }));
 
 // PAYSTACK WEBHOOK — MUST COME FIRST
-const { webhookHandler } = require('./routes/subscriptions');
 app.post(
     '/api/subscriptions/webhook',
     express.raw({ type: 'application/json' }),
@@ -77,7 +75,6 @@ app.use('/api/group-rules', groupRulesRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/statements', statementRoutes);
-app.use('/api/subscriptions/webhook', webhookHandlerRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

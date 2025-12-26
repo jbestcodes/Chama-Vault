@@ -10,7 +10,7 @@
       const res = await axios.get(`${apiUrl}/api/savings/non-members`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNonMembers(res.data.non_members || []);
+      setNonMembers(res.data.non_members.map(m => ({ ...m, id: m.id || m._id })) || []);
     } catch (err) {
       setNonMembers([]);
     }
@@ -48,7 +48,7 @@ function SavingsAdmin() {
   const [isNonMember, setIsNonMember] = useState(false);
   const [nonMemberName, setNonMemberName] = useState("");
   const [nonMemberPhone, setNonMemberPhone] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState({});
   const [editValue, setEditValue] = useState("");
 
   // Fetch only the group-specific matrix (members, weeks, matrix, groupTotal)
@@ -58,8 +58,9 @@ function SavingsAdmin() {
       const res = await axios.get(`${apiUrl}/api/savings/matrix`, { 
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Fix: normalize member IDs
+      setMembers(res.data.members.map(m => ({ ...m, id: m.id || m._id })));
       setWeeks(res.data.weeks);
-      setMembers(res.data.members);
       setSavingsMatrix(res.data.matrix);
       setGroupTotal(res.data.groupTotal);
     } catch (err) {
@@ -221,7 +222,8 @@ function SavingsAdmin() {
 
   // Edit handler
   const handleEdit = (week, memberId, currentValue) => {
-    setEditing({ [`${week}_${memberId}`]: true });
+    const cellKey = `${week}_${memberId}`;
+    setEditing({...editing, [cellKey]: true });
     setEditValue(currentValue);
   };
 
@@ -266,7 +268,7 @@ function SavingsAdmin() {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        `${apiUrl}/api/auth/deny-member`, // <-- Use backticks and apiUrl
+        `${apiUrl}/api/auth/deny-member`, 
         { member_id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -439,7 +441,7 @@ function SavingsAdmin() {
               style={{ minWidth: 140 }}
             >
               <option value="">Select Member</option>
-              {members.filter(m => m.id != null).map((m) => (
+              {[...members, ...nonMembers].map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.full_name}
                 </option>
@@ -493,7 +495,7 @@ function SavingsAdmin() {
               <td style={{ border: "1px solid #ccc", padding: 8 }}>{week}</td>
               {members.filter(m => m.id != null).map((member) => {
                 const cellKey = `${week}_${member.id}`;
-                const value = savingsMatrix[week]?.[member._id || member.id] || 0;
+                const value = savingsMatrix[week]?.[member.id] || 0;
                 return (
                   <td key={member.id} style={{ border: "1px solid #ccc", padding: 8 }}>
                     {editing[cellKey] ? (
@@ -549,7 +551,7 @@ function SavingsAdmin() {
             data={weeks.map(week => {
               const row = { week: `Week ${week}` };
               members.forEach(member => {
-                row[member.full_name] = Number(savingsMatrix[week]?.[member._id || member.id] || 0);
+                row[member.full_name] = Number(savingsMatrix[week]?.[member.id] || 0);
               });
               return row;
             })}

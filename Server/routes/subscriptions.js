@@ -150,8 +150,9 @@ router.post('/subscribe', authenticateToken, async (req, res) => {
     }
 });
 
-// Handle Paystack webhook
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+
+// Exported webhook handler
+const webhookHandler = async (req, res) => {
     try {
         // Verify webhook signature
         const hash = require('crypto')
@@ -169,30 +170,27 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             case 'subscription.create':
                 await handleSubscriptionCreated(event.data);
                 break;
-                
             case 'charge.success':
                 await handleChargeSuccess(event.data);
                 break;
-                
             case 'invoice.payment_failed':
                 await handlePaymentFailed(event.data);
                 break;
-                
             case 'subscription.disable':
                 await handleSubscriptionDisabled(event.data);
                 break;
-                
             default:
                 console.log('Unhandled webhook event:', event.event);
         }
-        
         res.status(200).json({ received: true });
-        
     } catch (error) {
         console.error('Webhook error:', error);
         res.status(400).json({ error: 'Webhook processing failed' });
     }
-});
+};
+
+// Use the handler in the router for local testing (optional)
+router.post('/webhook', express.raw({ type: 'application/json' }), webhookHandler);
 
 // Verify payment and activate subscription
 router.post('/verify/:reference', authenticateToken, async (req, res) => {
@@ -511,4 +509,4 @@ async function handleChargeSuccess(data) {
     }
 }
 
-module.exports = router;
+module.exports = { router, webhookHandler };
