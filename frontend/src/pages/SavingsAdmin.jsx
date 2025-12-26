@@ -48,14 +48,14 @@ function SavingsAdmin() {
   const [isNonMember, setIsNonMember] = useState(false);
   const [nonMemberName, setNonMemberName] = useState("");
   const [nonMemberPhone, setNonMemberPhone] = useState("");
-  const [editing, setEditing] = useState({});
+  const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
 
   // Fetch only the group-specific matrix (members, weeks, matrix, groupTotal)
   const fetchMatrix = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get(`${apiUrl}/api/savings/matrix`, { // <-- Use backticks and apiUrl
+      const res = await axios.get(`${apiUrl}/api/savings/matrix`, { 
         headers: { Authorization: `Bearer ${token}` },
       });
       setWeeks(res.data.weeks);
