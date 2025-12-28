@@ -92,7 +92,7 @@ function SavingsAdmin() {
     }
   };
       {/* Non-member Matching Section */}
-      {nonMembers.length > 0 && (
+      {isNonMember.length > 0 && (
         <div style={{ marginBottom: 32, background: "#fffbe6", padding: 16, borderRadius: 8 }}>
           <h3>Unmatched Non-Member Savings</h3>
           <table style={{ borderCollapse: "collapse", minWidth: 400 }}>
