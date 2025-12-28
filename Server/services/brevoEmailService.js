@@ -412,7 +412,7 @@ class BrevoEmailService {
                         <div class="invite-code">${inviteCode}</div>
                         
                         <p style="text-align: center;">
-                            <a href="${inviteLink}" class="button">Accept Invitation & Register</a>
+                            <a href="${process.env.FRONTEND_URL || 'https://jazanyumba.online'}/register" class="button">Accept Invitation & Register</a>
                         </p>
                         
                         <p style="font-size: 14px; color: #6b7280;">
