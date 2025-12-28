@@ -372,6 +372,8 @@ class BrevoEmailService {
      */
     async sendGroupInvitationEmail(email, recipientName, groupName, inviteCode, inviterName, inviteLink) {
         const sendSmtpEmail = new brevo.SendSmtpEmail();
+
+        const baseURL = process.env.FRONTEND_URL || 'https://jazanyumba.online';
         
         sendSmtpEmail.subject = `You're Invited to Join ${groupName} on Jaza Nyumba`;
         sendSmtpEmail.sender = { 
@@ -410,14 +412,16 @@ class BrevoEmailService {
 
                         <p>Your invitation code is:</p>
                         <div class="invite-code">${inviteCode}</div>
+
+                        
                         
                         <p style="text-align: center;">
-                            <a href="${process.env.FRONTEND_URL || 'https://jazanyumba.online'}/register" class="button">Accept Invitation & Register</a>
+                            <a href="${baseURL}/register?code=${inviteCode}" class="button">Accept Invitation & Register</a>
                         </p>
                         
                         <p style="font-size: 14px; color: #6b7280;">
                             <strong>Note:</strong> This invitation expires in 7 days. If the button doesn't work, copy and paste this link into your browser:<br>
-                            <span style="word-break: break-all; color: #7C3AED;">${inviteLink}</span>
+                            <span style="word-break: break-all; color: #7C3AED;">${baseURL}/register?code=${inviteCode}</span>
                         </p>
                         
                         <p>We look forward to having you join the group!</p>
