@@ -33,6 +33,10 @@ function SavingsAdmin() {
   const [nonMemberPhone, setNonMemberPhone] = useState("");
   const [editing, setEditing] = useState({});
   const [editValue, setEditValue] = useState("");
+  const [matching, setMatching] = useState("");
+  const [matchMsg, setMatchMsg] = useState("");
+  const [nonMembers, setNonMembers] = useState([]);
+
 
   // Fetch only the group-specific matrix (members, weeks, matrix, groupTotal)
   const fetchMatrix = async () => {
@@ -63,7 +67,18 @@ function SavingsAdmin() {
       setPendingMembers([]);
     }
   };
-
+const fetchNonMember = async () => {
+   const token = localStorage.getItem("token");
+   try {
+    const res = await axios.get(`${apiUrl}/api/savings/non-members`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setNonMembers(res.data || []);
+   } catch (err) {
+    console.error("Error fetching non-members:", err);
+    setNonMembers([]);
+   }
+};
   useEffect(() => {
     fetchMatrix();
     fetchPendingMembers();
@@ -92,7 +107,7 @@ function SavingsAdmin() {
     }
   };
       {/* Non-member Matching Section */}
-      {isNonMember.length > 0 && (
+      {nonMembers.length > 0 && (
         <div style={{ marginBottom: 32, background: "#fffbe6", padding: 16, borderRadius: 8 }}>
           <h3>Unmatched Non-Member Savings</h3>
           <table style={{ borderCollapse: "collapse", minWidth: 400 }}>
@@ -264,20 +279,25 @@ function SavingsAdmin() {
   };
 
   const handleDelete = async (member) => {
+    const idToDelete = member.id || member._id;
+    if (!idToDelete) {
+      alert ("Cannot delete member: missing ID.");
+      return;
+    }
     if (!window.confirm(`Are you sure you want to delete ${member.full_name}?`)) {
       return;
     }
     setApprovalMsg("");
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`${apiUrl}/api/groups/member/${member.id}`, {
+      await axios.delete(`${apiUrl}/api/groups/member/${idToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setApprovalMsg("Member deleted.");
+      setApprovalMsg("Member deleted successfully.");
       fetchPendingMembers();
       fetchMatrix();
     } catch {
-      setApprovalMsg("Error deleting member.");
+      setApprovalMsg("Error could not delete member.");
     }
   };
 
@@ -588,5 +608,6 @@ function SavingsAdmin() {
     </div>
   );
 }
+
 
 export default SavingsAdmin;
