@@ -67,7 +67,7 @@ function SavingsAdmin() {
   useEffect(() => {
     fetchMatrix();
     fetchPendingMembers();
-    fetchNonMembers();
+    fetchNonMember();
     // eslint-disable-next-line
   }, []);
   // Match non-member to registered member
@@ -84,7 +84,7 @@ function SavingsAdmin() {
       });
       setMatchMsg(res.data.message || "Matched successfully");
       fetchMatrix();
-      fetchNonMembers();
+      fetchNonMember();
     } catch (err) {
       setMatchMsg(err.response?.data?.error || "Error matching non-member");
     } finally {
@@ -234,7 +234,7 @@ function SavingsAdmin() {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        `${apiUrl}/api/auth/approve-member`, // <-- Use backticks and apiUrl
+        `${apiUrl}/api/auth/approve-member`, 
         { member_id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
