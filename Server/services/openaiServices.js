@@ -5,10 +5,10 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-class OpenAIService
+class OpenAIService {
     // 1. LIVE SUPPORT ASSISTANT (General Questions)
 
-    async generateLiveSupportResponse(userQuestion) {
+    async liveSupportResponse(userQuestion) {
         try {
             const systemPrompt = `
             You are the Live Support Assistant for Jaza Nyumba. 
@@ -90,6 +90,7 @@ class OpenAIService
             console.error('OpenAI Financial Chatbot Error:', error);
             return "I'm sorry, I'm having trouble responding right now. Please check your dashboard or contact your group admin.";
         }
+    }
 
 
     // 3. FINANCIAL NUDGE (Proactive Encouragement)
