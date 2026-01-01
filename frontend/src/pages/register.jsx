@@ -209,7 +209,8 @@ const Register = () => {
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
                                             background: '#fafafa',
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            color: '#333'
                                         }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = '#667eea';
@@ -253,7 +254,8 @@ const Register = () => {
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
                                             background: '#fafafa',
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            color: '#333'
                                         }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = '#667eea';
@@ -297,7 +299,8 @@ const Register = () => {
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
                                             background: '#fafafa',
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            color: '#333'
                                         }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = '#667eea';
@@ -322,6 +325,7 @@ const Register = () => {
                                         color: '#333',
                                         fontWeight: '500',
                                         fontSize: '14px'
+                                    
                                     }}>
                                         🔒 Password
                                     </label>
@@ -342,7 +346,8 @@ const Register = () => {
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
                                             background: '#fafafa',
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            color: '#333'
                                         }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = '#667eea';
@@ -387,7 +392,8 @@ const Register = () => {
                                             transition: 'all 0.3s ease',
                                             outline: 'none',
                                             background: '#fafafa',
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            color: '#333'
                                         }}
                                         onFocus={(e) => {
                                             e.target.style.borderColor = '#667eea';
