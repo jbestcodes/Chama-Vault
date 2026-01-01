@@ -241,7 +241,8 @@ function Subscribe() {
         plan: selectedPlan === 'monthly' ? 'PLN_sdxjk0g1ufsv7xa' : 'PLN_s35pjg5h2wxi5rx',
 
 metadata : {
-    member_id: String (user?.id || user?.id) 
+    member_id: String (user?.id),
+    plan_type: selectedPlan
 }
     };
 

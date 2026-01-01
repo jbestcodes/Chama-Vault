@@ -193,61 +193,79 @@ const webhookHandler = async (req, res) => {
 router.post('/webhook', express.raw({ type: 'application/json' }), webhookHandler);
 
 // Verify payment and activate subscription
+// Verify payment and activate subscription (Handles both existing and new subscriptions)
 router.post('/verify/:reference', authenticateToken, async (req, res) => {
     try {
         const { reference } = req.params;
+        const { plan } = req.body; // Get plan from frontend body
+        
         console.log('Verifying subscription:', reference, 'for user:', req.user.id);
         
+        // 1. Verify directly with Paystack
         const verification = await paystackService.verifySubscription(reference);
-        console.log('Paystack verification result:', verification);
         
         if (!verification.success) {
             return res.status(400).json({ error: 'Payment verification failed' });
         }
 
-        const memberIdRaw = verification.metadata && verification.metadata.member_id;
-        const memberId = memberIdRaw && typeof memberIdRaw === 'object' && memberIdRaw.toString
-            ? memberIdRaw.toString()
-            : String(memberIdRaw);
-        const requestUserId = String(req.user.id);
-        console.log('Transaction member_id:', memberId, 'Request user_id:', requestUserId);
-        if (memberId !== requestUserId) {
+        // 2. Security Check: Ensure the transaction belongs to the logged-in user
+        const memberIdRaw = verification.metadata?.member_id;
+        const memberId = String(memberIdRaw || req.user.id);
+        
+        if (memberId !== String(req.user.id)) {
             return res.status(403).json({ error: 'Unauthorized - transaction does not belong to you' });
         }
 
-        const subscription = await Subscription.findOne({ member_id: memberId });
+        // 3. Find OR Create the Subscription Record
+        // Since frontend initialized directly, the record might not exist yet.
+        let subscription = await Subscription.findOne({ member_id: memberId });
         
-        if (!subscription) {
-            return res.status(404).json({ error: 'Subscription not found' });
-        }
-
-        // Calculate expiry based on plan
+        // Determine Plan Type (use body from frontend, or metadata, or fallback to monthly)
+        const planType = plan || verification.metadata?.plan_type || 'monthly';
+        
         const now = new Date();
-        const expiryDate = subscription.plan_type === 'weekly' 
-            ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)  // 7 days
-            : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        const expiryDate = planType === 'weekly' 
+            ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) 
+            : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        // Activate subscription
-        subscription.status = 'active';
-        subscription.start_date = now;
-        subscription.expires_at = expiryDate;
-        subscription.next_payment_date = expiryDate;
-        subscription.features = getPlanFeatures(subscription.plan_type);
-        
-        // Add payment to history
-        subscription.payments.push({
-            reference: verification.reference,
-            amount: verification.amount,
-            status: 'success',
-            paid_at: new Date()
-        });
+        const subscriptionData = {
+            member_id: memberId,
+            plan_type: planType,
+            status: 'active',
+            amount: verification.amount / 100, // Convert to main currency unit
+            currency: 'KES',
+            start_date: now,
+            expires_at: expiryDate,
+            next_payment_date: expiryDate,
+            features: getPlanFeatures(planType),
+            // Store the initial payment in history
+            payments: [{
+                reference: verification.reference,
+                amount: verification.amount / 100,
+                status: 'success',
+                paid_at: now
+            }]
+        };
+
+        if (subscription) {
+            // Update existing record
+            Object.assign(subscription, subscriptionData);
+            // Ensure payment isn't duplicated in history if verify is called twice
+            const paymentExists = subscription.payments.some(p => p.reference === reference);
+            if (!paymentExists) {
+                subscription.payments.push(subscriptionData.payments[0]);
+            }
+        } else {
+            // Create new record
+            subscription = new Subscription(subscriptionData);
+        }
         
         await subscription.save();
 
-        // Update member's subscription status
+        // 4. Update Member Profile
         await Member.findByIdAndUpdate(memberId, {
             has_active_subscription: true,
-            subscription_plan: subscription.plan_type,
+            subscription_plan: planType,
             subscription_expires: expiryDate
         });
 
