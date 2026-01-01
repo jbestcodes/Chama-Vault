@@ -2,16 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TrialStatus from '../components/TrialStatus';
 
-
 const AIDashboard = () => {
     const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const [messages, setMessages] = useState([]);
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [trialInfo, setTrialInfo] = useState(null);
+    const [nudge, setNudge] = useState(''); // New state for proactive nudge
+    const [healthData, setHealthData] = useState(null); // New state for health score
     const messagesEndRef = useRef(null);
-    const navigate = useNavigate();
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -21,72 +20,57 @@ const AIDashboard = () => {
         scrollToBottom();
     }, [messages]);
 
-    // Check authentication status and trial info
     useEffect(() => {
         const token = localStorage.getItem('token');
         const loggedIn = !!token;
         setIsLoggedIn(loggedIn);
 
-        // Get trial info from localStorage if available
-        const storedTrialInfo = localStorage.getItem('aiTrialInfo');
-        if (storedTrialInfo) {
-            setTrialInfo(JSON.parse(storedTrialInfo));
-        }
-
-        // Set welcome message based on login status
         if (loggedIn) {
-            const trialStatus = storedTrialInfo ? JSON.parse(storedTrialInfo) : null;
-            let welcomeMessage = "Hello! I'm your AI financial assistant. Ask me anything about savings, loans, or your Chama finances! 🤖";
-            
-            if (trialStatus?.inTrial) {
-                welcomeMessage += `\n\n🎉 You're in your AI trial period! ${trialStatus.daysLeft} days remaining. Make the most of it!`;
-            }
-            
-            setMessages([
-                {
-                    text: welcomeMessage,
-                    isUser: false,
-                    timestamp: new Date()
-                }
-            ]);
+            fetchInitialAIData(token);
         } else {
-            setMessages([
-                {
-                    text: "Welcome to Jaza Nyumba AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first to access your data. Please login or register to get started! 🔐",
-                    isUser: false,
-                    timestamp: new Date()
-                }
-            ]);
+            setMessages([{
+                text: "Welcome to Jaza Nyumba AI! 🤖 I'd love to help you with personalized financial advice, but you need to be logged in first.",
+                isUser: false,
+                timestamp: new Date()
+            }]);
         }
     }, []);
 
+    // Fetch Nudge and Savings Health on Load
+    const fetchInitialAIData = async (token) => {
+        try {
+            // 1. Fetch Financial Nudge
+            const nudgeRes = await fetch(`${BASE_URL}/api/ai/financial-nudge`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const nudgeData = await nudgeRes.json();
+            setNudge(nudgeData.nudge);
+
+            // 2. Fetch Savings Health
+            const healthRes = await fetch(`${BASE_URL}/api/ai/savings-health`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const healthJson = await healthRes.json();
+            setHealthData(healthJson.health);
+
+            setMessages([{
+                text: "Hello! I've analyzed your latest data. Check your personalized insights on the side or ask me anything! 🤖",
+                isUser: false,
+                timestamp: new Date()
+            }]);
+        } catch (err) {
+            console.error("Failed to load AI insights", err);
+        }
+    };
+
     const handleSendMessage = async () => {
         if (!userInput.trim()) return;
-
-        const userMessage = {
-            text: userInput,
-            isUser: true,
-            timestamp: new Date()
-        };
-
+        const token = localStorage.getItem('token');
+        const userMessage = { text: userInput, isUser: true, timestamp: new Date() };
+        
         setMessages(prev => [...prev, userMessage]);
-        const currentInput = userInput;
         setUserInput('');
         setIsLoading(true);
-
-        // Check if user is logged in
-        const token = localStorage.getItem('token');
-        if (!token) {
-            const authMessage = {
-                text: "Sorry, you must be logged in to ask questions and get personalized financial advice! 🔐 Please login to access your savings data and get smart recommendations.",
-                isUser: false,
-                timestamp: new Date(),
-                showAuthButtons: true
-            };
-            setMessages(prev => [...prev, authMessage]);
-            setIsLoading(false);
-            return;
-        }
 
         try {
             const response = await fetch(`${BASE_URL}/api/ai/chat`, {
@@ -95,240 +79,102 @@ const AIDashboard = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ question: currentInput })
+                body: JSON.stringify({ question: userInput })
             });
 
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    // Token is invalid/expired
-                    localStorage.removeItem('token');
-                    setIsLoggedIn(false);
-                    const authMessage = {
-                        text: "Your session has expired! Please login again to continue using the AI assistant. 🔄",
-                        isUser: false,
-                        timestamp: new Date(),
-                        showAuthButtons: true
-                    };
-                    setMessages(prev => [...prev, authMessage]);
-                    setIsLoading(false);
-                    return;
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
-            
-            const aiMessage = {
+            setMessages(prev => [...prev, {
                 text: data.response,
                 isUser: false,
                 timestamp: new Date()
-            };
-
-            setMessages(prev => [...prev, aiMessage]);
+            }]);
         } catch (error) {
-            console.error('Chat API error:', error);
-            const errorMessage = {
-                text: "Sorry, I'm having trouble connecting right now. Please try again later! 🔧",
+            setMessages(prev => [...prev, {
+                text: "Connection issues. Please try again later.",
                 isUser: false,
                 timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorMessage]);
+            }]);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
-            <div className="flex-1 p-4">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                            AI Financial Assistant 🤖
-                        </h1>
-                        <p className="text-gray-600">
-                            {isLoggedIn 
-                                ? "Get personalized financial advice based on your savings and loan data"
-                                : "Login to get personalized financial advice based on your data"
-                            }
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left Column: Insights & Stats */}
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+                        <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                            <span>💡</span> Personal Nudge
+                        </h2>
+                        <p className="text-sm text-gray-700 leading-relaxed italic">
+                            "{nudge || 'Analyzing your savings pattern...'}"
                         </p>
-                        
-                        {/* Auth Status Indicator */}
-                        <div className="mt-3 flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${isLoggedIn ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                            <span className={`text-sm font-medium ${isLoggedIn ? 'text-green-600' : 'text-red-600'}`}>
-                                {isLoggedIn ? 'Logged in - Personalized advice available' : 'Not logged in - Please login for personalized advice'}
-                            </span>
-                        </div>
                     </div>
 
-                    {/* Trial Status - only show if logged in */}
+                    {healthData && (
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100">
+                            <h2 className="text-lg font-bold text-green-900 mb-4">Savings Health</h2>
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="text-3xl font-bold text-green-600">{healthData.score}%</div>
+                                <div className="text-xs uppercase tracking-wider font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
+                                    {healthData.status}
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500">{healthData.summary}</p>
+                        </div>
+                    )}
+                    
                     {isLoggedIn && <TrialStatus />}
+                </div>
 
-                    {/* Not Logged In Message */}
-                    {!isLoggedIn && (
-                        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                            <div className="max-w-md mx-auto">
-                                <div className="text-6xl mb-6">🔐</div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                                    Authentication Required
-                                </h2>
-                                <p className="text-gray-600 mb-8">
-                                    To interact with your financial assistant, you must be logged in
-                                </p>
-                                <div className="flex gap-4 justify-center">
-                                    <Link to="/login">
-                                        <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                                            Login
-                                        </button>
-                                    </Link>
-                                    <Link to="/register">
-                                        <button className="px-6 py-3 rounded-lg font-semibold">
-                                            Register
-                                        </button>
-                                    </Link>
-                                </div>
+                {/* Right Column: Main Chat */}
+                <div className="lg:col-span-2 flex flex-col h-[600px] bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="p-4 bg-blue-600 text-white flex justify-between items-center">
+                        <h1 className="font-bold">AI Financial Assistant</h1>
+                        <span className="text-xs bg-blue-500 px-2 py-1 rounded">Live Analysis</span>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                        {!isLoggedIn ? (
+                            <div className="text-center py-20">
+                                <p className="mb-4">Please login to access AI features</p>
+                                <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-full">Login</Link>
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            messages.map((m, i) => (
+                                <div key={i} className={`flex ${m.isUser ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                                        m.isUser ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-gray-800 shadow-sm rounded-tl-none'
+                                    }`}>
+                                        {m.text}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {isLoading && <div className="text-xs text-gray-400 animate-pulse">AI is thinking...</div>}
+                        <div ref={messagesEndRef} />
+                    </div>
 
-                    {/* Chat Container - Only show when logged in */}
-                    {isLoggedIn && (
-                        <div className="bg-white rounded-lg shadow-sm">
-                            {/* Messages Area */}
-                            <div className="h-96 overflow-y-auto p-6 space-y-4">
-                            {messages.map((message, index) => (
-                                <div key={index}>
-                                    <div className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                            message.isUser
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            <p className="text-sm">{message.text}</p>
-                                            <span className="text-xs opacity-75">
-                                                {message.timestamp.toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Auth buttons for non-logged in users */}
-                                    {message.showAuthButtons && (
-                                        <div className="flex justify-start mt-2">
-                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-xs lg:max-w-md">
-                                                <p className="text-sm text-blue-800 mb-3 font-medium">Ready to get started?</p>
-                                                <div className="flex gap-2">
-                                                    <Link to="/login">
-                                                        <button className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors">
-                                                            Login
-                                                        </button>
-                                                    </Link>
-                                                    <Link to="/register">
-                                                        <button className="px-4 py-2 rounded text-sm">
-                                                            Register
-                                                        </button>
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                            
-                            {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-gray-100 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
-                                        <div className="flex space-x-2">
-                                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="border-t p-4">
-                            <div className="flex space-x-2">
-                                <textarea
-                                    value={userInput}
-                                    onChange={(e) => setUserInput(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    placeholder={isLoggedIn 
-                                        ? "Ask me anything about your finances... (e.g., 'How much should I save weekly to reach 10k this year?')"
-                                        : "Please login to ask personalized financial questions..."
-                                    }
-                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                    rows="2"
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    onClick={handleSendMessage}
-                                    disabled={isLoading || !userInput.trim()}
-                                    className="px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    Send
-                                </button>
-                            </div>
-                            
-                            {/* Example Questions */}
-                            {isLoggedIn && (
-                                <div className="mt-3">
-                                    <p className="text-xs text-gray-500 mb-2">Try asking:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {[
-                                            "How much should I save weekly?",
-                                            "Am I eligible for a loan?",
-                                            "What's my savings health?",
-                                            "How to reach 10k this year?"
-                                        ].map((example, index) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => setUserInput(example)}
-                                                className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
-                                            >
-                                                {example}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            
-                            {/* Auth prompt for non-logged in users */}
-                            {!isLoggedIn && (
-                                <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                    <p className="text-xs text-yellow-800 mb-2">🔐 Want personalized financial advice?</p>
-                                    <div className="flex gap-2">
-                                        <Link to="/login">
-                                            <button className="text-xs px-3 py-1 rounded">
-                                                Login
-                                            </button>
-                                        </Link>
-                                        <Link to="/register">
-                                            <button className="text-xs px-3 py-1 rounded">
-                                                Register Free
-                                            </button>
-                                        </Link>
-                                    </div>
-                                </div>
-                            )}
+                    <div className="p-4 bg-white border-t">
+                        <div className="flex gap-2">
+                            <input 
+                                className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                placeholder="Ask about loans, savings, or goals..."
+                            />
+                            <button 
+                                onClick={handleSendMessage}
+                                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+                            >
+                                🚀
+                            </button>
                         </div>
                     </div>
-                    )}
                 </div>
             </div>
         </div>

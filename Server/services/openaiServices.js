@@ -5,8 +5,95 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-class OpenAIService {
-    // Financial Nudges based on savings pattern
+class OpenAIService
+    // 1. LIVE SUPPORT ASSISTANT (General Questions)
+
+    async generateLiveSupportResponse(userQuestion) {
+        try {
+            const systemPrompt = `
+            You are the Live Support Assistant for Jaza Nyumba. 
+            Your goal is to help visitors understand how the platform works.
+            Focus on: 
+            - How to create or join a Chama (savings group).
+            - Benefits of group savings and table banking.
+            - General platform security and ease of use.
+            Keep answers friendly, professional, and concise. 
+            If you cannot answer a specific technical issue, direct them to /contact or support@jazanyumba.com.`;
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userQuestion }
+                ],
+                max_tokens: 250,
+                temperature: 0.7
+            });
+
+            return response.choices[0].message.content.trim();
+        } catch (error) {
+            console.error('Live Support Error:', error);
+            return "Hi! I'm having a bit of trouble connecting to my brain. Please try again or contact our support team directly.";
+        }
+    }
+
+    
+    // 2. CHATBOT (Financial Assistant for Logged-in Members)
+
+    async chatbotResponse(userQuestion, groupId = null, context = '') {
+        try {
+            let customRules = '';
+            if (groupId) {
+                try {
+                    const questionKeywords = userQuestion.toLowerCase().split(/\s+/)
+                        .filter(word => word.length > 3)
+                        .slice(0, 5);
+                    
+                    const rules = await GroupRule.getAIRules(groupId, questionKeywords);
+                    if (rules && rules.length > 0) {
+                        customRules = '\n\nCustom Group Rules:\n' + 
+                            rules.slice(0, 5).map(rule => `- ${rule.title}: ${rule.description}`).join('\n');
+                    }
+                } catch (err) {
+                    console.warn('Could not fetch custom rules:', err.message);
+                }
+            }
+            
+            const systemPrompt = `
+            You are the Jaza Nyumba Financial Assistant. You help members manage their Chama savings and loans.
+            
+            MEMBER CONTEXT:
+            ${context}
+
+            GROUP RULES:
+            ${customRules || 'No specific group rules set. Use general Chama best practices.'}
+            
+            Your tasks:
+            1. Answer questions about their specific savings progress.
+            2. Explain loan terms based on group rules.
+            3. Provide advice on table banking (merry-go-round) operations.
+            
+            Be encouraging, specific to their data, and clear.`;
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userQuestion }
+                ],
+                max_tokens: 300,
+                temperature: 0.8
+            });
+
+            return response.choices[0].message.content.trim();
+        } catch (error) {
+            console.error('OpenAI Financial Chatbot Error:', error);
+            return "I'm sorry, I'm having trouble responding right now. Please check your dashboard or contact your group admin.";
+        }
+
+
+    // 3. FINANCIAL NUDGE (Proactive Encouragement)
+
     async generateFinancialNudge(memberData) {
         try {
             const prompt = `
@@ -16,188 +103,95 @@ class OpenAIService {
             - Missed weeks: ${memberData.missedWeeks || 0}
             - Group rank: ${memberData.rank || 'N/A'}
             
-            Generate a personalized, encouraging financial nudge (max 50 words) to help them improve their savings habit. Be positive and specific.
-            `;
+            Generate a personalized, encouraging financial nudge (max 50 words) to help them improve their savings habit. Be positive and specific.`;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini", // Temporarily test with GPT-4
+                model: "gpt-4o-mini",
                 messages: [{ role: "user", content: prompt }],
                 max_tokens: 80,
                 temperature: 0.7
             });
 
-            console.log('OpenAI nudge response:', response.choices[0].message.content);
             return response.choices[0].message.content.trim();
         } catch (error) {
             console.error('OpenAI Financial Nudge Error:', error);
-            return "Keep up the great work with your savings! Every contribution counts towards your financial goals.";
+            return "Keep up the great work! Every contribution brings you closer to your financial goals.";
         }
     }
 
-    // Loan Eligibility and Advice
+    
+    // 4. LOAN ELIGIBILITY (Returns JSON)
+    
     async analyzeLoanEligibility(memberData) {
         try {
             const prompt = `
-            Analyze loan eligibility for a Chama member:
-            - Total savings: ${memberData.totalSavings || 0}
-            - Savings consistency: ${memberData.consistencyRate || 0}%
-            - Membership duration: ${memberData.membershipMonths || 0} months
-            - Current loan status: ${memberData.hasActiveLoan ? 'Has active loan' : 'No active loan'}
+            Analyze loan eligibility for a Chama member. 
+            Data: Savings: ${memberData.totalSavings}, Consistency: ${memberData.consistencyRate}%, Months: ${memberData.membershipMonths}, Active Loan: ${memberData.hasActiveLoan}.
             
-            Provide: 1) Eligibility (Yes/No/Conditional) 2) Recommended loan amount 3) Brief advice (max 60 words)
-            Format: "ELIGIBILITY: [status] | AMOUNT: [amount] | ADVICE: [advice]"
-            `;
+            Return a JSON object:
+            {
+                "eligibility": "Yes" | "No" | "Conditional",
+                "recommendedAmount": number,
+                "advice": "string (max 60 words)"
+            }`;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini", // Temporarily test with GPT-4
+                model: "gpt-4o-mini",
+                response_format: { type: "json_object" },
                 messages: [{ role: "user", content: prompt }],
-                max_tokens: 100,
+                max_tokens: 150,
                 temperature: 0.6
             });
 
-            console.log('OpenAI loan response:', response.choices[0].message.content);
-            return this.parseLoanAnalysis(response.choices[0].message.content.trim());
+            const result = JSON.parse(response.choices[0].message.content);
+            return {
+                eligibility: result.eligibility || 'Conditional',
+                recommendedAmount: result.recommendedAmount || 0,
+                advice: result.advice || 'Contact admin for more details.'
+            };
         } catch (error) {
             console.error('OpenAI Loan Analysis Error:', error);
             return {
                 eligibility: 'Conditional',
-                recommendedAmount: memberData.totalSavings * 0.5,
+                recommendedAmount: (memberData.totalSavings || 0) * 0.5,
                 advice: 'Continue building your savings history for better loan terms.'
             };
         }
     }
 
-    // Savings Health Insights
+    
+    // 5. SAVINGS HEALTH INSIGHTS (Returns JSON)
     async generateSavingsHealthInsight(memberData, groupData) {
         try {
             const prompt = `
             Generate savings health insights:
-            Member Stats:
-            - Current savings: ${memberData.totalSavings || 0}
-            - Weekly goal: ${memberData.weeklyGoal || 100}
-            - Achievement rate: ${memberData.achievementRate || 0}%
+            Member: Savings ${memberData.totalSavings}, Goal ${memberData.weeklyGoal}, Achievement ${memberData.achievementRate}%.
+            Group: Avg ${groupData.groupAverage}, Member Rank ${memberData.rank}/${groupData.totalMembers}.
             
-            Group Comparison:
-            - Group average: ${groupData.groupAverage || 0}
-            - Member rank: ${memberData.rank}/${groupData.totalMembers}
-            - Top performer savings: ${groupData.topSavings || 0}
-            
-            Provide health score (1-100), status (Excellent/Good/Needs Improvement/Critical), and actionable insights (max 80 words).
-            Format: "SCORE: [score] | STATUS: [status] | INSIGHTS: [insights]"
-            `;
+            Return a JSON object:
+            {
+                "score": number (0-100),
+                "status": "Excellent" | "Good" | "Fair" | "Poor",
+                "insights": "string (max 80 words)"
+            }`;
 
             const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini", // Temporarily test with GPT-4
+                model: "gpt-4o-mini",
+                response_format: { type: "json_object" },
                 messages: [{ role: "user", content: prompt }],
-                max_tokens: 120,
+                max_tokens: 200,
                 temperature: 0.7
             });
 
-            console.log('OpenAI health response:', response.choices[0].message.content);
-            return this.parseHealthInsight(response.choices[0].message.content.trim());
+            return JSON.parse(response.choices[0].message.content);
         } catch (error) {
             console.error('OpenAI Health Insight Error:', error);
             return {
                 score: 70,
                 status: 'Good',
-                insights: 'Your savings are on track. Consider increasing weekly contributions to reach your goals faster.'
+                insights: 'Your savings are on track. Keep contributing regularly to hit your goals.'
             };
         }
-    }
-
-    // Chatbot for Savings Rules and Loan Terms
-    async chatbotResponse(userQuestion, groupId = null, context = '') {
-        try {
-            // Get custom group rules if group ID provided
-            let customRules = '';
-            if (groupId) {
-                try {
-                    const questionKeywords = userQuestion.toLowerCase().split(/\s+/)
-                        .filter(word => word.length > 3)
-                        .slice(0, 5); // Limit keywords for performance
-                    
-                    const rules = await GroupRule.getAIRules(groupId, questionKeywords);
-                    if (rules && rules.length > 0) {
-                        customRules = '\n\nCustom Group Rules:\n' + 
-                            rules.slice(0, 5).map(rule => `- ${rule.getAISummary ? rule.getAISummary() : `${rule.title}: ${rule.description}`}`).join('\n');
-                        
-                        // Mark rules as referenced
-                        await Promise.all(
-                            rules.slice(0, 3).map(async rule => {
-                                if (rule._id) {
-                                    try {
-                                        const ruleDoc = await GroupRule.findById(rule._id);
-                                        if (ruleDoc && ruleDoc.markReferenced) {
-                                            await ruleDoc.markReferenced();
-                                        }
-                                    } catch (err) {
-                                        console.warn('Could not mark rule as referenced:', err.message);
-                                    }
-                                }
-                            })
-                        );
-                    }
-                } catch (err) {
-                    console.warn('Could not fetch custom rules:', err.message);
-                }
-            }
-            
-            const systemPrompt = `
-            You are a helpful Jaza Nyumba financial assistant. You have access to the user's current data:
-
-            ${userContext}
-
-            You specialize in:
-            1. Chama savings rules and regulations
-            2. Loan terms and conditions
-            3. Group savings best practices
-            4. Financial literacy for group savings
-            5. Table banking (merry-go-round) operations
-            
-            Group-Specific Rules:
-            ${customRules || 'No specific group rules have been set. Use general Chama best practices.'}
-            
-            Use the user's data and group rules to provide personalized, specific answers. If you cannot fully answer the question with the available information, suggest contacting the group admin or support at /contact.
-            
-            Answer questions clearly and helpfully. Stay focused on Chama/group savings topics.
-            `;
-
-            const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini", // Temporarily test with GPT-4
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userQuestion }
-                ],
-                max_tokens: 250,
-                temperature: 0.8
-            });
-
-            console.log('OpenAI response:', response.choices[0].message.content);
-            return response.choices[0].message.content.trim();
-        } catch (error) {
-            console.error('OpenAI Chatbot Error:', error);
-            console.error('Error details:', error.response?.data || error.message);
-            return "I'm sorry, I'm having trouble responding right now. Please try again later or contact support for assistance with savings rules and loan terms.";
-        }
-    }
-
-    // Helper methods
-    parseLoanAnalysis(result) {
-        const parts = result.split(' | ');
-        return {
-            eligibility: parts[0]?.replace('ELIGIBILITY: ', '') || 'Conditional',
-            recommendedAmount: parseFloat(parts[1]?.replace('AMOUNT: ', '').replace(/[^\d.]/g, '')) || 0,
-            advice: parts[2]?.replace('ADVICE: ', '') || 'Continue building your savings history.'
-        };
-    }
-
-    parseHealthInsight(result) {
-        const parts = result.split(' | ');
-        return {
-            score: parseInt(parts[0]?.replace('SCORE: ', '')) || 70,
-            status: parts[1]?.replace('STATUS: ', '') || 'Good',
-            insights: parts[2]?.replace('INSIGHTS: ', '') || 'Keep up the good work with your savings!'
-        };
     }
 }
 

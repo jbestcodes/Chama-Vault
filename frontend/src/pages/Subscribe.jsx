@@ -43,7 +43,7 @@ function Subscribe() {
             description: 'Weekly access to AI features and reminders',
             features: [
                 'AI Financial Insights',
-                'SMS Notifications',
+                'SMS/Email Notifications',
                 'Group Leaderboard View',
                 'Basic Analytics',
                 'Performance Tracking',
@@ -268,7 +268,7 @@ metadata : {
                             onClick={() => setSelectedPlan(key)}
                         >
                             {key === 'monthly' && (
-                                <span className="absolute -top-3 left-4 bg-green-500 text-white px-3 py-1 text-xs rounded-full">
+                                <span className="absolute -top-3 left-4 bg-green-500 text-Red px-3 py-1 text-xs rounded-full">
                                     Most Popular
                                 </span>
                             )}
