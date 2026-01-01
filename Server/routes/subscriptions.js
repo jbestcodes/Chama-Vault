@@ -346,6 +346,7 @@ async function handleSubscriptionCreated(data) {
             return;
         }
 
+
         // Get plan details to determine features
         const planFeatures = getPlanFeatures(planType);
 
@@ -366,26 +367,52 @@ async function handleSubscriptionCreated(data) {
         };
 
         // Use upsert to create or update
+        let subscription = 
         await Subscription.findOneAndUpdate(
             { member_id: memberId },
-            subscriptionData,
-            { upsert: true, new: true }
+            { member_id: memberId, 
+                amount: verification.amount / 100,
+                plan_type: req.body.plan || 'monthly', },
+                { new: true, upsert: true, setDefaultsOnInsert: true 
+
+                }
         );
 
-        // Update member's subscription status
-        const expiryDate = subscriptionData.next_payment_date;
-        await Member.findByIdAndUpdate(memberId, {
-            has_active_subscription: true,
-            subscription_plan: planType,
-            subscription_expires: expiryDate
-        });
+        // Activate member subscription status
+        const now = new Date();
+const expiryDate = subscription.plan_type === 'weekly' 
+    ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) 
+    : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        console.log(`Subscription activated for member ${memberId}`);
+// Activate subscription
+subscription.status = 'active';
+subscription.start_date = now;
+subscription.expires_at = expiryDate;
+subscription.next_payment_date = expiryDate;
 
+// Define features based on your schema's structure
+subscription.features = {
+    sms_notifications: true,
+    ai_access: true,
+    loan_notifications: true,
+    contribution_reminders: true,
+    group_invites: true
+};
+
+// Add payment to history
+subscription.payments.push({
+    reference: verification.reference,
+    amount: verification.amount / 100,
+    status: 'success',
+    paid_at: new Date()
+});
+
+await subscription.save();
     } catch (error) {
         console.error('Error handling subscription created:', error);
     }
-}
+    }
+    
 
 async function handlePaymentFailed(data) {
     try {
