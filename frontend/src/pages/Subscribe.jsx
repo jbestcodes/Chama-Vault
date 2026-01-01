@@ -238,7 +238,11 @@ function Subscribe() {
         onSuccess: handlePaymentSuccess,
         onClose: handlePaymentClose,
         currency: 'KES',
-        plan: selectedPlan === 'monthly' ? 'PLN_sdxjk0g1ufsv7xa' : 'PLN_s35pjg5h2wxi5rx'
+        plan: selectedPlan === 'monthly' ? 'PLN_sdxjk0g1ufsv7xa' : 'PLN_s35pjg5h2wxi5rx',
+
+metadata : {
+    member_id: user?.id
+}
     };
 
     return (
