@@ -24,10 +24,11 @@ function Subscribe() {
         monthly: {
             name: 'Monthly Premium',
             price: 10000, // KES 100 in kobo
+            planCode: 'PLN_sdxjk0g1ufsv7xa',
             description: 'Full access to AI features and premium support',
             features: [
                 'AI Financial Insights & Deadline Nudges',
-                'SMS Notifications & Reminders',
+                'SMS/Email Notifications & Reminders',
                 'Group Leaderboard with Performance Ratings',
                 'Advanced Analytics & Reports',
                 'Member Performance Tracking',
@@ -38,6 +39,7 @@ function Subscribe() {
         weekly: {
             name: 'Weekly Premium',
             price: 3000, // KES 30 in kobo
+            planCode: 'PLN_s35pjg5h2wxi5rx',
             description: 'Weekly access to AI features',
             features: [
                 'AI Financial Insights',

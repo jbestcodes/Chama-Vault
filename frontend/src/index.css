@@ -87,3 +87,20 @@ border: none;
 border-radius: 5px;
 cursor: pointer;
 }
+
+/* Forces dark text even during browser autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #333 !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Fallback for general dark mode issues */
+input {
+  color: #333 !important;
+}
+textarea {
+  color: #333 !important;
+}
