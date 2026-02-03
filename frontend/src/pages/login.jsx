@@ -279,7 +279,7 @@ const Login = () => {
                             <div style={{
                                 fontSize: '48px',
                                 marginBottom: '10px'
-                            }}>🏦</div>
+                            }}></div>
                             <h2 style={{
                                 margin: '0 0 8px 0',
                                 color: '#333',
@@ -376,7 +376,7 @@ const Login = () => {
                                         fontWeight: '500',
                                         fontSize: '14px'
                                     }}>
-                                        📱 Email or Phone Number
+                                         Email or Phone Number
                                     </label>
                                     <input
                                         type="text"
@@ -429,7 +429,7 @@ const Login = () => {
                                         fontWeight: '500',
                                         fontSize: '14px'
                                     }}>
-                                        🔒 Password
+                                         Password
                                     </label>
                                     <div style={{ position: 'relative' }}>
                                         <input
@@ -540,7 +540,7 @@ const Login = () => {
                                             Sending Code...
                                         </span>
                                     ) : (
-                                        '📱 Send Login Code'
+                                        ' Send Login Code'
                                     )}
                                 </button>
 
@@ -564,7 +564,7 @@ const Login = () => {
                                             e.target.style.textDecoration = 'none';
                                         }}
                                     >
-                                        🤔 Forgot Password?
+                                         Forgot Password?
                                     </Link>
                                 </div>
                             </form>
@@ -579,7 +579,7 @@ const Login = () => {
                                         fontWeight: '500',
                                         fontSize: '14px'
                                     }}>
-                                        🔢 Verification Code
+                                         Verification Code
                                     </label>
                                     <input
                                         type="text"
@@ -664,7 +664,7 @@ const Login = () => {
                                             Verifying...
                                         </span>
                                     ) : (
-                                        '✅ Verify & Sign In'
+                                        ' Verify & Sign In'
                                     )}
                                 </button>
 
@@ -719,7 +719,7 @@ const Login = () => {
                                             }
                                         }}
                                     >
-                                        📱 Resend Code
+                                         Resend Code
                                     </button>
                                 </div>
                             </form>
@@ -740,7 +740,7 @@ const Login = () => {
                                 color: '#666',
                                 fontWeight: '500'
                             }}>
-                                📧 Having trouble logging in?
+                                 Having trouble logging in?
                             </p>
                             <button
                                 type="button"
@@ -771,14 +771,14 @@ const Login = () => {
                                     }
                                 }}
                             >
-                                📧 Resend Email Verification
+                                 Resend Email Verification
                             </button>
                             <p style={{
                                 margin: '8px 0 0 0',
                                 fontSize: '12px',
                                 color: '#888'
                             }}>
-                                Enter your email address above first
+                                Enter your email address above first!
                             </p>
                         </div>
                         

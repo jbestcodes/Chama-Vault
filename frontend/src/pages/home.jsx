@@ -375,7 +375,7 @@ const Home = () => {
                             fontSize: '36px',
                             fontWeight: 'bold'
                         }}>
-                            🚀 Join the Growing Movement
+                             Join the Growing Movement
                         </h2>
                         <p style={{
                             margin: '0 0 48px 0',
@@ -396,19 +396,16 @@ const Home = () => {
                                 {
                                     number: loading ? '...' : (stats?.totalGroups || 'Coming Soon'),
                                     label: 'Savings Groups',
-                                    icon: '🏢',
                                     subtext: !stats?.totalGroups ? 'Start the first group!' : ''
                                 },
                                 {
                                     number: loading ? '...' : (stats?.totalSavingsAmount || 'Coming Soon'),
                                     label: 'Total Savings',
-                                    icon: '💰',
                                     subtext: !stats?.totalSavingsAmount ? 'Every journey starts with the first save!' : ''
                                 },
                                 {
                                     number: loading ? '...' : (stats?.activeSubscriptions || 'Coming Soon'),
                                     label: 'Premium Users',
-                                    icon: '⭐',
                                     subtext: !stats?.activeSubscriptions ? 'Be the first to upgrade!' : ''
                                 }
                             ].map((stat, index) => (
@@ -438,18 +435,18 @@ const Home = () => {
                             fontWeight: 'bold',
                             textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                         }}>
-                            ✨ Amazing Features ✨
+                             Amazing Features 
                         </h2>
 
                         {/* Features Section - Dynamic */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                             {(stats?.features || [
-                                { icon: "🤖", title: "AI-Powered Insights", desc: "Get personalized financial advice and group performance analytics" },
-                                { icon: "📱", title: "Smart Notifications", desc: "Automated SMS and email reminders for contributions and loans" },
-                                { icon: "🔒", title: "Bank-Level Security", desc: "Secure payments with M-Pesa integration and encrypted data" },
-                                { icon: "📊", title: "Real-Time Dashboard", desc: "Track your savings progress with beautiful, interactive charts" },
-                                { icon: "👥", title: "Group Management", desc: "Powerful admin tools for managing members, loans, and contributions" },
-                                { icon: "🎯", title: "Goal Tracking", desc: "Set and achieve savings milestones with progress tracking" }
+                                {  title: "AI-Powered Insights", desc: "Get personalized financial advice and group performance analytics" },
+                                {  title: "Smart Notifications", desc: "Automated SMS and email reminders for contributions and loans" },
+                                {  title: "Bank-Level Security", desc: "Secure payments with M-Pesa integration and encrypted data" },
+                                {  title: "Real-Time Dashboard", desc: "Track your savings progress with beautiful, interactive charts" },
+                                {  title: "Group Management", desc: "Powerful admin tools for managing members, loans, and contributions" },
+                                { title: "Goal Tracking", desc: "Set and achieve savings milestones with progress tracking" }
                             ]).map((feature, index) => (
                                 <div
                                     key={index}
@@ -475,7 +472,7 @@ const Home = () => {
                                     fontSize: '36px',
                                     fontWeight: 'bold'
                                 }}>
-                                    💬 What Our Users Say
+                                     What Our Users Say
                                 </h2>
                                 <p style={{
                                     margin: '0 0 48px 0',
@@ -522,7 +519,7 @@ const Home = () => {
                                     fontSize: '36px',
                                     fontWeight: 'bold'
                                 }}>
-                                    📧 Stay Updated
+                                     Stay Updated
                                 </h2>
                                 <p style={{
                                     margin: '0 0 32px 0',
@@ -551,7 +548,7 @@ const Home = () => {
 
                                 {newsletterSubmitted && (
                                     <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                                        ✅ Thanks for subscribing! We'll keep you updated.
+                                         Thanks for subscribing! We'll keep you updated.
                                     </div>
                                 )}
                             </div>
@@ -584,7 +581,7 @@ const Home = () => {
                                             e.target.style.transform = 'translateY(0) scale(1)';
                                             e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
                                         }}>
-                                            🚀 Start Saving Today - FREE! ✨
+                                             Start Saving Today - FREE! ✨
                                         </button>
                                     </Link>
                                     <Link to="/login">
@@ -614,7 +611,7 @@ const Home = () => {
                                             e.target.style.background = 'white';
                                             e.target.style.color = '#667eea';
                                         }}>
-                                            🔑 Welcome Back! 💫
+                                             Welcome Back! 
                                         </button>
                                     </Link>
                                 </>
@@ -643,7 +640,7 @@ const Home = () => {
                                         e.target.style.transform = 'translateY(0) scale(1)';
                                         e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
                                     }}>
-                                        📊 Go to Dashboard 🎯
+                                         Go to Dashboard 
                                     </button>
                                 </Link>
                             )}
@@ -651,7 +648,7 @@ const Home = () => {
 
                         {/* Trust Indicators */}
                         <div style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
-                            <p>🔒 Secure • 🤖 AI-Powered • 📱 Mobile-First • 🇰🇪 Made for Kenya</p>
+                            <p> Secure •  AI-Powered •  Mobile-First • 🇰🇪 Made for Kenya</p>
                         </div>
                     </div>
                 </div>
